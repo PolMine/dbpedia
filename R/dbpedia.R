@@ -33,7 +33,7 @@ as.data.table.AnnotatedPlainTextDocument <- function(x, what = c("word", "ne")){
 get_dbpedia_links <- function(x, language, max_len = 6067L, confidence = 0.35, api = "http://localhost:2222/rest/annotate", verbose = TRUE){
   
   if (verbose) cli_progress_step("turn input into AnnotatedPlainTextDocument")
-  stopwords <- dbpedia_stopwords[[language]]
+  stopwords <- dbpedia::dbpedia_stopwords[[language]]
   
   x <- polmineR:::as.AnnotatedPlainTextDocument(
     x = x,

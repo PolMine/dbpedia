@@ -19,7 +19,7 @@ merkel_speeches <- corpus("GERMAPARL2") %>%
   subset(p_type == "speech") %>%
   as.speeches(s_attribute_name = "speaker_name", s_attribute_date = "protocol_date")
 
-dbpedia_links <- get_dbpedia_links(x = merkel_speeches[[1]])
+dbpedia_links <- get_dbpedia_links(x = merkel_speeches[[1]], language = "de")
 coloured <- lapply(
   1:nrow(dbpedia_links),
   function(i) dbpedia_links[["cpos_left"]][i]:dbpedia_links[["cpos_right"]][i]
