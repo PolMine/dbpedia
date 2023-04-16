@@ -9,6 +9,9 @@ as.data.table.AnnotatedPlainTextDocument <- function(x, what = c("word", "ne")){
   dt_min
 }
 
+#' @rdname get_dbpedia_links
+setGeneric("get_dbpedia_links", function(x, ...) standardGeneric("get_dbpedia_links"))
+
 
 #' Get DBpedia links.
 #' 
@@ -23,14 +26,18 @@ as.data.table.AnnotatedPlainTextDocument <- function(x, what = c("word", "ne")){
 #'   as threshold befor DBpedia Spotlight includes a link into the report.
 #' @param api An URL of the DBpedia Spotlight API.
 #' @param verbose A `logical` value - whether to display progress messages.
-#' @export get_dbpedia_links
+#' @param ... Further arguments.
+#' @exportMethod get_dbpedia_links
 #' @importFrom cli cli_alert_warning cli_progress_step cli_alert_danger
 #' @importFrom polmineR punctuation
 #' @importFrom jsonlite fromJSON
 #' @importFrom httr GET http_error content
 #' @importFrom data.table setnames `:=` setDT setcolorder
 #'   as.data.table
-get_dbpedia_links <- function(x, language, max_len = 6067L, confidence = 0.35, api = "http://localhost:2222/rest/annotate", verbose = TRUE){
+#' @import methods
+#' @docType methods
+#' @rdname get_dbpedia_links
+setMethod("get_dbpedia_links", "subcorpus", function(x, language, max_len = 6067L, confidence = 0.35, api = "http://localhost:2222/rest/annotate", verbose = TRUE){
   
   if (verbose) cli_progress_step("turn input into AnnotatedPlainTextDocument")
   stopwords <- dbpedia::dbpedia_stopwords[[language]]
@@ -89,7 +96,7 @@ get_dbpedia_links <- function(x, language, max_len = 6067L, confidence = 0.35, a
   )
   
   dbpedia_links
-}
+})
 
 #' Stopwords used by DBpedia Spotlight
 #' 
