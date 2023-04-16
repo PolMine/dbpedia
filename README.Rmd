@@ -1,0 +1,35 @@
+---
+title: R wrapper pkg to DBpedia Spotlight
+output: github_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+## Using the package
+
+```{r}
+library(dbpedia)
+library(polmineR)
+use("polmineR")
+
+merkel_speeches <- corpus("GERMAPARL2") %>% 
+  subset(protocol_lp == "19") %>%
+  subset(speaker_name == "Angela Merkel") %>%
+  subset(p_type == "speech") %>%
+  as.speeches(s_attribute_name = "speaker_name", s_attribute_date = "protocol_date")
+
+dbpedia_links <- get_dbpedia_links(x = merkel_speeches[[1]])
+coloured <- lapply(
+  1:nrow(dbpedia_links),
+  function(i) dbpedia_links[["cpos_left"]][i]:dbpedia_links[["cpos_right"]][i]
+)
+names(coloured) <- sample(heat.colors(n = nrow(dbpedia_links)))
+
+tips <- dbpedia_links[["uri"]]
+names(tips) <- names(coloured)
+
+read(merkel_speeches[[1]]) %>%
+  highlight(highlight = coloured) %>%
+  tooltips(tooltips = tips)
+```
