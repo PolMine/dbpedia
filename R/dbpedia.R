@@ -54,16 +54,7 @@ setMethod("get_dbpedia_links", "AnnotatedPlainTextDocument", function(x, languag
   resources_min[, "start" := as.integer(resources_min[["start"]]) + 1L]
   setcolorder(resources_min, c("start", "text", "uri"))
   
-  ne <- as.data.table(x, what = "entity")
-  
-  dbpedia_links <- resources_min[ne, on = c("start", "text")]
-  dbpedia_links[, "start" := NULL][, "end" := NULL][, "id":= NULL]
-  setcolorder(
-    dbpedia_links,
-    c("cpos_left", "cpos_right", "type", "text", "uri")
-  )
-  
-  dbpedia_links
+  resources_min
 })
 
 
@@ -98,7 +89,7 @@ setMethod("get_dbpedia_links", "subcorpus", function(x, language, p_attribute = 
   
   if (verbose) cli_progress_step("turn input into AnnotatedPlainTextDocument")
 
-  x <- polmineR:::as.AnnotatedPlainTextDocument(
+  doc <- polmineR:::as.AnnotatedPlainTextDocument(
     x = x,
     p_attributes = p_attribute,
     stoplist = c(
@@ -109,8 +100,8 @@ setMethod("get_dbpedia_links", "subcorpus", function(x, language, p_attribute = 
   )
   if (verbose) cli_progress_done()
   
-  dbpedia_links <- get_dbpedia_links(
-    x = x,
+  links <- get_dbpedia_links(
+    x = doc,
     language = language,
     max_len = max_len,
     confidence = confidence,
@@ -118,8 +109,18 @@ setMethod("get_dbpedia_links", "subcorpus", function(x, language, p_attribute = 
     verbose = verbose
   )
   
+  ne <- as.data.table(x, what = "entity")
+  
+  dbpedia_links <- links[ne, on = c("start", "text")]
+  dbpedia_links[, "start" := NULL][, "end" := NULL][, "id":= NULL]
+  setcolorder(
+    dbpedia_links,
+    c("cpos_left", "cpos_right", "type", "text", "uri")
+  )
+  
   dbpedia_links
 })
+
 
 #' Stopwords used by DBpedia Spotlight
 #' 
