@@ -6,6 +6,23 @@ editor_options:
 ---
 
 
+## Run dockerized DBpedia Spotlight
+
+The docker containers are not available for all architectures. Particularly not for M1. Therefore, we need to build from the dockerfile as follows.
+
+```{sh, eval = FALSE}
+git clone https://github.com/dbpedia-spotlight/spotlight-docker.git
+cd spotlight-docker
+docker build -t dbpedia/dbpedia-spotlight:latest
+```
+
+Then run the image as follows.
+
+```{sh}
+docker run -tid --restart unless-stopped --name dbpedia-spotlight.de --mount source=spotlight-model,target=/opt/spotlight -p 2222:80 dbpedia/dbpedia-spotlight spotlight.sh de
+```
+
+
 ## Using the package
 
 ```{r}
@@ -13,24 +30,22 @@ library(dbpedia)
 library(polmineR)
 use("polmineR")
 
-merkel_speeches <- corpus("GERMAPARL2") %>% 
-  subset(protocol_lp == "19") %>%
+sample_speeches <- corpus("GERMAPARL2") %>% 
+  subset(protocol_date == "2018-02-22") %>%
   subset(speaker_name == "Angela Merkel") %>%
   subset(p_type == "speech") %>%
-  as.speeches(s_attribute_name = "speaker_name", s_attribute_date = "protocol_date")
+  as.speeches(
+    s_attribute_name = "speaker_name",
+    s_attribute_date = "protocol_date",
+    progress = FALSE
+  )
 
-dbpedia_links <- get_dbpedia_links(x = merkel_speeches[[1]], language = "de")
+sample_speech <- sample_speeches[[1]]
 
-coloured <- lapply(
-  1:nrow(dbpedia_links),
-  function(i) dbpedia_links[["cpos_left"]][i]:dbpedia_links[["cpos_right"]][i]
-)
-names(coloured) <- sample(heat.colors(n = nrow(dbpedia_links)))
+dbpedia_links <- get_dbpedia_links(x = sample_speech, language = "de")
 
-tips <- dbpedia_links[["uri"]]
-names(tips) <- names(coloured)
-
-read(merkel_speeches[[1]]) %>%
-  highlight(highlight = coloured) %>%
-  tooltips(tooltips = tips)
+read(sample_speech) %>%
+  highlight(highlight = dbpedia_links[["highlight"]]) %>%
+  tooltips(tooltips = dbpedia_links[["uri"]]) %>%
+  href(url = dbpedia_links[["uri"]])
 ```

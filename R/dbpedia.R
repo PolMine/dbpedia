@@ -82,13 +82,14 @@ setMethod("get_dbpedia_links", "AnnotatedPlainTextDocument", function(x, languag
 #' @importFrom httr GET http_error content
 #' @importFrom data.table setnames `:=` setDT setcolorder
 #'   as.data.table
+#' @importFrom stats setNames
+#' @importFrom grDevices heat.colors
 #' @import methods
 #' @docType methods
 #' @rdname get_dbpedia_links
 setMethod("get_dbpedia_links", "subcorpus", function(x, language, p_attribute = "word", max_len = 6067L, confidence = 0.35, api = "http://localhost:2222/rest/annotate", verbose = TRUE){
   
-  if (verbose) cli_progress_step("turn input into AnnotatedPlainTextDocument")
-
+  if (verbose) cli_progress_step("convert input to `AnnotatedPlainTextDocument`")
   doc <- polmineR:::as.AnnotatedPlainTextDocument(
     x = x,
     p_attributes = p_attribute,
@@ -109,16 +110,33 @@ setMethod("get_dbpedia_links", "subcorpus", function(x, language, p_attribute = 
     verbose = verbose
   )
   
-  ne <- as.data.table(x, what = "entity")
+  ne <- as.data.table(doc, what = "entity")
   
   dbpedia_links <- links[ne, on = c("start", "text")]
   dbpedia_links[, "start" := NULL][, "end" := NULL][, "id":= NULL]
-  setcolorder(
-    dbpedia_links,
     c("cpos_left", "cpos_right", "type", "text", "uri")
+
+  retval <- list(
+    regions = as.matrix(dbpedia_links[, c("cpos_left", "cpos_right")]),
+    type = dbpedia_links[["type"]],
+    text = dbpedia_links[["text"]]
   )
   
-  dbpedia_links
+  retval[["highlight"]] <- setNames(
+    lapply(
+      1L:nrow(retval[["regions"]]),
+      function(i)
+        retval[["regions"]][i, "cpos_left"]:retval[["regions"]][i, "cpos_right"]
+    ),
+    sample(heat.colors(n = nrow(dbpedia_links)))
+  )
+  
+  retval[["uri"]] <- setNames(
+    dbpedia_links[["uri"]],
+    names(retval[["highlight"]])
+  )
+
+  retval
 })
 
 
