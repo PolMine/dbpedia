@@ -12,40 +12,9 @@ as.data.table.AnnotatedPlainTextDocument <- function(x, what = c("word", "ne")){
 #' @rdname get_dbpedia_links
 setGeneric("get_dbpedia_links", function(x, ...) standardGeneric("get_dbpedia_links"))
 
-
-#' Get DBpedia links.
-#' 
-#' @param x A `subcorpus` object. Will be coerced to
-#'   'AnnotatedPlainTextDocument' from NLP package.
-#' @param max_len An `integer` value. The text passed to DBpedia Spotlight may
-#'   not exceed a defined length. If it does, an HTTP error results. The known
-#'   threshold of 6067 characters is the default value.
-#' @param language The language of the input text ("en", "fr", "de", ...) to 
-#'   determine the stopwords used. 
-#' @param confidence A `numeric` value, the minimum similarity score that serves
-#'   as threshold befor DBpedia Spotlight includes a link into the report.
-#' @param api An URL of the DBpedia Spotlight API.
-#' @param verbose A `logical` value - whether to display progress messages.
-#' @param ... Further arguments.
 #' @exportMethod get_dbpedia_links
-#' @importFrom cli cli_alert_warning cli_progress_step cli_alert_danger
-#' @importFrom polmineR punctuation
-#' @importFrom jsonlite fromJSON
-#' @importFrom httr GET http_error content
-#' @importFrom data.table setnames `:=` setDT setcolorder
-#'   as.data.table
-#' @import methods
-#' @docType methods
 #' @rdname get_dbpedia_links
-setMethod("get_dbpedia_links", "subcorpus", function(x, language, max_len = 6067L, confidence = 0.35, api = "http://localhost:2222/rest/annotate", verbose = TRUE){
-  
-  if (verbose) cli_progress_step("turn input into AnnotatedPlainTextDocument")
-  stopwords <- dbpedia::dbpedia_stopwords[[language]]
-  
-  x <- polmineR:::as.AnnotatedPlainTextDocument(
-    x = x,
-    stoplist = c(stopwords, polmineR::punctuation)
-  )
+setMethod("get_dbpedia_links", "AnnotatedPlainTextDocument", function(x, language, max_len = 6067L, confidence = 0.35, api = "http://localhost:2222/rest/annotate", verbose = TRUE){
   
   if (nchar(x[["content"]]) > max_len){
     if (verbose) cli_alert_warning(
@@ -55,8 +24,7 @@ setMethod("get_dbpedia_links", "subcorpus", function(x, language, max_len = 6067
   } else {
     txt <- x[["content"]]
   }
-  
-  
+
   if (verbose) cli_progress_step("send request to DBpedia Spotlight")
   request <- httr::GET(
     url = api,
@@ -93,6 +61,61 @@ setMethod("get_dbpedia_links", "subcorpus", function(x, language, max_len = 6067
   setcolorder(
     dbpedia_links,
     c("cpos_left", "cpos_right", "type", "text", "uri")
+  )
+  
+  dbpedia_links
+})
+
+
+
+#' Get DBpedia links.
+#' 
+#' @param x A `subcorpus` object. Will be coerced to
+#'   'AnnotatedPlainTextDocument' from NLP package.
+#' @param max_len An `integer` value. The text passed to DBpedia Spotlight may
+#'   not exceed a defined length. If it does, an HTTP error results. The known
+#'   threshold of 6067 characters is the default value.
+#' @param language The language of the input text ("en", "fr", "de", ...) to 
+#'   determine the stopwords used. 
+#' @param confidence A `numeric` value, the minimum similarity score that serves
+#'   as threshold befor DBpedia Spotlight includes a link into the report.
+#' @param api An URL of the DBpedia Spotlight API.
+#' @param verbose A `logical` value - whether to display progress messages.
+#' @param p_attribute The p-attribute used for decoding a `subcorpus` object.
+#' @param ... Further arguments.
+#' @exportMethod get_dbpedia_links
+#' @importFrom cli cli_alert_warning cli_progress_step cli_alert_danger
+#'   cli_progress_done
+#' @importFrom polmineR punctuation
+#' @importFrom jsonlite fromJSON
+#' @importFrom httr GET http_error content
+#' @importFrom data.table setnames `:=` setDT setcolorder
+#'   as.data.table
+#' @import methods
+#' @docType methods
+#' @rdname get_dbpedia_links
+setMethod("get_dbpedia_links", "subcorpus", function(x, language, p_attribute = "word", max_len = 6067L, confidence = 0.35, api = "http://localhost:2222/rest/annotate", verbose = TRUE){
+  
+  if (verbose) cli_progress_step("turn input into AnnotatedPlainTextDocument")
+
+  x <- polmineR:::as.AnnotatedPlainTextDocument(
+    x = x,
+    p_attributes = p_attribute,
+    stoplist = c(
+      dbpedia::dbpedia_stopwords[[language]],
+      polmineR::punctuation
+    ),
+    verbose = FALSE
+  )
+  if (verbose) cli_progress_done()
+  
+  dbpedia_links <- get_dbpedia_links(
+    x = x,
+    language = language,
+    max_len = max_len,
+    confidence = confidence,
+    api = api,
+    verbose = verbose
   )
   
   dbpedia_links

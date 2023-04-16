@@ -3,14 +3,25 @@
 \docType{methods}
 \name{get_dbpedia_links}
 \alias{get_dbpedia_links}
+\alias{get_dbpedia_links,AnnotatedPlainTextDocument-method}
 \alias{get_dbpedia_links,subcorpus-method}
 \title{Get DBpedia links.}
 \usage{
 get_dbpedia_links(x, ...)
 
+\S4method{get_dbpedia_links}{AnnotatedPlainTextDocument}(
+  x,
+  language,
+  max_len = 6067L,
+  confidence = 0.35,
+  api = "http://localhost:2222/rest/annotate",
+  verbose = TRUE
+)
+
 \S4method{get_dbpedia_links}{subcorpus}(
   x,
   language,
+  p_attribute = "word",
   max_len = 6067L,
   confidence = 0.35,
   api = "http://localhost:2222/rest/annotate",
@@ -36,6 +47,8 @@ as threshold befor DBpedia Spotlight includes a link into the report.}
 \item{api}{An URL of the DBpedia Spotlight API.}
 
 \item{verbose}{A \code{logical} value - whether to display progress messages.}
+
+\item{p_attribute}{The p-attribute used for decoding a \code{subcorpus} object.}
 }
 \description{
 Get DBpedia links.
