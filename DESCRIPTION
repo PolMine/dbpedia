@@ -24,6 +24,7 @@ Suggests:
     rmarkdown,
     knitr
 VignetteBuilder: knitr
+SystemRequirements: docker
 LazyData: true
 Description: Use functionality of DBpedia from R.
 BugReports: https://github.com/PolMine/dbpedia/issues
