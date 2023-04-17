@@ -49,3 +49,12 @@ read(sample_speech) %>%
   tooltips(tooltips = dbpedia_links[["uri"]]) %>%
   href(url = dbpedia_links[["uri"]])
 ```
+
+
+## Related work
+
+- https://github.com/glaserL/unsc-ne
+
+- https://pypi.org/project/spacy-dbpedia-spotlight/
+
+- https://github.com/news-r/spotlight
