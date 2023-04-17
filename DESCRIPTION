@@ -1,8 +1,8 @@
 Package: dbpedia
 Type: Package
 Title: R wrapper for DBpedia Spotlight
-Version: 0.0.0.9001
-Date: 2023-04-16
+Version: 0.0.0.9002
+Date: 2023-04-17
 Authors@R: c(
   person("Andreas", "Blaette", role = c("aut", "cre"), email = "andreas.blaette@uni-due.de", comment = c(ORCID = "0000-0001-8970-8010")),
   person("Christoph", "Leonhardt", role = "ctb")
@@ -12,7 +12,7 @@ Depends:
     R (>= 3.5.0)
 Imports:
     methods,
-    polmineR (>= 0.8.8.9007),
+    polmineR (>= 0.8.8.9008),
     cli,
     data.table,
     httr,

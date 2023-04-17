@@ -84,15 +84,18 @@ setMethod("get_dbpedia_links", "AnnotatedPlainTextDocument", function(x, languag
 #'   as.data.table
 #' @importFrom stats setNames
 #' @importFrom grDevices heat.colors
+#' @importFrom polmineR decode
 #' @import methods
 #' @docType methods
 #' @rdname get_dbpedia_links
-setMethod("get_dbpedia_links", "subcorpus", function(x, language, p_attribute = "word", max_len = 6067L, confidence = 0.35, api = "http://localhost:2222/rest/annotate", verbose = TRUE){
+setMethod("get_dbpedia_links", "subcorpus", function(x, language, p_attribute = "word", mw = "ne", max_len = 6067L, confidence = 0.35, api = "http://localhost:2222/rest/annotate", verbose = TRUE){
   
   if (verbose) cli_progress_step("convert input to `AnnotatedPlainTextDocument`")
-  doc <- polmineR:::as.AnnotatedPlainTextDocument(
-    x = x,
+  doc <- decode(
+    x,
+    to = "AnnotatedPlainTextDocument",
     p_attributes = p_attribute,
+    mw = mw,
     stoplist = c(
       dbpedia::dbpedia_stopwords[[language]],
       polmineR::punctuation
@@ -110,7 +113,7 @@ setMethod("get_dbpedia_links", "subcorpus", function(x, language, p_attribute = 
     verbose = verbose
   )
   
-  ne <- as.data.table(doc, what = "entity")
+  ne <- as.data.table(doc, what = mw)
   
   dbpedia_links <- links[ne, on = c("start", "text")]
   dbpedia_links[, "start" := NULL][, "end" := NULL][, "id":= NULL]

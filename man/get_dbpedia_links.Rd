@@ -22,6 +22,7 @@ get_dbpedia_links(x, ...)
   x,
   language,
   p_attribute = "word",
+  mw = "ne",
   max_len = 6067L,
   confidence = 0.35,
   api = "http://localhost:2222/rest/annotate",
