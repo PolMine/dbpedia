@@ -1,0 +1,28 @@
+---
+title: "Using the dbpedia package"
+author: "Andreas Blaette (andreas.blaette@uni-due.de)"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using the dbpedia package}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+library(dbpedia)
+library(polmineR)
+```
+
+
+```{r}
+article <- corpus("NADIRASZ") %>% subset(article_id == "A70041931")
+
+links <- get_dbpedia_links(x = article, language = "de")
+
+read(article, highlight = links$highlight, tooltips = links$uri) %>%
+  href(links$uri)
+```
