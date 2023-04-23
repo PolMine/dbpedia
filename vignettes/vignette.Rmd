@@ -17,12 +17,18 @@ library(dbpedia)
 library(polmineR)
 ```
 
+```{r}
+article <- corpus("NADIRASZ") %>%
+  subset(article_id == "A70041931")
+```
+
 
 ```{r}
-article <- corpus("NADIRASZ") %>% subset(article_id == "A70041931")
+read(article)
+```
 
-links <- get_dbpedia_links(x = article, language = "de")
+```{r}
+links <- get_dbpedia_links(x = article, language = "de", mw = "ne_type")
 
-read(article, highlight = links$highlight, tooltips = links$uri) %>%
-  href(links$uri)
+read(article, annotation = links)
 ```

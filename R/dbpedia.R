@@ -3,6 +3,7 @@ as.data.table.AnnotatedPlainTextDocument <- function(x, what = c("word", "ne")){
   dt_min <- dt[dt[["type"]] %in% what]
   dt_min[, "text" := unlist(lapply(dt_min[["features"]], `[[`, "text"))]
   constituents <- lapply(dt_min[["features"]], `[[`, "constituents")
+  dt_min[, "ne_type" := unlist(lapply(dt_min[["features"]], `[[`, "kind"))]
   dt_min[, "cpos_left" := sapply(constituents, min)]
   dt_min[, "cpos_right" := sapply(constituents, max)]
   dt_min[, "features" := NULL]
@@ -117,27 +118,27 @@ setMethod("get_dbpedia_links", "subcorpus", function(x, language, p_attribute = 
   
   dbpedia_links <- links[ne, on = c("start", "text")]
   dbpedia_links[, "start" := NULL][, "end" := NULL][, "id":= NULL]
-    c("cpos_left", "cpos_right", "type", "text", "uri")
 
-  retval <- list(
-    regions = as.matrix(dbpedia_links[, c("cpos_left", "cpos_right")]),
-    type = dbpedia_links[["type"]],
-    text = dbpedia_links[["text"]]
-  )
+  retval <- x
   
-  retval[["highlight"]] <- setNames(
-    lapply(
-      1L:nrow(retval[["regions"]]),
-      function(i)
-        retval[["regions"]][i, "cpos_left"]:retval[["regions"]][i, "cpos_right"]
+  retval@cpos <- as.matrix(dbpedia_links[, c("cpos_left", "cpos_right")])
+  retval@annotations <- list(
+    highlight = sapply(
+      dbpedia_links[["ne_type"]], 
+      switch,
+      PERSON = "yellow",
+      LOCATION = "lightgreen",
+      ORGANIZATION = "lightskyblue2",
+      MISC = "lightgrey"
     ),
-    sample(heat.colors(n = nrow(dbpedia_links)))
+    href = dbpedia_links[["uri"]],
+    tooltips = ifelse(
+      is.na(dbpedia_links[["uri"]]),
+      "[no uri]",
+      dbpedia_links[["uri"]]
+    )
   )
-  
-  retval[["uri"]] <- setNames(
-    dbpedia_links[["uri"]],
-    names(retval[["highlight"]])
-  )
+      
 
   retval
 })
