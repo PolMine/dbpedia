@@ -1,6 +1,6 @@
 ## dbpedia v0.0.1
 
-* `get_dbpedia_links()` returns `subcorpus` with information in slot `annotations`.
+* `get_dbpediaget_links()` returns `subcorpus` with information in slot `annotations`.
 
 ## dbpedia v0.0.0.9003
 

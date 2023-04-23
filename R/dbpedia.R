@@ -128,7 +128,7 @@ setMethod("get_dbpedia_links", "subcorpus", function(x, language, p_attribute = 
       switch,
       PERSON = "yellow",
       LOCATION = "lightgreen",
-      ORGANIZATION = "lightskyblue2",
+      ORGANIZATION = "lightskyblue",
       MISC = "lightgrey"
     ),
     href = dbpedia_links[["uri"]],
