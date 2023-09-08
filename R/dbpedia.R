@@ -10,6 +10,31 @@ as.data.table.AnnotatedPlainTextDocument <- function(x, what = c("word", "ne")){
   dt_min
 }
 
+
+#' Add annotation for highlighting to subcorpus.
+#' @param x A `subcorpus` object.
+#' @export as_annotation
+#' @importFrom RcppCWB cl_struc2str
+as_annotation <- function(x){
+  ne_type <- cl_struc2str(
+    corpus = x@corpus,
+    registry = x@registry_dir,
+    struc = x@strucs,
+    s_attribute = x@s_attribute_strucs
+  )
+  x@annotations <- list(
+    highlight = sapply(
+      ne_type,
+      switch,
+      PERSON = "yellow",
+      LOCATION = "lightgreen",
+      ORGANIZATION = "lightskyblue",
+      MISC = "lightgrey"
+    )
+  )
+  x
+}
+
 #' @rdname get_dbpedia_links
 setGeneric("get_dbpedia_links", function(x, ...) standardGeneric("get_dbpedia_links"))
 
@@ -74,6 +99,8 @@ setMethod("get_dbpedia_links", "AnnotatedPlainTextDocument", function(x, languag
 #' @param api An URL of the DBpedia Spotlight API.
 #' @param verbose A `logical` value - whether to display progress messages.
 #' @param p_attribute The p-attribute used for decoding a `subcorpus` object.
+#' @param mw A multiword expression (s-attribute) used as filter for links 
+#'   identified by DBpedia Spotlight.
 #' @param ... Further arguments.
 #' @exportMethod get_dbpedia_links
 #' @importFrom cli cli_alert_warning cli_progress_step cli_alert_danger

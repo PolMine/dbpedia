@@ -16,7 +16,8 @@ Imports:
     cli,
     data.table,
     httr,
-    jsonlite
+    jsonlite,
+    RcppCWB
 Suggests:
     markdown (>= 1.5),
     rmarkdown,

@@ -23,12 +23,31 @@ article <- corpus("NADIRASZ") %>%
 ```
 
 
-```{r}
-read(article)
-```
+get named entities/NEs present (previous annotation using StanfordCore NLP)
 
 ```{r}
-links <- get_dbpedia_links(x = article, language = "de", mw = "ne_type")
-
-read(article, annotation = links)
+named_entities <- article %>%
+  subset(ne_type) %>%
+  as_annotation()
 ```
+
+inspect article with NE annotation before linking step
+
+```{r}
+read(article, annotation = named_entities)
+```
+
+get DBpedia links for named entities using DBpedia Spotlight
+
+```{r}
+dbpedia_links <- get_dbpedia_links(x = article, language = "de", mw = "ne_type")
+```
+
+inspect DBpedia resource URIs
+
+```{r}
+read(article, annotation = dbpedia_links)
+```
+
+
+

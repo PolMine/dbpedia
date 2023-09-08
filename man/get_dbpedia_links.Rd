@@ -50,6 +50,9 @@ as threshold befor DBpedia Spotlight includes a link into the report.}
 \item{verbose}{A \code{logical} value - whether to display progress messages.}
 
 \item{p_attribute}{The p-attribute used for decoding a \code{subcorpus} object.}
+
+\item{mw}{A multiword expression (s-attribute) used as filter for links
+identified by DBpedia Spotlight.}
 }
 \description{
 Get DBpedia links.
