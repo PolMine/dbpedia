@@ -15,6 +15,7 @@ Imports:
     polmineR (>= 0.8.8.9010),
     cli,
     data.table,
+    tibble,
     httr,
     jsonlite,
     RcppCWB
@@ -37,6 +38,7 @@ Collate:
     'dbpedia.R'
     'utils.R'
     'wikidata.R'
+    'get_annotation_table.R'
     'zzz.R'
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3

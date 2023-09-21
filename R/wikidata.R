@@ -12,13 +12,13 @@
 #' @export
 #' @examples
 #' \donttest{
-#' dbpedia_ids <- c(
+#' dbpedia_uris <- c(
 #'   "http://de.dbpedia.org/resource/Killesberg",
 #'   "http://de.dbpedia.org/resource/Ljubljana",
 #'   "http://de.dbpedia.org/resource/Velbert"
 #' )
 #' dbpedia_get_wikidata_uris(
-#'   dbpedia_ids,
+#'   dbpedia_uris,
 #'   optional = "municipalityCode",
 #'   endpoint = "http://de.dbpedia.org/sparql",
 #'   wait = 0,
@@ -75,16 +75,16 @@ dbpedia_get_wikidata_uris <- function(x, optional, endpoint, limit = 100, wait =
     Sys.sleep(wait)
     
     retval_li[[i]] <- SPARQL::SPARQL(url = endpoint, query = query)[["results"]]
-    retval_li[[i]][["wikidata_id"]] <- gsub(
-      "^.*\\/(Q\\d+)>$", "\\1",
-      retval_li[[i]][["wikidata_uri"]]
-    )
-    colnames(retval_li[[i]])[1] <- "dbpedia_uri"
   }
   
   if (progress) cli_progress_done()
   
-  do.call(rbind, retval_li)
+
+  y <- as_tibble(do.call(rbind, retval_li))
+  colnames(y)[1] <- "dbpedia_uri"
+  y[["dbpedia_uri"]] <- gsub("^<(.*?)>$", "\\1", y[["dbpedia_uri"]])
+  y[["wikidata_uri"]] <- gsub("^<(.*?)>$", "\\1", y[["wikidata_uri"]])
+  y
 }
 
 
@@ -139,7 +139,7 @@ wikidata_query <- function(x, id, limit = 100L, wait = 1, progress = FALSE){
   
   if (progress) cli_progress_bar("Tasks", total = length(chunks), type = "tasks")
   for (i in 1L:length(chunks)){
-    cli_progress_update()
+    if (progress) cli_progress_update()
     query <- sprintf(
       template,
       paste0("wd:", chunks[[i]], collapse = " "),
@@ -148,14 +148,17 @@ wikidata_query <- function(x, id, limit = 100L, wait = 1, progress = FALSE){
     
     Sys.sleep(wait)
     
-    retval_li[[i]] <- WikidataQueryServiceR::query_wikidata(
-      sparql_query = query,
-      format = "simple"
-    )
-    colnames(retval_li[[i]])[1] <- "wikidata_id"
+    suppressWarnings({
+      retval_li[[i]] <- WikidataQueryServiceR::query_wikidata(
+        sparql_query = query,
+        format = "simple"
+      )
+    })
+    
+    colnames(retval_li[[i]])[1] <- "wikidata_uri"
   }
   
   if (progress) cli_progress_done()
   
-  do.call(rbind, retval_li)
+  as_tibble(do.call(rbind, retval_li))
 }
