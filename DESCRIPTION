@@ -22,7 +22,8 @@ Suggests:
     markdown (>= 1.5),
     rmarkdown,
     knitr,
-    SPARQL
+    SPARQL,
+    WikidataQueryServiceR
 VignetteBuilder: knitr
 SystemRequirements: docker
 LazyData: true

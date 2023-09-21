@@ -1,6 +1,9 @@
-## dbpedia v0.0.1.9001
+## dbpedia v0.0.1.9001-v0.0.1.9002
 
 * New auxiliary function `as_chunks()`.
+* New function `dbpedia_get_wikidata_uris()`.
+* New function `wikidata_query()` as high-level wrapper for
+`WikidataQueryServiceR::query_wikidata()`.
 
 ## dbpedia v0.0.1
 
