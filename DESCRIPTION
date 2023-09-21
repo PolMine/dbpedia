@@ -1,7 +1,7 @@
 Package: dbpedia
 Type: Package
 Title: R wrapper for DBpedia Spotlight
-Version: 0.0.1.9001
+Version: 0.0.1.9002
 Date: 2023-09-21
 Authors@R: c(
   person("Andreas", "Blaette", role = c("aut", "cre"), email = "andreas.blaette@uni-due.de", comment = c(ORCID = "0000-0001-8970-8010")),
@@ -21,7 +21,8 @@ Imports:
 Suggests:
     markdown (>= 1.5),
     rmarkdown,
-    knitr
+    knitr,
+    SPARQL
 VignetteBuilder: knitr
 SystemRequirements: docker
 LazyData: true
@@ -34,6 +35,7 @@ Encoding: UTF-8
 Collate: 
     'dbpedia.R'
     'utils.R'
+    'wikidata.R'
     'zzz.R'
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
