@@ -1,6 +1,10 @@
+## dbpedia v0.0.1.9001
+
+* New auxiliary function `as_chunks()`.
+
 ## dbpedia v0.0.1
 
-* `get_dbpediaget_links()` returns `subcorpus` with information in slot `annotations`.
+* `get_dbpedia_links()` returns `subcorpus` with information in slot `annotations`.
 
 ## dbpedia v0.0.0.9003
 
