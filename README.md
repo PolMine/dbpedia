@@ -6,6 +6,23 @@ v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/li
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 
+## Installation
+
+At this stage, the dbpedia R package is a GitHub-only package. Install
+it as follows:
+
+``` r
+devtools::install_github("PolMine/dbpedia", ref = "main")
+```
+
+The SPARQL package is a suggested package used internally by functions
+\`\` and was archived at CRAN. The latest version (1.16) can be
+installed as follows.
+
+``` r
+devtools::install_version("SPARQL", version = "1.16", repos = "http://cran.us.r-project.org") 
+```
+
 ## Run dockerized DBpedia Spotlight
 
 DBpedia Spotlight docker containers are not available for all
