@@ -1,5 +1,10 @@
-R wrapper pkg to DBpedia Spotlight
+R package ‘dbpedia’ - wrapper for DBpedia Spotlight
 ================
+
+[![License: GPL
+v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 
 ## Run dockerized DBpedia Spotlight
 
@@ -16,7 +21,7 @@ docker build -t dbpedia/dbpedia-spotlight:latest .
 Then run the image as follows.
 
 ``` sh
-docker run -tid --restart unless-stopped --name dbpedia-spotlight.de --mount source=spotlight-model,target=/opt/spotlight -p 2222:80 dbpedia/dbpedia-spotlight spotlight.sh de
+docker run -tid --restart unless-stopped --name dbpedia-spotlight.de --mount source=spotlight-model,target=/opt/spotlight -p 2222:80  dbpedia/dbpedia-spotlight spotlight.sh de
 ```
 
 ## Using the package
