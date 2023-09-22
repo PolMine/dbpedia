@@ -12,6 +12,7 @@ as.data.table.AnnotatedPlainTextDocument <- function(x, what = c("word", "ne")){
 
 
 #' Add annotation for highlighting to subcorpus.
+#' 
 #' @param x A `subcorpus` object.
 #' @export as_annotation
 #' @importFrom RcppCWB cl_struc2str
@@ -104,7 +105,7 @@ setMethod("get_dbpedia_links", "AnnotatedPlainTextDocument", function(x, languag
 #' @param ... Further arguments.
 #' @exportMethod get_dbpedia_links
 #' @importFrom cli cli_alert_warning cli_progress_step cli_alert_danger
-#'   cli_progress_done
+#'   cli_progress_done cli_alert_info
 #' @importFrom polmineR punctuation
 #' @importFrom jsonlite fromJSON
 #' @importFrom httr GET http_error content
@@ -112,7 +113,8 @@ setMethod("get_dbpedia_links", "AnnotatedPlainTextDocument", function(x, languag
 #'   as.data.table
 #' @importFrom stats setNames
 #' @importFrom grDevices heat.colors
-#' @importFrom polmineR decode
+#' @importFrom polmineR decode get_token_stream
+#' @importFrom RcppCWB cl_cpos2struc get_region_matrix
 #' @import methods
 #' @docType methods
 #' @rdname get_dbpedia_links
@@ -142,32 +144,64 @@ setMethod("get_dbpedia_links", "subcorpus", function(x, language, p_attribute = 
   )
   
   ne <- as.data.table(doc, what = mw)
-  
-  dbpedia_links <- links[ne, on = c("start", "text")]
-  dbpedia_links[, "start" := NULL][, "end" := NULL][, "id":= NULL]
+  tab <- links[ne, on = c("start", "text")]
 
-  retval <- x
+  # Corpus positions in table tab may deviate from regions of 
+  # s-attribute if region starts or ends with stopword (see #11)
+  if (verbose)
+    cli_progress_step(
+      "map DBpedia Spotlight result on regions of s-attribute {.val {mw}}"
+    )
+  strucs <- cl_cpos2struc(
+    corpus = x@corpus,
+    s_attribute = mw,
+    registry = x@registry_dir,
+    cpos = tab[["cpos_left"]]
+  ) 
+  x@cpos <- get_region_matrix(
+    corpus = x@corpus,
+    s_attribute = mw,
+    registry = x@registry_dir,
+    strucs = strucs  
+  )
+  if (verbose){
+    lapply(
+      1L:nrow(tab),
+      function(i)
+        if (tab[["cpos_left"]][i] !=  x@cpos[i,1] ||
+            tab[["cpos_right"]][i] != x@cpos[i,2]){
+          ne <- get_token_stream(
+            x@cpos[i,1]:x@cpos[i,2],
+            corpus = x@corpus,
+            registry = x@registry_dir,
+            p_attribute = p_attribute,
+            collapse = " "
+          )
+          cli_alert_info("annotation mapped: {ne}")
+        }
+    )
+  }
   
-  retval@cpos <- as.matrix(dbpedia_links[, c("cpos_left", "cpos_right")])
-  retval@annotations <- list(
+  if (verbose)
+    cli_progress_step("assign results to slot {.col_cyan annotations}")
+  x@annotations <- list(
     highlight = sapply(
-      dbpedia_links[["ne_type"]], 
+      tab[["ne_type"]], 
       switch,
       PERSON = "yellow",
       LOCATION = "lightgreen",
       ORGANIZATION = "lightskyblue",
       MISC = "lightgrey"
     ),
-    href = dbpedia_links[["uri"]],
+    href = tab[["uri"]],
     tooltips = ifelse(
-      is.na(dbpedia_links[["uri"]]),
+      is.na(tab[["uri"]]),
       "[no uri]",
-      dbpedia_links[["uri"]]
+      tab[["uri"]]
     )
   )
-      
 
-  retval
+  x
 })
 
 

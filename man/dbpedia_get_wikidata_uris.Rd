@@ -34,13 +34,13 @@ Get Wikipedia IDs for DBpedia IDS.
 }
 \examples{
 \donttest{
-dbpedia_ids <- c(
+dbpedia_uris <- c(
   "http://de.dbpedia.org/resource/Killesberg",
   "http://de.dbpedia.org/resource/Ljubljana",
   "http://de.dbpedia.org/resource/Velbert"
 )
 dbpedia_get_wikidata_uris(
-  dbpedia_ids,
+  dbpedia_uris,
   optional = "municipalityCode",
   endpoint = "http://de.dbpedia.org/sparql",
   wait = 0,
