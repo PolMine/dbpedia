@@ -6,6 +6,11 @@ v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/li
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 
+## About
+
+Functionality for entity linking from R: Get DBpedia URIs for existing
+named entity recognition in a corpus using DBpedia Spotlight.
+
 ## Installation
 
 At this stage, the dbpedia R package is a GitHub-only package. Install
@@ -80,3 +85,10 @@ read(speech, annotation = dbpedia_links)
 - <https://pypi.org/project/spacy-dbpedia-spotlight/>
 
 - <https://github.com/news-r/spotlight>
+
+## Acknowledgements
+
+We gratefully acknowledge funding from the German National Research Data
+Infrastructure (Nationale Forschungsdaten-Infrastruktur / NFDI).
+Developing the dbpedia package is part of the measure “Linking Textual
+Data” as part of the consortium KonsortSWD (project number 442494171).
