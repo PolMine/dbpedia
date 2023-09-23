@@ -1,13 +1,21 @@
-as.data.table.AnnotatedPlainTextDocument <- function(x, what = c("word", "ne")){
+`:=` <- function(...) NULL
+.SD <- NULL
+
+
+as.data.table.AnnotatedPlainTextDocument <- function(x, what = NULL){
   dt <- setDT(as.data.frame(x[["annotation"]]))
-  dt_min <- dt[dt[["type"]] %in% what]
-  dt_min[, "text" := unlist(lapply(dt_min[["features"]], `[[`, "text"))]
-  constituents <- lapply(dt_min[["features"]], `[[`, "constituents")
-  dt_min[, "ne_type" := unlist(lapply(dt_min[["features"]], `[[`, "kind"))]
-  dt_min[, "cpos_left" := sapply(constituents, min)]
-  dt_min[, "cpos_right" := sapply(constituents, max)]
-  dt_min[, "features" := NULL]
-  dt_min
+  if (!is.null(what)){
+    dt <- dt[dt[["type"]] %in% what]
+    dt[, "text" := unlist(lapply(dt[["features"]], `[[`, "text"))]
+    constituents <- lapply(dt[["features"]], `[[`, "constituents")
+    dt[, "ne_type" := unlist(lapply(dt[["features"]], `[[`, "kind"))]
+    dt[, "cpos_left" := sapply(constituents, min)]
+    dt[, "cpos_right" := sapply(constituents, max)]
+    dt[, "features" := NULL]
+  } else {
+    dt <- dt[, "features" := NULL]
+  }
+  dt
 }
 
 
@@ -36,12 +44,19 @@ as_annotation <- function(x){
   x
 }
 
-#' @rdname get_dbpedia_links
-setGeneric("get_dbpedia_links", function(x, ...) standardGeneric("get_dbpedia_links"))
+#' @rdname get_dbpedia_uris
+#' @return A `data.table` with columns 'dbpedia_uri' and 'text'. Depending on
+#'   input object, further columns are ...
+setGeneric("get_dbpedia_uris", function(x, ...) standardGeneric("get_dbpedia_uris"))
 
-#' @exportMethod get_dbpedia_links
-#' @rdname get_dbpedia_links
-setMethod("get_dbpedia_links", "AnnotatedPlainTextDocument", function(x, language, max_len = 6067L, confidence = 0.35, api = "http://localhost:2222/rest/annotate", verbose = TRUE){
+#' @exportMethod get_dbpedia_uris
+#' @rdname get_dbpedia_uris
+#' @examples
+#' # Process AnnotatedPlainTextDocument (example available in NLP package)
+#' doc <- readRDS(system.file("texts", "stanford.rds", package = "NLP"))
+#' tab <- get_dbpedia_uris(x = doc, language = "en")
+#' tab
+setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language, max_len = 6067L, confidence = 0.35, api = "http://localhost:2222/rest/annotate", verbose = TRUE){
   
   if (nchar(x[["content"]]) > max_len){
     if (verbose) cli_alert_warning(
@@ -76,10 +91,10 @@ setMethod("get_dbpedia_links", "AnnotatedPlainTextDocument", function(x, languag
   setnames(
     resources_min,
     old = c("@URI", "@surfaceForm", "@offset"),
-    new = c("uri", "text", "start")
+    new = c("dbpedia_uri", "text", "start")
   )
   resources_min[, "start" := as.integer(resources_min[["start"]]) + 1L]
-  setcolorder(resources_min, c("start", "text", "uri"))
+  setcolorder(resources_min, c("start", "text", "dbpedia_uri"))
   
   resources_min
 })
@@ -99,11 +114,13 @@ setMethod("get_dbpedia_links", "AnnotatedPlainTextDocument", function(x, languag
 #'   as threshold befor DBpedia Spotlight includes a link into the report.
 #' @param api An URL of the DBpedia Spotlight API.
 #' @param verbose A `logical` value - whether to display progress messages.
+#' @param s_attribute A length-one `character` vector indicating a s-attribute.
+#'   DBpedia URIs will be mapped on this s-attribute. Only regions covered by 
+#'   this s-attribute will be kept. If missing, URIs will be
+#'   mapped on the token stream, and all URIs suggested will be kept.
 #' @param p_attribute The p-attribute used for decoding a `subcorpus` object.
-#' @param mw A multiword expression (s-attribute) used as filter for links 
-#'   identified by DBpedia Spotlight.
 #' @param ... Further arguments.
-#' @exportMethod get_dbpedia_links
+#' @exportMethod get_dbpedia_uris
 #' @importFrom cli cli_alert_warning cli_progress_step cli_alert_danger
 #'   cli_progress_done cli_alert_info
 #' @importFrom polmineR punctuation
@@ -114,18 +131,34 @@ setMethod("get_dbpedia_links", "AnnotatedPlainTextDocument", function(x, languag
 #' @importFrom stats setNames
 #' @importFrom grDevices heat.colors
 #' @importFrom polmineR decode get_token_stream
+#' @importFrom data.table setcolorder
 #' @importFrom RcppCWB cl_cpos2struc get_region_matrix
 #' @import methods
 #' @docType methods
-#' @rdname get_dbpedia_links
-setMethod("get_dbpedia_links", "subcorpus", function(x, language, p_attribute = "word", mw = "ne", max_len = 6067L, confidence = 0.35, api = "http://localhost:2222/rest/annotate", verbose = TRUE){
+#' @rdname get_dbpedia_uris
+#' @examples
+#' library(polmineR)
+#' use("RcppCWB")
+#' 
+#' uritab <- corpus("REUTERS") %>% 
+#'   subset(id == "127") %>%
+#'   get_dbpedia_uris(language = "en", p_attribute = "word")
+#' 
+#' use("GermaParl2")
+#' 
+#' uritab2 <- corpus("GERMAPARL2MINI") %>% 
+#'   subset(speaker_name == "Carlo Schmid") %>%
+#'   subset(p_type == "speech") %>% 
+#'   get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 5067)
+#'   
+setMethod("get_dbpedia_uris", "subcorpus", function(x, language, p_attribute = "word", s_attribute = NULL, max_len = 6067L, confidence = 0.35, api = "http://localhost:2222/rest/annotate", verbose = TRUE){
   
   if (verbose) cli_progress_step("convert input to `AnnotatedPlainTextDocument`")
   doc <- decode(
     x,
     to = "AnnotatedPlainTextDocument",
     p_attributes = p_attribute,
-    mw = mw,
+    mw = s_attribute,
     stoplist = c(
       dbpedia::dbpedia_stopwords[[language]],
       polmineR::punctuation
@@ -134,7 +167,7 @@ setMethod("get_dbpedia_links", "subcorpus", function(x, language, p_attribute = 
   )
   if (verbose) cli_progress_done()
   
-  links <- get_dbpedia_links(
+  links <- get_dbpedia_uris(
     x = doc,
     language = language,
     max_len = max_len,
@@ -143,65 +176,69 @@ setMethod("get_dbpedia_links", "subcorpus", function(x, language, p_attribute = 
     verbose = verbose
   )
   
-  ne <- as.data.table(doc, what = mw)
-  tab <- links[ne, on = c("start", "text")]
-
-  # Corpus positions in table tab may deviate from regions of 
-  # s-attribute if region starts or ends with stopword (see #11)
-  if (verbose)
-    cli_progress_step(
-      "map DBpedia Spotlight result on regions of s-attribute {.val {mw}}"
-    )
-  strucs <- cl_cpos2struc(
-    corpus = x@corpus,
-    s_attribute = mw,
-    registry = x@registry_dir,
-    cpos = tab[["cpos_left"]]
-  ) 
-  x@cpos <- get_region_matrix(
-    corpus = x@corpus,
-    s_attribute = mw,
-    registry = x@registry_dir,
-    strucs = strucs  
-  )
-  if (verbose){
-    lapply(
-      1L:nrow(tab),
-      function(i)
-        if (tab[["cpos_left"]][i] !=  x@cpos[i,1] ||
-            tab[["cpos_right"]][i] != x@cpos[i,2]){
-          ne <- get_token_stream(
-            x@cpos[i,1]:x@cpos[i,2],
-            corpus = x@corpus,
-            registry = x@registry_dir,
-            p_attribute = p_attribute,
-            collapse = " "
-          )
-          cli_alert_info("annotation mapped: {ne}")
-        }
-    )
-  }
+  dt <- as.data.table(doc, what = s_attribute)
   
-  if (verbose)
-    cli_progress_step("assign results to slot {.col_cyan annotations}")
-  x@annotations <- list(
-    highlight = sapply(
-      tab[["ne_type"]], 
-      switch,
-      PERSON = "yellow",
-      LOCATION = "lightgreen",
-      ORGANIZATION = "lightskyblue",
-      MISC = "lightgrey"
-    ),
-    href = tab[["uri"]],
-    tooltips = ifelse(
-      is.na(tab[["uri"]]),
-      "[no uri]",
-      tab[["uri"]]
+  if (is.null(s_attribute)){
+    
+    links[, "end" := links[["start"]] + nchar(links[["text"]]) - 1L]
+    tab <- links[,
+                 list(
+                   cpos_left = dt[.SD[["start"]] == .SD[["start"]]][["id"]],
+                   cpos_right = dt[.SD[["end"]] == .SD[["end"]]][["id"]],
+                   dbpedia_uri = .SD[["dbpedia_uri"]], text = .SD[["text"]]
+                 ),
+                 by = "start",
+                 .SDcols = c("start", "end", "dbpedia_uri", "text")
+    ]
+    tab[, "start" := NULL]
+  } else {
+    tab <- links[dt, on = c("start", "text")]
+    
+    # Corpus positions in table tab may deviate from regions of 
+    # s-attribute if region starts or ends with stopword (see #11)
+    if (verbose)
+      cli_progress_step(
+        "map DBpedia Spotlight result on regions of s-attribute {.val {s_attribute}}"
+      )
+    strucs <- cl_cpos2struc(
+      corpus = x@corpus,
+      s_attribute = s_attribute,
+      registry = x@registry_dir,
+      cpos = tab[["cpos_left"]]
+    ) 
+    r <- get_region_matrix(
+      corpus = x@corpus,
+      s_attribute = s_attribute,
+      registry = x@registry_dir,
+      strucs = strucs  
     )
-  )
+    tab[["cpos_left"]] <- r[,1]
+    tab[["cpos_right"]] <- r[,2]
+    tab[["start"]] <- NULL
+    tab[["end"]] <- NULL
+    tab[["id"]] <- NULL
+    
+    setcolorder(x = tab, neworder = c("cpos_left", "cpos_right", "dbpedia_uri", "text"))
+    
+    if (verbose){
+      lapply(
+        1L:nrow(tab),
+        function(i)
+          if (tab[["cpos_left"]][i] !=  r[i,1] || tab[["cpos_right"]][i] != r[i,2]){
+            ne <- get_token_stream(
+              r[i,1]:r[i,2],
+              corpus = x@corpus,
+              registry = x@registry_dir,
+              p_attribute = p_attribute,
+              collapse = " "
+            )
+            cli_alert_info("annotation mapped: {ne}")
+          }
+      )
+    }
+  }
 
-  x
+  tab
 })
 
 

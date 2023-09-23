@@ -75,7 +75,7 @@ dbpedia_links <- get_dbpedia_links(
   mw = "ne_type"
 )
 
-read(speech, annotation = dbpedia_links)
+read(speech, annotation = as_subcorpus(dbpedia_links))
 ```
 
 ## Related work

@@ -1,9 +1,15 @@
-## dbpedia v0.0.1.9001-v0.0.1.9002
+## dbpedia v0.1.0
 
 * New auxiliary function `as_chunks()`.
 * New function `dbpedia_get_wikidata_uris()`.
 * New function `wikidata_query()` as high-level wrapper for
 `WikidataQueryServiceR::query_wikidata()`.
+* Method `get_dbpedia_links()` renamed to `get_dbpedia_uris()`, return value is
+now a `data.table`, argument `mw` of method `get_dbpedia_links()` for
+`subcorpus` objects renamed as `s_attribute`.
+* Auxiliary function `as_subcorpus()` to turn `data.table` with DBpedia URIs
+into `subcorpus` that can be used for annotation.
+
 
 ## dbpedia v0.0.1
 

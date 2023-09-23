@@ -30,3 +30,28 @@ as_chunks <- function(x, size){
   
   li
 }
+
+#' Transform table with DBpedia URIs to subcorpus.
+#' 
+#' @param x A `data.table` with DBpedia URIs.
+#' @importFrom fs path
+#' @export
+as_subcorpus <- function(x){
+  new(
+    "subcorpus",
+    template = path(NA_character_),
+    cpos = as.matrix(x[, c("cpos_left", "cpos_right")]),
+    annotations = list(
+      highlight = sapply(
+        x[["ne_type"]],
+        switch,
+        PERSON = "yellow",
+        LOCATION = "lightgreen",
+        ORGANIZATION = "lightskyblue",
+        MISC = "lightgrey"
+      ),
+      href = x[["dbpedia_uri"]],
+      tooltips = ifelse(is.na(x[["dbpedia_uri"]]), "[no uri]", x[["dbpedia_uri"]])
+    )
+  )
+}
