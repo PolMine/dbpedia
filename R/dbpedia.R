@@ -244,5 +244,17 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language, p_attribute = "
 
 #' Stopwords used by DBpedia Spotlight
 #' 
+#' `dbpedia_stopwords` is a list of character vecotrs with stopwords used by
+#' DBpedia Spotlight before processing chunks of texts. The data is used for
+#' mapping offset positions returned from DBpedia Spotlight on corpus positions
+#' on the R side.
+#' 
+#' `dbpedia_stopwords` is prepared using the script 'stopwords.R' in the
+#' 'data-raw' folder of the GitHub repository. The original data is included
+#' in the [model-quickstarter](https://github.com/dbpedia-spotlight/model-quickstarter)
+#' repository of the DBpedia Spotlight project.
+#' 
+#' @examples
+#' names(dbpedia_stopwords) # languages available
 "dbpedia_stopwords"
 

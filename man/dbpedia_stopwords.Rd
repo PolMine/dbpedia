@@ -11,6 +11,18 @@ An object of class \code{list} of length 24.
 dbpedia_stopwords
 }
 \description{
-Stopwords used by DBpedia Spotlight
+\code{dbpedia_stopwords} is a list of characters with stopwords used by DBpedia
+Spotlight before processing chunks of texts. The data is used for mapping
+offset positions returned from DBpedia Spotlight on corpus positions on the
+R side.
+}
+\details{
+\code{dbpedia_stopwords} is prepared using the script 'stopwords.R' in the
+'data-raw' folder of the GitHub repository. The original data is included
+in the \href{https://github.com/dbpedia-spotlight/model-quickstarter}{model-quickstarter}
+repository of the DBpedia Spotlight project.
+}
+\examples{
+names(dbpedia_stopwords) # languages available
 }
 \keyword{datasets}
