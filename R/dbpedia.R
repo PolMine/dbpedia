@@ -242,6 +242,53 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language, p_attribute = "
 })
 
 
+#' @importFrom data.table rbindlist setorderv
+#' @param progress Whether to show progress bar (`logical` value).
+#' @rdname get_dbpedia_uris
+#' @examples
+#' uritab <- corpus("REUTERS") %>% 
+#'   split(s_attribute = "id", verbose = FALSE) %>% 
+#'   get_dbpedia_uris(language = "en", p_attribute = "word", verbose = TRUE)
+setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language, p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = "http://localhost:2222/rest/annotate", max_len = 6067L, verbose = TRUE){
+  
+  if (verbose){
+    env <- parent.frame()
+    cli_progress_bar("Tasks", total = length(x), type = "tasks", .envir = env)
+  }
+  
+  li <- lapply(
+    x@objects, 
+    function(sc){
+      if (verbose) cli_progress_update(.envir = env)
+      get_dbpedia_uris(
+        x = sc,
+        language = language,
+        s_attribute = s_attribute,
+        max_len = max_len,
+        confidence = confidence,
+        api = api,
+        verbose = FALSE
+      )
+    }
+  )
+  if (verbose) cli_progress_done(.envir = env)
+  
+  y <- rbindlist(li)
+  setorderv(y, cols = "cpos_left", order = 1L)
+  
+  
+  if (verbose){
+    if (!is.null(s_attribute)){
+      cli_alert_info(
+        "coverage of DBpedia URIs: {.val {nrow(y)}} regions of s-attribute {.val {s_attribute}} / {.val {length(na.omit(y[['dbpedia_uri']]))}} URIs"
+      )
+    }
+  }
+
+  y
+})
+
+
 #' Stopwords used by DBpedia Spotlight
 #' 
 #' `dbpedia_stopwords` is a list of character vecotrs with stopwords used by

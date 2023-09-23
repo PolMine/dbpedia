@@ -5,6 +5,7 @@
 \alias{get_dbpedia_uris}
 \alias{get_dbpedia_uris,AnnotatedPlainTextDocument-method}
 \alias{get_dbpedia_uris,subcorpus-method}
+\alias{get_dbpedia_uris,subcorpus_bundle-method}
 \title{Get DBpedia links.}
 \usage{
 get_dbpedia_uris(x, ...)
@@ -26,6 +27,17 @@ get_dbpedia_uris(x, ...)
   max_len = 6067L,
   confidence = 0.35,
   api = "http://localhost:2222/rest/annotate",
+  verbose = TRUE
+)
+
+\S4method{get_dbpedia_uris}{subcorpus_bundle}(
+  x,
+  language,
+  p_attribute = "word",
+  s_attribute = NULL,
+  confidence = 0.35,
+  api = "http://localhost:2222/rest/annotate",
+  max_len = 6067L,
   verbose = TRUE
 )
 }
@@ -55,6 +67,8 @@ as threshold befor DBpedia Spotlight includes a link into the report.}
 DBpedia URIs will be mapped on this s-attribute. Only regions covered by
 this s-attribute will be kept. If missing, URIs will be
 mapped on the token stream, and all URIs suggested will be kept.}
+
+\item{progress}{Whether to show progress bar (\code{logical} value).}
 }
 \value{
 A \code{data.table} with columns 'dbpedia_uri' and 'text'. Depending on
@@ -82,4 +96,7 @@ uritab2 <- corpus("GERMAPARL2MINI") \%>\%
   subset(p_type == "speech") \%>\% 
   get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 5067)
   
+uritab <- corpus("REUTERS") \%>\% 
+  split(s_attribute = "id", verbose = FALSE) \%>\% 
+  get_dbpedia_uris(language = "en", p_attribute = "word")
 }

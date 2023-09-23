@@ -11,10 +11,10 @@ An object of class \code{list} of length 24.
 dbpedia_stopwords
 }
 \description{
-\code{dbpedia_stopwords} is a list of characters with stopwords used by DBpedia
-Spotlight before processing chunks of texts. The data is used for mapping
-offset positions returned from DBpedia Spotlight on corpus positions on the
-R side.
+\code{dbpedia_stopwords} is a list of character vecotrs with stopwords used by
+DBpedia Spotlight before processing chunks of texts. The data is used for
+mapping offset positions returned from DBpedia Spotlight on corpus positions
+on the R side.
 }
 \details{
 \code{dbpedia_stopwords} is prepared using the script 'stopwords.R' in the
