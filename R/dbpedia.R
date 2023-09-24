@@ -18,25 +18,34 @@ dbpedia_spotlight_status <- function(){
   status <- list(docker = FALSE, lang = NA_character_, api = NA_character_)
   class(status) <- c("dbpedia_spotlight_status", class(status))
   
-  stdout <- system2(
-    command = "docker",
-    args = c("container", "ls"),
-    stdout = TRUE
-  )
-  if (grepl("dbpedia/dbpedia-spotlight", stdout[2])){
-    status[["docker"]] <- TRUE
-    status[["lang"]] <- gsub(
-      '^.*"spotlight.sh\\s+(\\w{2})".*$',
-      "\\1",
-      stdout[2]
+  stdout <- system2(command = "docker", stdout = FALSE, stderr = NULL)
+  
+  if (stdout == 0){
+    stdout <- system2(
+      command = "docker",
+      args = c("container", "ls"),
+      stdout = TRUE
     )
-    status[["endpoint"]] <- "http://localhost:2222/rest/annotate"
+    
+    if (grepl("dbpedia/dbpedia-spotlight", stdout[2])){
+      status[["docker"]] <- TRUE
+      status[["lang"]] <- gsub(
+        '^.*"spotlight.sh\\s+(\\w{2})".*$',
+        "\\1",
+        stdout[2]
+      )
+      status[["endpoint"]] <- "http://localhost:2222/rest/annotate"
+    } else {
+      status[["docker"]] <- FALSE
+      status[["lang"]] <- "en"
+      status[["endpoint"]] <- "http://api.dbpedia-spotlight.org/en/annotate"
+    }
   } else {
     status[["docker"]] <- FALSE
     status[["lang"]] <- "en"
     status[["endpoint"]] <- "http://api.dbpedia-spotlight.org/en/annotate"
   }
-  
+
   options("dbpedia.lang" = status[["lang"]])
   options("dbpedia.endpoint" = status[["endpoint"]])
 
