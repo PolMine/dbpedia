@@ -1,3 +1,7 @@
+## dbpedia v0.1.1
+
+* New function `dbpedia_spotlight_status()`.
+
 ## dbpedia v0.1.0
 
 * New auxiliary function `as_chunks()`.

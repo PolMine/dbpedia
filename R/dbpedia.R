@@ -1,6 +1,66 @@
 `:=` <- function(...) NULL
 .SD <- NULL
 
+#' Set and report status of DBpedia Spotlight
+#' 
+#' Check whether Docker container with DBpedia Spotlight is running locally 
+#' and set options 'dbpedia.lang' and 'dbpedia.endpoint' accordingly.
+#' @return Object of class `dbpedia_spotlight_stats`, a `list` with elements
+#'   "docker" (`TRUE`/`FALSE`), "lang" and "endpoint".
+#' @rdname dbpedia_spotlight_status
+#' @export
+#' @examples
+#' dbpedia_spotlight_status()
+#' getOption("dbpedia.endpoint")
+#' getOption("dbpedia.lang")
+dbpedia_spotlight_status <- function(){
+  
+  status <- list(docker = FALSE, lang = NA_character_, api = NA_character_)
+  class(status) <- c("dbpedia_spotlight_status", class(status))
+  
+  stdout <- system2(
+    command = "docker",
+    args = c("container", "ls"),
+    stdout = TRUE
+  )
+  if (grepl("dbpedia/dbpedia-spotlight", stdout[2])){
+    status[["docker"]] <- TRUE
+    status[["lang"]] <- gsub(
+      '^.*"spotlight.sh\\s+(\\w{2})".*$',
+      "\\1",
+      stdout[2]
+    )
+    status[["endpoint"]] <- "http://localhost:2222/rest/annotate"
+  } else {
+    status[["docker"]] <- FALSE
+    status[["lang"]] <- "en"
+    status[["endpoint"]] <- "http://api.dbpedia-spotlight.org/en/annotate"
+  }
+  
+  options("dbpedia.lang" = status[["lang"]])
+  options("dbpedia.endpoint" = status[["endpoint"]])
+
+  status
+}
+
+#' @param x `dbpedia_spotlight_status` object to be printed.
+#' @param ... Further arguments passed into `print()`. Unused / required for 
+#'   technical reasons.
+#' @exportS3Method
+#' @rdname dbpedia_spotlight_status
+#' @importFrom cli col_cyan cli_text cli_bullets style_bold col_cyan
+print.dbpedia_spotlight_status <- function(x, ...){
+  cli_text(style_bold("DBpedia Spotlight settings:"))
+  cli_bullets(
+    c(
+      "*" = "endpoint: {col_cyan({x[['endpoint']]})}",
+      "*" = "language: {col_cyan({x[['lang']]})}"
+    )
+  )
+  
+  invisible(NULL)
+}
+
 
 as.data.table.AnnotatedPlainTextDocument <- function(x, what = NULL){
   dt <- setDT(as.data.frame(x[["annotation"]]))
@@ -63,7 +123,7 @@ setGeneric("get_dbpedia_uris", function(x, ...) standardGeneric("get_dbpedia_uri
 #' )
 #' 
 #' tab
-setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language, max_len = 6067L, confidence = 0.35, api = "http://localhost:2222/rest/annotate", verbose = TRUE){
+setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language = getOption("dbpedia.lang"), max_len = 6067L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
   
   if (nchar(x[["content"]]) > max_len){
     if (verbose) cli_alert_warning(
@@ -158,7 +218,7 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #'   subset(p_type == "speech") %>% 
 #'   get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 5067)
 #'   
-setMethod("get_dbpedia_uris", "subcorpus", function(x, language, p_attribute = "word", s_attribute = NULL, max_len = 6067L, confidence = 0.35, api = "http://localhost:2222/rest/annotate", verbose = TRUE){
+setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, max_len = 6067L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
   
   if (verbose) cli_progress_step("convert input to `AnnotatedPlainTextDocument`")
   doc <- decode(

@@ -1,12 +1,13 @@
 .onAttach <- function (libname, pkgname) {
-  stdout <- system2(command = "docker", args = c("container", "ls"), stdout = TRUE)
-  if (grepl("dbpedia/dbpedia-spotlight", stdout[2])){
-    packageStartupMessage("* Docker container 'dbpedia/dbpedia-spotlight' running")
-    lang <- gsub('^.*"spotlight.sh\\s+(\\w{2})".*$', "\\1", stdout[2])
-    packageStartupMessage(sprintf("* language: %s", lang))
-    options("dbpedia.lang" = lang)
+  
+  status <- dbpedia_spotlight_status()
+  
+  if (status[["docker"]]){
+    packageStartupMessage("* DBpedia Spotlight Docker container running")
   } else {
-    packageStartupMessage("* Docker container 'dbpedia/dbpedia-spotlight' not found")
+    packageStartupMessage("* Using DBpedia Spotlight online API")
   }
+  packageStartupMessage(sprintf("* endpoint/api: %s", status[["endpoint"]]))
+  packageStartupMessage(sprintf("* language: %s", status[["lang"]]))
 }
 

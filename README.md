@@ -48,9 +48,38 @@ docker run -tid --restart unless-stopped --name dbpedia-spotlight.de --mount sou
 
 ## Using the package
 
+Upon loading the dbpedia package, a startup message will issue
+information whether a Docker container running locally has been detected
+and on the API and language used.
+
+``` r
+library(dbpedia)
+```
+
+    ## * DBpedia Spotlight Docker container running
+
+    ## * endpoint/api: http://localhost:2222/rest/annotate
+
+    ## * language: de
+
+This information is available during the R session and is used by the
+`get_dbpedia_uris()` method.
+
+``` r
+getOption("dbpedia.endpoint")
+```
+
+    ## [1] "http://localhost:2222/rest/annotate"
+
+``` r
+getOption("dbpedia.lang")
+```
+
+    ## [1] "de"
+
 ``` r
 library(polmineR)
-library(dbpedia)
+library(dplyr)
 
 speech <- corpus("GERMAPARL2") %>% 
   subset(protocol_date == "2018-02-22") %>%
@@ -69,13 +98,40 @@ named_entites <- speech %>%
 
 read(speech, annotation = named_entites)
 
-dbpedia_links <- get_dbpedia_links(
+dbpedia_uris <- get_dbpedia_uris(
   x = speech,
   language = "de",
-  mw = "ne_type"
+  s_attribute = "ne_type"
 )
 
-read(speech, annotation = as_subcorpus(dbpedia_links))
+read(speech, annotation = as_subcorpus(dbpedia_uris))
+```
+
+``` r
+library(RCurl)
+library(XML)
+
+dbpedia_uris <- dbpedia_uris %>%
+  pull(dbpedia_uri) %>% 
+  dbpedia_get_wikidata_uris(
+    optional = "municipalityCode",
+    endpoint = "http://de.dbpedia.org/sparql",
+    wait = 0.5,
+    limit = 100,
+    progress = TRUE
+  ) %>% 
+  right_join(dbpedia_uris, by = "dbpedia_uri")
+```
+
+``` r
+dbpedia_results <- dbpedia_uris %>%
+  pull(wikidata_id) %>% 
+  wikidata_query(
+    id = "P439", # German municipality key
+    wait = 1,
+    limit = 100,
+    progress = TRUE
+  )
 ```
 
 ## Related work

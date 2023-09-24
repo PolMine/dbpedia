@@ -12,21 +12,21 @@ get_dbpedia_uris(x, ...)
 
 \S4method{get_dbpedia_uris}{AnnotatedPlainTextDocument}(
   x,
-  language,
+  language = getOption("dbpedia.lang"),
   max_len = 6067L,
   confidence = 0.35,
-  api = "http://localhost:2222/rest/annotate",
+  api = getOption("dbpedia.endpoint"),
   verbose = TRUE
 )
 
 \S4method{get_dbpedia_uris}{subcorpus}(
   x,
-  language,
+  language = getOption("dbpedia.lang"),
   p_attribute = "word",
   s_attribute = NULL,
   max_len = 6067L,
   confidence = 0.35,
-  api = "http://localhost:2222/rest/annotate",
+  api = getOption("dbpedia.endpoint"),
   verbose = TRUE
 )
 

@@ -48,9 +48,21 @@ docker run -tid --restart unless-stopped --name dbpedia-spotlight.de --mount sou
 
 ## Using the package
 
+Upon loading the dbpedia package, a startup message will issue information whether a Docker container running locally has been detected and on the API and language used.
+
+```{r load_dbpedia, eval = TRUE}
+library(dbpedia)
+```
+
+This information is available during the R session and is used by the `get_dbpedia_uris()` method.
+
+```{r}
+getOption("dbpedia.endpoint")
+getOption("dbpedia.lang")
+```
+
 ```{r, eval = FALSE}
 library(polmineR)
-library(dbpedia)
 library(dplyr)
 
 speech <- corpus("GERMAPARL2") %>% 
@@ -79,7 +91,7 @@ dbpedia_uris <- get_dbpedia_uris(
 read(speech, annotation = as_subcorpus(dbpedia_uris))
 ```
 
-```{r}
+```{r, eval = FALSE}
 library(RCurl)
 library(XML)
 
@@ -95,7 +107,7 @@ dbpedia_uris <- dbpedia_uris %>%
   right_join(dbpedia_uris, by = "dbpedia_uri")
 ```
 
-```{r}
+```{r eval = FALSE}
 dbpedia_results <- dbpedia_uris %>%
   pull(wikidata_id) %>% 
   wikidata_query(
