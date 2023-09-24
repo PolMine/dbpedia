@@ -44,7 +44,12 @@ docker build -t dbpedia/dbpedia-spotlight:latest .
 Then run the image as follows.
 
 ```{sh, eval = FALSE}
-docker run -tid --restart unless-stopped --name dbpedia-spotlight.de --mount source=spotlight-model,target=/opt/spotlight -p 2222:80  dbpedia/dbpedia-spotlight spotlight.sh de
+docker run -tid \
+  --restart unless-stopped \
+  --name dbpedia-spotlight.de \
+  --mount source=spotlight-model,target=/opt/spotlight \
+  -p 2222:80  \
+  dbpedia/dbpedia-spotlight spotlight.sh de
 ```
 
 
