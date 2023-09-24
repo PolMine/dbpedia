@@ -243,7 +243,6 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language, p_attribute = "
 
 
 #' @importFrom data.table rbindlist setorderv
-#' @param progress Whether to show progress bar (`logical` value).
 #' @rdname get_dbpedia_uris
 #' @examples
 #' uritab <- corpus("REUTERS") %>% 

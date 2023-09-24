@@ -98,7 +98,6 @@ dbpedia_uris <- dbpedia_uris %>%
 ```{r}
 dbpedia_results <- dbpedia_uris %>%
   pull(wikidata_id) %>% 
-  unique() %>% 
   wikidata_query(
     id = "P439", # German municipality key
     wait = 1,

@@ -67,3 +67,10 @@ na_drop <- function(x, verbose = TRUE){
   }
   x
 }
+
+unique_msg <- function(x, verbose = TRUE){
+  y <- unique(x)
+  if (length(y) < length(x) && verbose)
+    cli_alert_info("{.val {length(y)}} unique values to process")
+  y
+}

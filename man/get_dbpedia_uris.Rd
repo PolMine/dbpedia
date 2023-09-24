@@ -67,8 +67,6 @@ as threshold befor DBpedia Spotlight includes a link into the report.}
 DBpedia URIs will be mapped on this s-attribute. Only regions covered by
 this s-attribute will be kept. If missing, URIs will be
 mapped on the token stream, and all URIs suggested will be kept.}
-
-\item{progress}{Whether to show progress bar (\code{logical} value).}
 }
 \value{
 A \code{data.table} with columns 'dbpedia_uri' and 'text'. Depending on
@@ -98,5 +96,5 @@ uritab2 <- corpus("GERMAPARL2MINI") \%>\%
   
 uritab <- corpus("REUTERS") \%>\% 
   split(s_attribute = "id", verbose = FALSE) \%>\% 
-  get_dbpedia_uris(language = "en", p_attribute = "word")
+  get_dbpedia_uris(language = "en", p_attribute = "word", verbose = TRUE)
 }

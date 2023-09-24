@@ -4,16 +4,19 @@
 \alias{wikidata_query}
 \title{Query Wikidata endpoint for additional information.}
 \usage{
-wikidata_query(x, id, limit = 100L, wait = 1, progress = FALSE)
+wikidata_query(x, id, limit = 100L, wait = 1, verbose = TRUE, progress = FALSE)
 }
 \arguments{
-\item{x}{A vector of wikidata ids.}
+\item{x}{A vector of wikidata ids.  NA values are dropped, only unique values
+will be processed.}
 
 \item{id}{Wikidata ID for information to retrieve (\code{character} vector).}
 
 \item{limit}{Maximum number of wikidata IDs to be sent to endpoint at a time.}
 
 \item{wait}{A numeric value - slow down requests to avoid denial of service.}
+
+\item{verbose}{Whether to output messages (\code{logical} value).}
 
 \item{progress}{Whether to show progress information (\code{logical} value).}
 }

@@ -10,11 +10,13 @@ dbpedia_get_wikidata_uris(
   endpoint,
   limit = 100,
   wait = 1,
+  verbose = TRUE,
   progress = FALSE
 )
 }
 \arguments{
-\item{x}{A character vector with DBpedia URIs.}
+\item{x}{A character vector with DBpedia URIs. NA values are dropped, only
+unique values will be processed.}
 
 \item{optional}{Optional information to retrieve (passed as length-one
 character vector, e.g. 'municipalityCode').}
@@ -26,6 +28,8 @@ a time.}
 
 \item{wait}{A numeric value passed into \code{Sys.sleep()} to slow down sequence
 of requests (and avoid denial of service). Defaults to 100.}
+
+\item{verbose}{Whether to show messages (\code{logical} value).}
 
 \item{progress}{Whether to show progress bar (\code{logical} value).}
 }

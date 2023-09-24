@@ -1,6 +1,7 @@
 #' Get Wikipedia IDs for DBpedia IDS.
 #' 
-#' @param x A character vector with DBpedia URIs.
+#' @param x A character vector with DBpedia URIs. NA values are dropped, only
+#'   unique values will be processed.
 #' @param optional Optional information to retrieve (passed as length-one
 #'   character vector, e.g. 'municipalityCode').
 #' @param endpoint Endpoint to query (a `character` vector).
@@ -9,6 +10,7 @@
 #' @param wait A numeric value passed into `Sys.sleep()` to slow down sequence
 #'   of requests (and avoid denial of service). Defaults to 100.
 #' @param progress Whether to show progress bar (`logical` value).
+#' @param verbose Whether to show messages (`logical` value).
 #' @export
 #' @examples
 #' \donttest{
@@ -51,6 +53,9 @@ dbpedia_get_wikidata_uris <- function(x, optional, endpoint, limit = 100, wait =
   }
   
   x <- na_drop(x, verbose = verbose)
+  
+  if (verbose) cli_alert_info("length of input vector: {.val {length(x)}}")
+  x <- unique_msg(x, verbose = verbose)
   
   template <- 'SELECT distinct ?item ?wikidata_uri ?key
       WHERE {
@@ -97,9 +102,11 @@ dbpedia_get_wikidata_uris <- function(x, optional, endpoint, limit = 100, wait =
 #' additional information for known wikidata IDs.
 #' 
 #' @return A `tibble`.
-#' @param x A vector of wikidata ids.
+#' @param x A vector of wikidata ids.  NA values are dropped, only unique values
+#'   will be processed.
 #' @param id Wikidata ID for information to retrieve (`character` vector).
 #' @param limit Maximum number of wikidata IDs to be sent to endpoint at a time.
+#' @param verbose Whether to output messages (`logical` value).
 #' @param progress Whether to show progress information (`logical` value).
 #' @param wait A numeric value - slow down requests to avoid denial of service.
 #' @export
@@ -130,6 +137,9 @@ wikidata_query <- function(x, id, limit = 100L, wait = 1, verbose = TRUE, progre
   
   x <- na_drop(x, verbose = verbose)
   
+  if (verbose) cli_alert_info("length of input vector: {.val {length(x)}}")
+  x <- unique_msg(x, verbose = verbose)
+
   template <- 'SELECT ?item ?label ?key ?keyLabel
         WHERE {
         VALUES ?item { %s }
