@@ -111,16 +111,8 @@ dbpedia_get_wikidata_uris <- function(x, optional, endpoint, limit = 100, wait =
 #' @param wait A numeric value - slow down requests to avoid denial of service.
 #' @export
 #' @examples
-#' \donttest{
 #' wikidata_ids <- c("Q1741365", "Q3840", "Q437")
-#' wikidata_resolve_dbpedia_uri(
-#'   wikidata_ids,
-#'   id = "P439", # German municipality key
-#'   wait = 0,
-#'   limit = 2,
-#'   progress = TRUE
-#' )
-#' }
+#' wikidata_query(wikidata_ids, id = "P439")
 wikidata_query <- function(x, id, limit = 100L, wait = 1, verbose = TRUE, progress = FALSE){
   
   if (!requireNamespace("WikidataQueryServiceR", quietly = TRUE)){
@@ -161,14 +153,15 @@ wikidata_query <- function(x, id, limit = 100L, wait = 1, verbose = TRUE, progre
       id
     )
     
-    Sys.sleep(wait)
+    if (i > 1L) Sys.sleep(wait)
     
-    suppressWarnings({
-      retval_li[[i]] <- WikidataQueryServiceR::query_wikidata(
-        sparql_query = query,
-        format = "simple"
-      )
-    })
+    option_setting <- getOption("readr.show_col_types")
+    options("readr.show_col_types" = FALSE)
+    retval_li[[i]] <- WikidataQueryServiceR::query_wikidata(
+      sparql_query = query,
+      format = "simple"
+    )
+    options("readr.show_col_types" = option_setting)
     
     colnames(retval_li[[i]])[1] <- "wikidata_uri"
   }

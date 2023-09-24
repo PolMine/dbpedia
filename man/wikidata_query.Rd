@@ -28,14 +28,6 @@ This is a wrapper for \code{WikidataQueryServiceR::query_wikidata()} to get
 additional information for known wikidata IDs.
 }
 \examples{
-\donttest{
 wikidata_ids <- c("Q1741365", "Q3840", "Q437")
-wikidata_resolve_dbpedia_uri(
-  wikidata_ids,
-  id = "P439", # German municipality key
-  wait = 0,
-  limit = 2,
-  progress = TRUE
-)
-}
+wikidata_query(wikidata_ids, id = "P439")
 }
