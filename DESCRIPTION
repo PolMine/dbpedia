@@ -28,7 +28,7 @@ Suggests:
     WikidataQueryServiceR
 Remotes:
   polmineR=github::PolMine/polmineR@dev,
-  ggplot2=url::https://cran.r-project.org/src/contrib/Archive/SPARQL/SPARQL_1.16.tar.gz
+  SPARQL=url::https://cran.r-project.org/src/contrib/Archive/SPARQL/SPARQL_1.16.tar.gz
 VignetteBuilder: knitr
 SystemRequirements: docker
 LazyData: true

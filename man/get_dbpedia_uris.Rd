@@ -32,11 +32,11 @@ get_dbpedia_uris(x, ...)
 
 \S4method{get_dbpedia_uris}{subcorpus_bundle}(
   x,
-  language,
+  language = getOption("dbpedia.lang"),
   p_attribute = "word",
   s_attribute = NULL,
   confidence = 0.35,
-  api = "http://localhost:2222/rest/annotate",
+  api = getOption("dbpedia.endpoint"),
   max_len = 6067L,
   verbose = TRUE
 )
