@@ -7,7 +7,7 @@ R package ‘dbpedia’ - wrapper for DBpedia Spotlight
 v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![R-CMD-check](https://github.com/PolMine/dbpedia/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/PolMine/dbpedia/actions/workflows/R-CMD-check.yaml)
 [![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
 ## About
@@ -47,7 +47,12 @@ docker build -t dbpedia/dbpedia-spotlight:latest .
 Then run the image as follows.
 
 ``` sh
-docker run -tid --restart unless-stopped --name dbpedia-spotlight.de --mount source=spotlight-model,target=/opt/spotlight -p 2222:80  dbpedia/dbpedia-spotlight spotlight.sh de
+docker run -tid \
+  --restart unless-stopped \
+  --name dbpedia-spotlight.de \
+  --mount source=spotlight-model,target=/opt/spotlight \
+  -p 2222:80  \
+  dbpedia/dbpedia-spotlight spotlight.sh de
 ```
 
 ## Using the package
@@ -60,11 +65,11 @@ and on the API and language used.
 library(dbpedia)
 ```
 
-    ## * DBpedia Spotlight Docker container running
+    ## * Using DBpedia Spotlight online API (no local Docker container running)
 
-    ## * endpoint/api: http://localhost:2222/rest/annotate
+    ## * endpoint/api: http://api.dbpedia-spotlight.org/en/annotate
 
-    ## * language: de
+    ## * language: en
 
 This information is available during the R session and is used by the
 `get_dbpedia_uris()` method.
@@ -73,13 +78,13 @@ This information is available during the R session and is used by the
 getOption("dbpedia.endpoint")
 ```
 
-    ## [1] "http://localhost:2222/rest/annotate"
+    ## [1] "http://api.dbpedia-spotlight.org/en/annotate"
 
 ``` r
 getOption("dbpedia.lang")
 ```
 
-    ## [1] "de"
+    ## [1] "en"
 
 ``` r
 library(polmineR)

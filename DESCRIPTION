@@ -1,6 +1,6 @@
 Package: dbpedia
 Type: Package
-Title: R wrapper for DBpedia Spotlight
+Title: R Wrapper for DBpedia Spotlight
 Version: 0.1.1
 Date: 2023-09-24
 Authors@R: c(
@@ -25,7 +25,9 @@ Suggests:
     rmarkdown,
     knitr,
     SPARQL,
-    WikidataQueryServiceR
+    WikidataQueryServiceR,
+    RCurl,
+    XML
 Remotes:
   polmineR=github::PolMine/polmineR@dev,
   SPARQL=url::https://cran.r-project.org/src/contrib/Archive/SPARQL/SPARQL_1.16.tar.gz

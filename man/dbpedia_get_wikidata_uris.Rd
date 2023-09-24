@@ -37,7 +37,9 @@ of requests (and avoid denial of service). Defaults to 100.}
 Get Wikipedia IDs for DBpedia IDS.
 }
 \examples{
-\donttest{
+library(RCurl)
+library(XML)
+
 dbpedia_uris <- c(
   "http://de.dbpedia.org/resource/Killesberg",
   "http://de.dbpedia.org/resource/Ljubljana",
@@ -51,5 +53,4 @@ dbpedia_get_wikidata_uris(
   limit = 2,
   progress = TRUE
 )
-}
 }

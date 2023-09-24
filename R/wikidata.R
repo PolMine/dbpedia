@@ -13,7 +13,9 @@
 #' @param verbose Whether to show messages (`logical` value).
 #' @export
 #' @examples
-#' \donttest{
+#' library(RCurl)
+#' library(XML)
+#' 
 #' dbpedia_uris <- c(
 #'   "http://de.dbpedia.org/resource/Killesberg",
 #'   "http://de.dbpedia.org/resource/Ljubljana",
@@ -27,7 +29,6 @@
 #'   limit = 2,
 #'   progress = TRUE
 #' )
-#' }
 #' @importFrom cli cli_progress_bar cli_progress_done cli_progress_update
 dbpedia_get_wikidata_uris <- function(x, optional, endpoint, limit = 100, wait = 1, verbose = TRUE, progress = FALSE){
   

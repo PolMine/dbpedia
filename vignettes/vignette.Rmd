@@ -12,45 +12,49 @@ editor_options:
 ---
 
 
-```{r}
+```{r load_libs}
 library(dbpedia)
 library(polmineR)
 ```
 
-```{r}
-article <- corpus("NADIRASZ") %>%
-  subset(article_id == "A70041931")
+```{r make_speech}
+use("GermaParl2")
+
+speech <- corpus("GERMAPARL2MINI") %>%
+  subset(speaker_name == "Carlo Schmid") %>%
+  subset(p_type == "speech")
 ```
 
 
 get named entities/NEs present (previous annotation using StanfordCore NLP)
 
-```{r}
-named_entities <- article %>%
+```{r get_named_entities}
+named_entities <- speech %>%
   subset(ne_type) %>%
   as_annotation()
 ```
 
 inspect article with NE annotation before linking step
 
-```{r}
-read(article, annotation = named_entities)
+```{r read_speech}
+read(speech, annotation = named_entities)
 ```
 
 get DBpedia links for named entities using DBpedia Spotlight
 
-```{r}
-dbpedia_links <- get_dbpedia_uris(
-  x = article,
+```{r get_uris}
+dbpedia_uris <- get_dbpedia_uris(
+  x = speech,
   language = "de",
-  s_attribute = "ne_type"
+  s_attribute = "ne_type",
+  max_len = 5067
 )
 ```
 
 inspect DBpedia resource URIs
 
-```{r}
-read(article, annotation = as_subcorpus(dbpedia_links))
+```{r inspect_result}
+read(speech, annotation = as_subcorpus(dbpedia_uris))
 ```
 
 
