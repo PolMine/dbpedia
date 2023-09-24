@@ -55,3 +55,15 @@ as_subcorpus <- function(x){
     )
   )
 }
+
+na_drop <- function(x, verbose = TRUE){
+  if (any(is.na(x))){
+    nas <- is.na(x)
+    if (verbose)
+      cli_alert_info(
+        "drop {.val {length(which(nas))}} NA values (old length {.val {length(x)}})"
+      )
+    x <- x[-nas]
+  }
+  x
+}

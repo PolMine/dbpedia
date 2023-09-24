@@ -27,7 +27,7 @@
 #' )
 #' }
 #' @importFrom cli cli_progress_bar cli_progress_done cli_progress_update
-dbpedia_get_wikidata_uris <- function(x, optional, endpoint, limit = 100, wait = 1, progress = FALSE){
+dbpedia_get_wikidata_uris <- function(x, optional, endpoint, limit = 100, wait = 1, verbose = TRUE, progress = FALSE){
   
   if (!requireNamespace("SPARQL", quietly = TRUE)){
     stop(
@@ -49,6 +49,8 @@ dbpedia_get_wikidata_uris <- function(x, optional, endpoint, limit = 100, wait =
   } else {
     optional <- ""
   }
+  
+  x <- na_drop(x, verbose = verbose)
   
   template <- 'SELECT distinct ?item ?wikidata_uri ?key
       WHERE {
@@ -78,12 +80,13 @@ dbpedia_get_wikidata_uris <- function(x, optional, endpoint, limit = 100, wait =
   }
   
   if (progress) cli_progress_done()
-  
 
   y <- as_tibble(do.call(rbind, retval_li))
   colnames(y)[1] <- "dbpedia_uri"
   y[["dbpedia_uri"]] <- gsub("^<(.*?)>$", "\\1", y[["dbpedia_uri"]])
   y[["wikidata_uri"]] <- gsub("^<(.*?)>$", "\\1", y[["wikidata_uri"]])
+  y[["wikidata_id"]] <- gsub("^.*/(Q\\d+)$", "\\1", y[["wikidata_uri"]])
+  y[["key"]] <- NULL
   y
 }
 
@@ -111,7 +114,7 @@ dbpedia_get_wikidata_uris <- function(x, optional, endpoint, limit = 100, wait =
 #'   progress = TRUE
 #' )
 #' }
-wikidata_query <- function(x, id, limit = 100L, wait = 1, progress = FALSE){
+wikidata_query <- function(x, id, limit = 100L, wait = 1, verbose = TRUE, progress = FALSE){
   
   if (!requireNamespace("WikidataQueryServiceR", quietly = TRUE)){
     stop("R package WikidataQueryServiceR required but not available. ")
@@ -124,6 +127,8 @@ wikidata_query <- function(x, id, limit = 100L, wait = 1, progress = FALSE){
     is.numeric(wait), wait > 0, length(wait) == 1L,
     is.logical(progress), length(progress) == 1L
   )
+  
+  x <- na_drop(x, verbose = verbose)
   
   template <- 'SELECT ?item ?label ?key ?keyLabel
         WHERE {
