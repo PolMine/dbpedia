@@ -55,6 +55,13 @@ setGeneric("get_dbpedia_uris", function(x, ...) standardGeneric("get_dbpedia_uri
 #' # Process AnnotatedPlainTextDocument (example available in NLP package)
 #' doc <- readRDS(system.file("texts", "stanford.rds", package = "NLP"))
 #' tab <- get_dbpedia_uris(x = doc, language = "en")
+#' 
+#' tab <- get_dbpedia_uris(
+#'   x = doc,
+#'   language = "en",
+#'   api = "http://api.dbpedia-spotlight.org/en/annotate"
+#' )
+#' 
 #' tab
 setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language, max_len = 6067L, confidence = 0.35, api = "http://localhost:2222/rest/annotate", verbose = TRUE){
   

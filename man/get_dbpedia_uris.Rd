@@ -79,6 +79,13 @@ Get DBpedia links.
 # Process AnnotatedPlainTextDocument (example available in NLP package)
 doc <- readRDS(system.file("texts", "stanford.rds", package = "NLP"))
 tab <- get_dbpedia_uris(x = doc, language = "en")
+
+tab <- get_dbpedia_uris(
+  x = doc,
+  language = "en",
+  api = "http://api.dbpedia-spotlight.org/en/annotate"
+)
+
 tab
 library(polmineR)
 use("RcppCWB")
