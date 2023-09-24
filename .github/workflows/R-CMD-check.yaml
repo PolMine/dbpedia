@@ -44,12 +44,11 @@ jobs:
           extra-packages: any::rcmdcheck, any::covr, any::remotes
           needs: check
       
-      - name: Install further dependencies
-        run: |
-          remotes::install_version("SPARQL", version = "1.16", repos = "http://cran.us.r-project.org") 
-          install.packages(pkgs = "GermaParl2", contriburl = "https://polmine.github.io/drat/src/contrib", type = "source")
-        shell: Rscript {0}
-
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
+
+      - name: Test coverage
+        if: runner.os == 'Linux'
+        run: covr::codecov()
+        shell: Rscript {0}

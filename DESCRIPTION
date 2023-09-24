@@ -27,10 +27,12 @@ Suggests:
     SPARQL,
     WikidataQueryServiceR,
     RCurl,
-    XML
+    XML,
+    GermaParl2
 Remotes:
   polmineR=github::PolMine/polmineR@dev,
-  SPARQL=url::https://cran.r-project.org/src/contrib/Archive/SPARQL/SPARQL_1.16.tar.gz
+  SPARQL=url::https://cran.r-project.org/src/contrib/Archive/SPARQL/SPARQL_1.16.tar.gz,
+  GermaParl2=url::https://polmine.github.io/drat/src/contrib/GermaParl2_2.0.0.tar.gz
 VignetteBuilder: knitr
 SystemRequirements: docker
 LazyData: true
