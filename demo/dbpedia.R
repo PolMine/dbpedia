@@ -11,7 +11,7 @@ named_entities <- article %>% subset(ne_type) %>% as_annotation()
 read(article, annotation = named_entities)
 
 # get DBpedia links for named entities using DBpedia Spotlight
-dbpedia_links <- get_dbpedia_links(x = article, language = "de", mw = "ne_type")
+dbpedia_links <- get_dbpedia_uris(x = article, language = "de", s_attribute = "ne_type")
 
 # inspect DBpedia resource URIs
-read(article, annotation = dbpedia_links)
+read(article, annotation = as_subcorpus(dbpedia_links))
