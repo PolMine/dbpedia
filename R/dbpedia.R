@@ -163,6 +163,16 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
   json <- jsonlite::fromJSON(txt)
   resources <- as.data.table(json[["Resources"]])
   
+  if (nrow(resources) == 0L){
+    return(
+      data.table(
+        start = integer(),
+        text = character(),
+        dbpedia_uri = character()
+      )
+    )
+  }
+  
   resources_min <- resources[, c("@URI", "@surfaceForm", "@offset")]
   setnames(
     resources_min,

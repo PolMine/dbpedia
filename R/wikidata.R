@@ -70,7 +70,13 @@ dbpedia_get_wikidata_uris <- function(x, optional, endpoint, limit = 100, wait =
   chunks <- as_chunks(x = x, size = limit)
   retval_li <- list()
   
-  if (progress) cli_progress_bar("Tasks", total = length(chunks), type = "tasks")
+  if (progress){
+    cli_progress_bar(
+      "Processing chunks of DBpedia URIs to get Wikidata URIs",
+      total = length(chunks),
+      type = "tasks"
+    )
+  }
   for (i in 1L:length(chunks)){
     cli_progress_update()
     query <- sprintf(
@@ -145,7 +151,13 @@ wikidata_query <- function(x, id, limit = 100L, wait = 1, verbose = TRUE, progre
   chunks <- as_chunks(x = x, size = limit)
   retval_li <- list()
   
-  if (progress) cli_progress_bar("Tasks", total = length(chunks), type = "tasks")
+  if (progress){
+    cli_progress_bar(
+      "Processing chunks of Wikidata URIs",
+      total = length(chunks),
+      type = "tasks"
+    )
+  }
   for (i in 1L:length(chunks)){
     if (progress) cli_progress_update()
     query <- sprintf(

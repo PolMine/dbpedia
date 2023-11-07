@@ -1,3 +1,9 @@
+## dbpedia v0.1.1.9002
+
+* Error avoided when `get_dbpedia_uris()` does not detect any URI.
+* More telling progress messages of `wikidata_query()` and
+`dbpedia_get_wikidata_uris()`.
+
 ## dbpedia v0.1.1
 
 * New function `dbpedia_spotlight_status()`.
