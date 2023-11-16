@@ -3,6 +3,9 @@
 * Error avoided when `get_dbpedia_uris()` does not detect any URI.
 * More telling progress messages of `wikidata_query()` and
 `dbpedia_get_wikidata_uris()`.
+* `dbpedia_get_wikidata_uris()` implemented for `character` strings.
+* Preliminary implementation of `dbpedia_get_wikidata_uris()` for 'corpus' objects
+from package quanteda.
 
 ## dbpedia v0.1.1
 

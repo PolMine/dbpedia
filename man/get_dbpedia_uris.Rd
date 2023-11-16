@@ -3,12 +3,23 @@
 \docType{methods}
 \name{get_dbpedia_uris}
 \alias{get_dbpedia_uris}
+\alias{get_dbpedia_uris,character-method}
 \alias{get_dbpedia_uris,AnnotatedPlainTextDocument-method}
 \alias{get_dbpedia_uris,subcorpus-method}
 \alias{get_dbpedia_uris,subcorpus_bundle-method}
+\alias{get_dbpedia_uris,corpus-method}
 \title{Get DBpedia links.}
 \usage{
 get_dbpedia_uris(x, ...)
+
+\S4method{get_dbpedia_uris}{character}(
+  x,
+  language = getOption("dbpedia.lang"),
+  max_len = 6067L,
+  confidence = 0.35,
+  api = getOption("dbpedia.endpoint"),
+  verbose = TRUE
+)
 
 \S4method{get_dbpedia_uris}{AnnotatedPlainTextDocument}(
   x,
@@ -38,6 +49,15 @@ get_dbpedia_uris(x, ...)
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   max_len = 6067L,
+  verbose = TRUE
+)
+
+\S4method{get_dbpedia_uris}{corpus}(
+  x,
+  language = getOption("dbpedia.lang"),
+  max_len = 6067L,
+  confidence = 0.35,
+  api = getOption("dbpedia.endpoint"),
   verbose = TRUE
 )
 }
@@ -86,7 +106,6 @@ tab <- get_dbpedia_uris(
   api = "http://api.dbpedia-spotlight.org/en/annotate"
 )
 
-tab
 library(polmineR)
 use("RcppCWB")
 
@@ -104,4 +123,12 @@ uritab2 <- corpus("GERMAPARL2MINI") \%>\%
 uritab <- corpus("REUTERS") \%>\% 
   split(s_attribute = "id", verbose = FALSE) \%>\% 
   get_dbpedia_uris(language = "en", p_attribute = "word", verbose = TRUE)
+# example code
+
+# Process quanteda corpus 
+library(quanteda)
+uritab <- data_char_ukimmig2010 |>
+  corpus() |>
+  get_dbpedia_uris(verbose = FALSE)
+  
 }

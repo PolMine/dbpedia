@@ -132,25 +132,19 @@ setGeneric("get_dbpedia_uris", function(x, ...) standardGeneric("get_dbpedia_uri
 #'   api = "http://api.dbpedia-spotlight.org/en/annotate"
 #' )
 #' 
-#' tab
-setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language = getOption("dbpedia.lang"), max_len = 6067L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
+setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbpedia.lang"), max_len = 6067L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
   
-  if (nchar(x[["content"]]) > max_len){
+  if (nchar(x) > max_len){
     if (verbose) cli_alert_warning(
-      "nchar of input text is {nchar(x[['content']])}, truncate to max_len ({.val {max_len}})"
+      "input text has length {nchar(x)}, truncate to max_len ({.val {max_len}})"
     )
-    txt <- substr(x[["content"]], 1, max_len)
-  } else {
-    txt <- x[["content"]]
+    x <- substr(x, 1L, max_len)
   }
-
+  
   if (verbose) cli_progress_step("send request to DBpedia Spotlight")
   request <- httr::GET(
     url = api,
-    query = list(
-      text = txt,
-      confidence = confidence
-    ),
+    query = list(text = x, confidence = confidence),
     httr::add_headers('Accept' = 'application/json')
   )
   
@@ -186,6 +180,19 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
   resources_min
 })
 
+
+#' @exportMethod get_dbpedia_uris
+#' @rdname get_dbpedia_uris
+setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language = getOption("dbpedia.lang"), max_len = 6067L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
+  get_dbpedia_uris(
+    x = as.character(x[["content"]]),
+    language = language,
+    max_len = max_len,
+    confidence = confidence,
+    api = api,
+    verbose = verbose
+  )
+})
 
 
 #' Get DBpedia links.
@@ -373,6 +380,60 @@ setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOpti
 
   y
 })
+
+
+#' @examples
+#' # example code
+#' 
+#' # Process quanteda corpus 
+#' library(quanteda)
+#' uritab <- data_char_ukimmig2010 |>
+#'   corpus() |>
+#'   get_dbpedia_uris(verbose = FALSE)
+#'   
+#' @rdname get_dbpedia_uris
+setMethod(
+  "get_dbpedia_uris",
+  "corpus",
+  function(
+    x,
+    language = getOption("dbpedia.lang"),
+    max_len = 6067L,
+    confidence = 0.35,
+    api = getOption("dbpedia.endpoint"),
+    verbose = TRUE
+  ){
+    
+    if (isS4(x)){
+      cli::cli_alert_danger(
+        "input of {.fn get_dbpedia_uris} is S4 class 'corpus' 
+        from package {.pkg {getClass('corpus')@package}} -
+        'corpus' class from package {.pkg quanteda} required" ,
+        wrap = TRUE
+      )
+    }
+    
+    
+    docs <- as.character(x)
+    retval <- rbindlist(
+      lapply(
+        names(docs),
+        function(docname){
+          dt <- get_dbpedia_uris(
+            x = docs[[docname]],
+            language = language,
+            max_len = 5067L,
+            confidence = confidence,
+            api = api,
+            verbose = verbose
+          )[, "doc" := docname]
+        }
+      )
+    )
+    setcolorder(retval, neworder = "doc")
+    retval
+  }
+)
 
 
 #' Stopwords used by DBpedia Spotlight
