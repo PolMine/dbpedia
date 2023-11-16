@@ -120,6 +120,7 @@ setGeneric("get_dbpedia_uris", function(x, ...) standardGeneric("get_dbpedia_uri
 
 #' @exportMethod get_dbpedia_uris
 #' @rdname get_dbpedia_uris
+#' @importFrom data.table data.table
 #' @examples
 #' # Process AnnotatedPlainTextDocument (example available in NLP package)
 #' doc <- readRDS(system.file("texts", "stanford.rds", package = "NLP"))
