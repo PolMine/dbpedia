@@ -6,6 +6,11 @@
 * `dbpedia_get_wikidata_uris()` implemented for `character` strings.
 * Preliminary implementation of `dbpedia_get_wikidata_uris()` for 'corpus' objects
 from package quanteda.
+* New function `add_wikidata_uris()` to add wikidata URIs to a table with
+DBpedia URIs.
+* `wikidata_query()` is a method now, result does not include columns
+"key and keyLabel" any more. The column with values queries from Wikidata is 
+ID now (not "label", as previously).
 
 ## dbpedia v0.1.1
 

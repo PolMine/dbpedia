@@ -12,6 +12,7 @@
 #' @param progress Whether to show progress bar (`logical` value).
 #' @param verbose Whether to show messages (`logical` value).
 #' @export
+#' @rdname wikidata_uris
 #' @examples
 #' library(RCurl)
 #' library(XML)
@@ -55,7 +56,7 @@ dbpedia_get_wikidata_uris <- function(x, optional, endpoint, limit = 100, wait =
   
   x <- na_drop(x, verbose = verbose)
   
-  if (verbose) cli_alert_info("length of input vector: {.val {length(x)}}")
+  if (verbose) cli_alert_info("input length: {.val {length(x)}}")
   x <- unique_msg(x, verbose = verbose)
   
   template <- 'SELECT distinct ?item ?wikidata_uri ?key
@@ -116,18 +117,22 @@ dbpedia_get_wikidata_uris <- function(x, optional, endpoint, limit = 100, wait =
 #' @param verbose Whether to output messages (`logical` value).
 #' @param progress Whether to show progress information (`logical` value).
 #' @param wait A numeric value - slow down requests to avoid denial of service.
+#' @param ... Further arguments.
 #' @export
+#' @rdname wikidata_query
+setGeneric("wikidata_query", function(x, ...) standardGeneric("wikidata_query"))
+
+#' @rdname wikidata_query
 #' @examples
 #' wikidata_ids <- c("Q1741365", "Q3840", "Q437")
-#' wikidata_query(wikidata_ids, id = "P439")
-wikidata_query <- function(x, id, limit = 100L, wait = 1, verbose = TRUE, progress = FALSE){
+#' wikidata_query(wikidata_ids, id = "P439",progress = TRUE)
+setMethod("wikidata_query", "character", function(x, id, limit = 100L, wait = 1, verbose = TRUE, progress = FALSE){
   
   if (!requireNamespace("WikidataQueryServiceR", quietly = TRUE)){
     stop("R package WikidataQueryServiceR required but not available. ")
   }
   
   stopifnot(
-    is.vector(x), is.character(x),
     is.character(id), length(id) == 1L,
     is.numeric(limit), limit > 0,
     is.numeric(wait), wait > 0, length(wait) == 1L,
@@ -181,5 +186,108 @@ wikidata_query <- function(x, id, limit = 100L, wait = 1, verbose = TRUE, progre
   
   if (progress) cli_progress_done()
   
-  as_tibble(do.call(rbind, retval_li))
-}
+  retval <- as_tibble(do.call(rbind, retval_li))
+  colnames(retval)[which(colnames(retval) == "label")] <- "wikidata_label"
+  colnames(retval)[which(colnames(retval) == "key")] <- paste(id, "key", sep = "_")
+  colnames(retval)[which(colnames(retval) == "keyLabel")] <- paste(id, "keyLabel", sep = "_")
+  retval
+})
+
+#' @rdname wikidata_query
+setMethod(
+  "wikidata_query",
+  "data.table",
+  function(x, id, limit = 100L, wait = 1, verbose = TRUE, progress = FALSE){
+    if (!"wikidata_id" %in% colnames(x)){
+      cli_alert_danger("{.fn wikidata_query} requires column {.val wikidata_id}")
+      stop()
+    }
+    
+    tbl <- wikidata_query(
+      x = x[["wikidata_id"]],
+      id = id,
+      limit = limit,
+      wait = wait,
+      verbose = verbose,
+      progress = progress
+    )
+    dt <- as.data.table(tbl, key = "wikidata_uri")
+    setkeyv(x = x, cols = "wikidata_uri")
+    y <- dt[x]
+    setcolorder(x = y, neworder = c(colnames(x), colnames(dt)[-which(colnames(dt) == "wikidata_uri")]))
+    y
+  }
+)
+
+
+
+#' @param ... Further arguments.
+#' @rdname wikidata_uris
+#' @exportMethod add_wikidata_uris
+setGeneric(
+  "add_wikidata_uris",
+  function(x, ...) standardGeneric("add_wikidata_uris")
+)
+
+
+#' @examples
+#' # This example is commented out because we get an error that the SSL 
+#' # certificate has expired
+#' 
+#' # options(dbpedia.lang = "en")
+#' # options(dbpedia.endpoint = "http://api.dbpedia-spotlight.org/en/annotate")
+#' # library(quanteda)
+#' 
+#' # dt <- data_char_ukimmig2010 |>
+#' #   corpus() |>
+#' #  get_dbpedia_uris(verbose = FALSE) %>% 
+#' #   add_wikidata_uris(endpoint = "http://de.dbpedia.org/sparql", progress = TRUE)
+#' 
+#' library(polmineR)
+#' use("GermaParl2")
+#' library(RCurl)
+#' library(XML)
+#' 
+#' options(dbpedia.lang = "de")
+#' options(dbpedia.endpoint = "http://localhost:2222/rest/annotate")
+#' 
+#' data <- polmineR::corpus("GERMAPARL2MINI") %>% 
+#'   subset(speaker_name == "Carlo Schmid") %>%
+#'   subset(p_type == "speech") %>% 
+#'   get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 5067) %>% 
+#'   add_wikidata_uris(endpoint = "http://de.dbpedia.org/sparql", verbose = FALSE, progress = TRUE) %>% 
+#'   wikidata_query(id = "P31")
+#' @rdname wikidata_uris
+#' @importFrom data.table setkeyv
+setMethod(
+  "add_wikidata_uris",
+  "data.table",
+  function(
+    x,
+    optional,
+    endpoint,
+    limit = 100,
+    wait = 1,
+    verbose = TRUE,
+    progress = FALSE
+  ){
+    if (!"dbpedia_uri" %in% colnames(x)){
+      cli_alert_danger("{.fn add_dbpedia_uris} requires column {.val dbpedia_uri}")
+      stop()
+    }
+    
+    wikidata_tbl <- dbpedia_get_wikidata_uris(
+      x = x[["dbpedia_uri"]],
+      optional = optional,
+      endpoint = endpoint,
+      wait = wait,
+      limit = limit,
+      progress = progress
+    )
+    wikidata_dt <- as.data.table(wikidata_tbl, key = "dbpedia_uri")
+    setkeyv(x = x, cols = "dbpedia_uri")
+    y <- wikidata_dt[x]
+    setcolorder(x = y, neworder = c(colnames(x), "wikidata_uri", "wikidata_id"))
+    y
+  }
+)

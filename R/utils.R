@@ -63,7 +63,7 @@ na_drop <- function(x, verbose = TRUE){
       cli_alert_info(
         "drop {.val {length(which(nas))}} NA values (old length {.val {length(x)}})"
       )
-    x <- x[-nas]
+    x <- x[-which(nas)]
   }
   x
 }

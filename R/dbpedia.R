@@ -118,10 +118,12 @@ as_annotation <- function(x){
 #'   input object, further columns are ...
 setGeneric("get_dbpedia_uris", function(x, ...) standardGeneric("get_dbpedia_uris"))
 
+
 #' @exportMethod get_dbpedia_uris
 #' @rdname get_dbpedia_uris
 #' @importFrom data.table data.table
 #' @examples
+#' \dontrun{
 #' # Process AnnotatedPlainTextDocument (example available in NLP package)
 #' doc <- readRDS(system.file("texts", "stanford.rds", package = "NLP"))
 #' tab <- get_dbpedia_uris(x = doc, language = "en")
@@ -131,6 +133,7 @@ setGeneric("get_dbpedia_uris", function(x, ...) standardGeneric("get_dbpedia_uri
 #'   language = "en",
 #'   api = "http://api.dbpedia-spotlight.org/en/annotate"
 #' )
+#' }
 #' 
 setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbpedia.lang"), max_len = 6067L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
   
@@ -404,6 +407,7 @@ setMethod(
     verbose = TRUE
   ){
     
+    # ensure that input object is corpus class from quanteda pkg
     if (isS4(x)){
       cli::cli_alert_danger(
         "input of {.fn get_dbpedia_uris} is S4 class 'corpus' 
@@ -412,8 +416,7 @@ setMethod(
         wrap = TRUE
       )
     }
-    
-    
+
     docs <- as.character(x)
     retval <- rbindlist(
       lapply(

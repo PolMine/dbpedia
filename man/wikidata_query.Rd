@@ -2,13 +2,21 @@
 % Please edit documentation in R/wikidata.R
 \name{wikidata_query}
 \alias{wikidata_query}
+\alias{wikidata_query,character-method}
+\alias{wikidata_query,data.table-method}
 \title{Query Wikidata endpoint for additional information.}
 \usage{
-wikidata_query(x, id, limit = 100L, wait = 1, verbose = TRUE, progress = FALSE)
+wikidata_query(x, ...)
+
+\S4method{wikidata_query}{character}(x, id, limit = 100L, wait = 1, verbose = TRUE, progress = FALSE)
+
+\S4method{wikidata_query}{data.table}(x, id, limit = 100L, wait = 1, verbose = TRUE, progress = FALSE)
 }
 \arguments{
 \item{x}{A vector of wikidata ids.  NA values are dropped, only unique values
 will be processed.}
+
+\item{...}{Further arguments.}
 
 \item{id}{Wikidata ID for information to retrieve (\code{character} vector).}
 
@@ -29,5 +37,5 @@ additional information for known wikidata IDs.
 }
 \examples{
 wikidata_ids <- c("Q1741365", "Q3840", "Q437")
-wikidata_query(wikidata_ids, id = "P439")
+wikidata_query(wikidata_ids, id = "P439",progress = TRUE)
 }

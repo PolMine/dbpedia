@@ -2,9 +2,23 @@
 % Please edit documentation in R/wikidata.R
 \name{dbpedia_get_wikidata_uris}
 \alias{dbpedia_get_wikidata_uris}
+\alias{add_wikidata_uris}
+\alias{add_wikidata_uris,data.table-method}
 \title{Get Wikipedia IDs for DBpedia IDS.}
 \usage{
 dbpedia_get_wikidata_uris(
+  x,
+  optional,
+  endpoint,
+  limit = 100,
+  wait = 1,
+  verbose = TRUE,
+  progress = FALSE
+)
+
+add_wikidata_uris(x, ...)
+
+\S4method{add_wikidata_uris}{data.table}(
   x,
   optional,
   endpoint,
@@ -32,6 +46,8 @@ of requests (and avoid denial of service). Defaults to 100.}
 \item{verbose}{Whether to show messages (\code{logical} value).}
 
 \item{progress}{Whether to show progress bar (\code{logical} value).}
+
+\item{...}{Further arguments.}
 }
 \description{
 Get Wikipedia IDs for DBpedia IDS.
@@ -53,4 +69,30 @@ dbpedia_get_wikidata_uris(
   limit = 2,
   progress = TRUE
 )
+# This example is commented out because we get an error that the SSL 
+# certificate has expired
+
+# options(dbpedia.lang = "en")
+# options(dbpedia.endpoint = "http://api.dbpedia-spotlight.org/en/annotate")
+# library(quanteda)
+
+# dt <- data_char_ukimmig2010 |>
+#   corpus() |>
+#  get_dbpedia_uris(verbose = FALSE) \%>\% 
+#   add_wikidata_uris(endpoint = "http://de.dbpedia.org/sparql", progress = TRUE)
+
+library(polmineR)
+use("GermaParl2")
+library(RCurl)
+library(XML)
+
+options(dbpedia.lang = "de")
+options(dbpedia.endpoint = "http://localhost:2222/rest/annotate")
+
+data <- polmineR::corpus("GERMAPARL2MINI") \%>\% 
+  subset(speaker_name == "Carlo Schmid") \%>\%
+  subset(p_type == "speech") \%>\% 
+  get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 5067) \%>\% 
+  add_wikidata_uris(endpoint = "http://de.dbpedia.org/sparql", verbose = FALSE, progress = TRUE) \%>\% 
+  wikidata_query(id = "P31")
 }

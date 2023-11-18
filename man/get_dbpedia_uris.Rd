@@ -96,6 +96,7 @@ input object, further columns are ...
 Get DBpedia links.
 }
 \examples{
+\dontrun{
 # Process AnnotatedPlainTextDocument (example available in NLP package)
 doc <- readRDS(system.file("texts", "stanford.rds", package = "NLP"))
 tab <- get_dbpedia_uris(x = doc, language = "en")
@@ -105,6 +106,7 @@ tab <- get_dbpedia_uris(
   language = "en",
   api = "http://api.dbpedia-spotlight.org/en/annotate"
 )
+}
 
 library(polmineR)
 use("RcppCWB")
