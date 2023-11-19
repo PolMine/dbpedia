@@ -53,9 +53,6 @@ of requests (and avoid denial of service). Defaults to 100.}
 Get Wikipedia IDs for DBpedia IDS.
 }
 \examples{
-library(RCurl)
-library(XML)
-
 dbpedia_uris <- c(
   "http://de.dbpedia.org/resource/Killesberg",
   "http://de.dbpedia.org/resource/Ljubljana",
@@ -83,8 +80,6 @@ dbpedia_get_wikidata_uris(
 
 library(polmineR)
 use("GermaParl2")
-library(RCurl)
-library(XML)
 
 options(dbpedia.lang = "de")
 options(dbpedia.endpoint = "http://localhost:2222/rest/annotate")

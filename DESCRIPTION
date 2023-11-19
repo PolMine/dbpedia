@@ -1,8 +1,8 @@
 Package: dbpedia
 Type: Package
 Title: R Wrapper for DBpedia Spotlight
-Version: 0.1.1.9005
-Date: 2023-11-18
+Version: 0.1.1.9006
+Date: 2023-11-19
 Authors@R: c(
   person("Andreas", "Blaette", role = c("aut", "cre"), email = "andreas.blaette@uni-due.de", comment = c(ORCID = "0000-0001-8970-8010")),
   person("Christoph", "Leonhardt", role = "aut")
@@ -25,15 +25,11 @@ Suggests:
     markdown (>= 1.5),
     rmarkdown,
     knitr,
-    SPARQL,
     WikidataQueryServiceR,
-    RCurl,
-    XML,
     GermaParl2,
     quanteda
 Remotes:
   polmineR=github::PolMine/polmineR@dev,
-  SPARQL=url::https://cran.r-project.org/src/contrib/Archive/SPARQL/SPARQL_1.16.tar.gz,
   GermaParl2=url::https://polmine.github.io/drat/src/contrib/GermaParl2_2.0.0.tar.gz
 VignetteBuilder: knitr
 SystemRequirements: docker

@@ -1,4 +1,4 @@
-## dbpedia v0.1.1.9002
+## dbpedia v0.1.1.9006
 
 * Error avoided when `get_dbpedia_uris()` does not detect any URI.
 * More telling progress messages of `wikidata_query()` and
@@ -11,6 +11,10 @@ DBpedia URIs.
 * `wikidata_query()` is a method now, result does not include columns
 "key and keyLabel" any more. The column with values queries from Wikidata is 
 ID now (not "label", as previously).
+* New auxiliary function `sparql_query()` replaces `SPARQL::SPARQL()` and is 
+basis for dropping packages SPARQL, XML and RCurl as dependencies. Package xml2
+is a new dependency.
+
 
 ## dbpedia v0.1.1
 

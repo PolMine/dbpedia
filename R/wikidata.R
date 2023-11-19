@@ -14,9 +14,6 @@
 #' @export
 #' @rdname wikidata_uris
 #' @examples
-#' library(RCurl)
-#' library(XML)
-#' 
 #' dbpedia_uris <- c(
 #'   "http://de.dbpedia.org/resource/Killesberg",
 #'   "http://de.dbpedia.org/resource/Ljubljana",
@@ -33,13 +30,6 @@
 #' @importFrom cli cli_progress_bar cli_progress_done cli_progress_update
 dbpedia_get_wikidata_uris <- function(x, optional, endpoint, limit = 100, wait = 1, verbose = TRUE, progress = FALSE){
   
-  if (!requireNamespace("SPARQL", quietly = TRUE)){
-    stop(
-      "R package SPARQL required but not available. ",
-      "SPARQL is currently not at CRAN, but can be installed from the archive"
-    )
-  }
-
   stopifnot(
     is.character(x),
     is.numeric(limit), length(limit) == 1L,
@@ -89,7 +79,7 @@ dbpedia_get_wikidata_uris <- function(x, optional, endpoint, limit = 100, wait =
     
     Sys.sleep(wait)
     
-    retval_li[[i]] <- SPARQL::SPARQL(url = endpoint, query = query)[["results"]]
+    retval_li[[i]] <- sparql_query(endpoint = endpoint, query = query)
   }
   
   if (progress) cli_progress_done()
@@ -245,8 +235,6 @@ setGeneric(
 #' 
 #' library(polmineR)
 #' use("GermaParl2")
-#' library(RCurl)
-#' library(XML)
 #' 
 #' options(dbpedia.lang = "de")
 #' options(dbpedia.endpoint = "http://localhost:2222/rest/annotate")
