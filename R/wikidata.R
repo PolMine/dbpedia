@@ -79,7 +79,7 @@ dbpedia_get_wikidata_uris <- function(x, optional, endpoint, limit = 100, wait =
     )
   }
   for (i in 1L:length(chunks)){
-    cli_progress_update()
+    if (progress) cli_progress_update()
     query <- sprintf(
       template,
       paste(sprintf("<%s>", chunks[[i]]), collapse = " "),

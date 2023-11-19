@@ -1,3 +1,69 @@
+#' Query SPARQL endpoint
+#' 
+#' @param endpoint URL of a SPARQL endpoint.
+#' @param query A (single) SPARL query. 
+#' @importFrom httr GET add_headers content
+#' @importFrom xml2 read_xml xml_find_all xml_attr xml_text
+#' @importFrom utils URLencode
+#' @export
+#' @examples
+#' sparql_endpoint <- "http://de.dbpedia.org/sparql"
+#' query <- 'SELECT distinct ?item ?wikidata_uri ?key
+#'   WHERE {
+#'     VALUES ?item {<http://de.dbpedia.org/resource/Bayernpartei> <http://de.dbpedia.org/resource/Deutsches_Kaiserreich>}
+#'     ?item owl:sameAs ?wikidata_uri
+#'     FILTER(regex(str(?wikidata_uri), "www.wikidata.org" ) )
+#'   }
+#'   LIMIT 100
+#' '
+#' sparql_query(endpoint = sparql_endpoint, query = query)
+sparql_query <- function(endpoint, query){
+  
+  stopifnot(
+    is.character(endpoint), length(endpoint) == 1L,
+    is.character(query), length(query) == 1L
+  )
+  
+  url <- paste(
+    endpoint,
+    "?query=",
+    gsub("\\+", "%2B", URLencode(query, reserved = TRUE)),
+    sep = ""
+  )
+  
+  results <- GET(
+    url = url,
+    add_headers(Accept = "application/sparql-results+xml")
+  )
+  
+  content <- content(results, as = "text")
+  
+  dom <- read_xml(x = content)
+  results <- xml_find_all(x = dom, xpath = "//d1:result")
+  
+  if (length(results) == 0L) return(data.frame(c()))
+  
+  vars <- xml_find_all(dom, xpath = "//d1:head/d1:variable")
+  attrs <- xml_attr(vars, attr = "name")
+  
+  data <- lapply(
+    attrs,
+    function(attr){
+      nodes <- xml_find_all(
+        results,
+        xpath = sprintf("//d1:binding[@name='%s']", attr)
+      )
+      if (length(nodes) == 0L){
+        rep(NA, times = length(results))
+      } else {
+        xml_text(nodes)
+      }
+    }
+  )
+  names(data) <- attrs
+  data.frame(data)
+}
+
 #' Split vector into equally sized chunks
 #' 
 #' Split input vector `x` into equally sized chunks. The maximum size is taken
@@ -74,3 +140,4 @@ unique_msg <- function(x, verbose = TRUE){
     cli_alert_info("{.val {length(y)}} unique values to process")
   y
 }
+

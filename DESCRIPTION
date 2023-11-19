@@ -19,7 +19,8 @@ Imports:
     httr,
     jsonlite,
     RcppCWB,
-    fs
+    fs,
+    xml2
 Suggests:
     markdown (>= 1.5),
     rmarkdown,
