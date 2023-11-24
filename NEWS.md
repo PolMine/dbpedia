@@ -15,6 +15,7 @@ ID now (not "label", as previously).
 basis for dropping packages SPARQL, XML and RCurl as dependencies. Package xml2
 is a new dependency.
 * Default value of argument `max_len` is now 5680.
+* Bugged result for `get_dbpedia_uris()` if s_attribute = NULL corrected #18.
 
 
 ## dbpedia v0.1.1

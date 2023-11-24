@@ -274,22 +274,25 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
     verbose = verbose
   )
   
-  dt <- as.data.table(doc, what = s_attribute)
+  
   
   if (is.null(s_attribute)){
-    
+    dt <- as.data.table(doc, what = s_attribute)
     links[, "end" := links[["start"]] + nchar(links[["text"]]) - 1L]
     tab <- links[,
                  list(
-                   cpos_left = dt[.SD[["start"]] == .SD[["start"]]][["id"]],
-                   cpos_right = dt[.SD[["end"]] == .SD[["end"]]][["id"]],
-                   dbpedia_uri = .SD[["dbpedia_uri"]], text = .SD[["text"]]
+                   cpos_left = dt[.SD[["start"]] == dt[["start"]]][["id"]],
+                   cpos_right = dt[.SD[["end"]] == dt[["end"]]][["id"]],
+                   dbpedia_uri = .SD[["dbpedia_uri"]],
+                   text = .SD[["text"]]
                  ),
                  by = "start",
                  .SDcols = c("start", "end", "dbpedia_uri", "text")
     ]
     tab[, "start" := NULL]
   } else {
+    
+    dt <- as.data.table(doc, what = s_attribute)
     tab <- links[dt, on = c("start", "text")]
     
     # Corpus positions in table tab may deviate from regions of 
