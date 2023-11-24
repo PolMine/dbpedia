@@ -14,6 +14,7 @@ ID now (not "label", as previously).
 * New auxiliary function `sparql_query()` replaces `SPARQL::SPARQL()` and is 
 basis for dropping packages SPARQL, XML and RCurl as dependencies. Package xml2
 is a new dependency.
+* Default value of argument `max_len` is now 5680.
 
 
 ## dbpedia v0.1.1

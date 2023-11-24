@@ -8,9 +8,25 @@
 \usage{
 wikidata_query(x, ...)
 
-\S4method{wikidata_query}{character}(x, id, limit = 100L, wait = 1, verbose = TRUE, progress = FALSE)
+\S4method{wikidata_query}{character}(
+  x,
+  id,
+  language = getOption("dbpedia.lang"),
+  limit = 100L,
+  wait = 1,
+  verbose = TRUE,
+  progress = FALSE
+)
 
-\S4method{wikidata_query}{data.table}(x, id, limit = 100L, wait = 1, verbose = TRUE, progress = FALSE)
+\S4method{wikidata_query}{data.table}(
+  x,
+  id,
+  language = getOption("dbpedia.lang"),
+  limit = 100L,
+  wait = 1,
+  verbose = TRUE,
+  progress = FALSE
+)
 }
 \arguments{
 \item{x}{A vector of wikidata ids.  NA values are dropped, only unique values
@@ -19,6 +35,8 @@ will be processed.}
 \item{...}{Further arguments.}
 
 \item{id}{Wikidata ID for information to retrieve (\code{character} vector).}
+
+\item{language}{Language to be used in Wikidata query.}
 
 \item{limit}{Maximum number of wikidata IDs to be sent to endpoint at a time.}
 

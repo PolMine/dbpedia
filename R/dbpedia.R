@@ -135,7 +135,7 @@ setGeneric("get_dbpedia_uris", function(x, ...) standardGeneric("get_dbpedia_uri
 #' )
 #' }
 #' 
-setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbpedia.lang"), max_len = 6067L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
+setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbpedia.lang"), max_len = 5680L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
   
   if (nchar(x) > max_len){
     if (verbose) cli_alert_warning(
@@ -186,7 +186,7 @@ setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbp
 
 #' @exportMethod get_dbpedia_uris
 #' @rdname get_dbpedia_uris
-setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language = getOption("dbpedia.lang"), max_len = 6067L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
+setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language = getOption("dbpedia.lang"), max_len = L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
   get_dbpedia_uris(
     x = as.character(x[["content"]]),
     language = language,
@@ -204,7 +204,7 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #'   'AnnotatedPlainTextDocument' from NLP package.
 #' @param max_len An `integer` value. The text passed to DBpedia Spotlight may
 #'   not exceed a defined length. If it does, an HTTP error results. The known
-#'   threshold of 6067 characters is the default value.
+#'   threshold of 5680 characters is the default value.
 #' @param language The language of the input text ("en", "fr", "de", ...) to 
 #'   determine the stopwords used. 
 #' @param confidence A `numeric` value, the minimum similarity score that serves
@@ -248,7 +248,7 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #'   subset(p_type == "speech") %>% 
 #'   get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 5067)
 #'   
-setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, max_len = 6067L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
+setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, max_len = 5680L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
   
   if (verbose) cli_progress_step("convert input to `AnnotatedPlainTextDocument`")
   doc <- decode(
@@ -345,7 +345,7 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
 #' uritab <- corpus("REUTERS") %>% 
 #'   split(s_attribute = "id", verbose = FALSE) %>% 
 #'   get_dbpedia_uris(language = "en", p_attribute = "word", verbose = TRUE)
-setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = getOption("dbpedia.endpoint"), max_len = 6067L, verbose = TRUE){
+setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = getOption("dbpedia.endpoint"), max_len = 5680L, verbose = TRUE){
   
   if (verbose){
     env <- parent.frame()
@@ -401,7 +401,7 @@ setMethod(
   function(
     x,
     language = getOption("dbpedia.lang"),
-    max_len = 6067L,
+    max_len = 5680L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
     verbose = TRUE
@@ -425,7 +425,7 @@ setMethod(
           dt <- get_dbpedia_uris(
             x = docs[[docname]],
             language = language,
-            max_len = 5067L,
+            max_len = max_len,
             confidence = confidence,
             api = api,
             verbose = verbose

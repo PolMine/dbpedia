@@ -66,28 +66,22 @@ dbpedia_get_wikidata_uris(
   limit = 2,
   progress = TRUE
 )
-# This example is commented out because we get an error that the SSL 
-# certificate has expired
+library(dbpedia)
+library(quanteda)
+library(dplyr)
+library(tibble)
 
-# options(dbpedia.lang = "en")
-# options(dbpedia.endpoint = "http://api.dbpedia-spotlight.org/en/annotate")
-# library(quanteda)
+options(dbpedia.lang = "en")
+options(dbpedia.endpoint = "http://api.dbpedia-spotlight.org/en/annotate")
 
-# dt <- data_char_ukimmig2010 |>
-#   corpus() |>
-#  get_dbpedia_uris(verbose = FALSE) \%>\% 
-#   add_wikidata_uris(endpoint = "http://de.dbpedia.org/sparql", progress = TRUE)
+httr::set_config(httr::config(ssl_verifypeer = 0L))
 
-library(polmineR)
-use("GermaParl2")
-
-options(dbpedia.lang = "de")
-options(dbpedia.endpoint = "http://localhost:2222/rest/annotate")
-
-data <- polmineR::corpus("GERMAPARL2MINI") \%>\% 
-  subset(speaker_name == "Carlo Schmid") \%>\%
-  subset(p_type == "speech") \%>\% 
-  get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 5067) \%>\% 
-  add_wikidata_uris(endpoint = "http://de.dbpedia.org/sparql", verbose = FALSE, progress = TRUE) \%>\% 
-  wikidata_query(id = "P31")
+uritab <- data_char_ukimmig2010 |>
+  corpus() |>
+  get_dbpedia_uris() \%>\% 
+  add_wikidata_uris(endpoint = "https://dbpedia.org/sparql/", progress = TRUE, limit = 50) \%>\% 
+  wikidata_query(id = "P31") \%>\% 
+  as_tibble() \%>\% 
+  filter(grepl("political party", P31))
+  
 }

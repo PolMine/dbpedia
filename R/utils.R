@@ -38,6 +38,8 @@ sparql_query <- function(endpoint, query){
   
   content <- content(results, as = "text")
   
+  if (nchar(content) == 0L) return(data.frame(c()))
+  
   dom <- read_xml(x = content)
   results <- xml_find_all(x = dom, xpath = "//d1:result")
   
