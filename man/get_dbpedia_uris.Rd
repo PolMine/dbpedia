@@ -15,7 +15,7 @@ get_dbpedia_uris(x, ...)
 \S4method{get_dbpedia_uris}{character}(
   x,
   language = getOption("dbpedia.lang"),
-  max_len = 6067L,
+  max_len = 5680L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   verbose = TRUE
@@ -24,7 +24,7 @@ get_dbpedia_uris(x, ...)
 \S4method{get_dbpedia_uris}{AnnotatedPlainTextDocument}(
   x,
   language = getOption("dbpedia.lang"),
-  max_len = 6067L,
+  max_len = 5680L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   verbose = TRUE
@@ -35,7 +35,7 @@ get_dbpedia_uris(x, ...)
   language = getOption("dbpedia.lang"),
   p_attribute = "word",
   s_attribute = NULL,
-  max_len = 6067L,
+  max_len = 5680L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   verbose = TRUE
@@ -48,17 +48,19 @@ get_dbpedia_uris(x, ...)
   s_attribute = NULL,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
-  max_len = 6067L,
-  verbose = TRUE
+  max_len = 5680L,
+  verbose = TRUE,
+  progress = FALSE
 )
 
 \S4method{get_dbpedia_uris}{corpus}(
   x,
   language = getOption("dbpedia.lang"),
-  max_len = 6067L,
+  max_len = 5680L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
-  verbose = TRUE
+  verbose = TRUE,
+  progress = FALSE
 )
 }
 \arguments{
@@ -72,14 +74,14 @@ determine the stopwords used.}
 
 \item{max_len}{An \code{integer} value. The text passed to DBpedia Spotlight may
 not exceed a defined length. If it does, an HTTP error results. The known
-threshold of 6067 characters is the default value.}
+threshold of 5680 characters is the default value.}
 
 \item{confidence}{A \code{numeric} value, the minimum similarity score that serves
 as threshold befor DBpedia Spotlight includes a link into the report.}
 
 \item{api}{An URL of the DBpedia Spotlight API.}
 
-\item{verbose}{A \code{logical} value - whether to display progress messages.}
+\item{verbose}{A \code{logical} value - whether to display messages.}
 
 \item{p_attribute}{The p-attribute used for decoding a \code{subcorpus} object.}
 
@@ -87,6 +89,8 @@ as threshold befor DBpedia Spotlight includes a link into the report.}
 DBpedia URIs will be mapped on this s-attribute. Only regions covered by
 this s-attribute will be kept. If missing, URIs will be
 mapped on the token stream, and all URIs suggested will be kept.}
+
+\item{progress}{A \code{logical} value - whether to show progress.}
 }
 \value{
 A \code{data.table} with columns 'dbpedia_uri' and 'text'. Depending on

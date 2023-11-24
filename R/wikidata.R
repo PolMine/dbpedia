@@ -233,8 +233,6 @@ setGeneric(
 #' @examples
 #' library(dbpedia)
 #' library(quanteda)
-#' library(dplyr)
-#' library(tibble)
 #' 
 #' options(dbpedia.lang = "en")
 #' options(dbpedia.endpoint = "http://api.dbpedia-spotlight.org/en/annotate")
@@ -245,9 +243,7 @@ setGeneric(
 #'   corpus() |>
 #'   get_dbpedia_uris() %>% 
 #'   add_wikidata_uris(endpoint = "https://dbpedia.org/sparql/", progress = TRUE, limit = 50) %>% 
-#'   wikidata_query(id = "P31") %>% 
-#'   as_tibble() %>% 
-#'   filter(grepl("political party", P31))
+#'   wikidata_query(id = "P31")
 #'   
 #' @rdname wikidata_uris
 #' @importFrom data.table setkeyv

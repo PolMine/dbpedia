@@ -186,7 +186,7 @@ setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbp
 
 #' @exportMethod get_dbpedia_uris
 #' @rdname get_dbpedia_uris
-setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language = getOption("dbpedia.lang"), max_len = L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
+setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language = getOption("dbpedia.lang"), max_len = 5680L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
   get_dbpedia_uris(
     x = as.character(x[["content"]]),
     language = language,
@@ -210,7 +210,8 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #' @param confidence A `numeric` value, the minimum similarity score that serves
 #'   as threshold befor DBpedia Spotlight includes a link into the report.
 #' @param api An URL of the DBpedia Spotlight API.
-#' @param verbose A `logical` value - whether to display progress messages.
+#' @param verbose A `logical` value - whether to display messages.
+#' @param progress A `logical` value - whether to show progress.
 #' @param s_attribute A length-one `character` vector indicating a s-attribute.
 #'   DBpedia URIs will be mapped on this s-attribute. Only regions covered by 
 #'   this s-attribute will be kept. If missing, URIs will be
@@ -345,9 +346,9 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
 #' uritab <- corpus("REUTERS") %>% 
 #'   split(s_attribute = "id", verbose = FALSE) %>% 
 #'   get_dbpedia_uris(language = "en", p_attribute = "word", verbose = TRUE)
-setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = getOption("dbpedia.endpoint"), max_len = 5680L, verbose = TRUE){
+setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = getOption("dbpedia.endpoint"), max_len = 5680L, verbose = TRUE, progress = FALSE){
   
-  if (verbose){
+  if (progress){
     env <- parent.frame()
     cli_progress_bar("Tasks", total = length(x), type = "tasks", .envir = env)
   }
@@ -355,7 +356,7 @@ setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOpti
   li <- lapply(
     x@objects, 
     function(sc){
-      if (verbose) cli_progress_update(.envir = env)
+      if (progress) cli_progress_update(.envir = env)
       get_dbpedia_uris(
         x = sc,
         language = language,
@@ -363,11 +364,11 @@ setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOpti
         max_len = max_len,
         confidence = confidence,
         api = api,
-        verbose = FALSE
+        verbose = if (progress) FALSE else verbose
       )
     }
   )
-  if (verbose) cli_progress_done(.envir = env)
+  if (progress) cli_progress_done(.envir = env)
   
   y <- rbindlist(li)
   setorderv(y, cols = "cpos_left", order = 1L)
@@ -404,7 +405,8 @@ setMethod(
     max_len = 5680L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
-    verbose = TRUE
+    verbose = TRUE,
+    progress = FALSE
   ){
     
     # ensure that input object is corpus class from quanteda pkg
@@ -418,21 +420,31 @@ setMethod(
     }
 
     docs <- as.character(x)
+    
+    if (progress){
+      env <- parent.frame()
+      cli_progress_bar("Tasks", total = length(x), type = "tasks", .envir = env)
+    }
+    
     retval <- rbindlist(
       lapply(
         names(docs),
         function(docname){
+          if (progress) cli_progress_update(.envir = env)
           dt <- get_dbpedia_uris(
             x = docs[[docname]],
             language = language,
             max_len = max_len,
             confidence = confidence,
             api = api,
-            verbose = verbose
+            verbose = if (progress) FALSE else verbose
           )[, "doc" := docname]
         }
       )
     )
+    
+    if (progress) cli_progress_done(.envir = env)
+    
     setcolorder(retval, neworder = "doc")
     retval
   }
