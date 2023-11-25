@@ -77,7 +77,7 @@ httr::set_config(httr::config(ssl_verifypeer = 0L))
 
 uritab <- data_char_ukimmig2010 |>
   corpus() |>
-  get_dbpedia_uris() \%>\% 
+  get_dbpedia_uris(progress = TRUE) \%>\% 
   add_wikidata_uris(endpoint = "https://dbpedia.org/sparql/", progress = TRUE, limit = 50) \%>\% 
   wikidata_query(id = "P31")
 }

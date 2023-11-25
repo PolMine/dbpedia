@@ -55,5 +55,12 @@ additional information for known wikidata IDs.
 }
 \examples{
 wikidata_ids <- c("Q1741365", "Q3840", "Q437")
-wikidata_query(wikidata_ids, id = "P439",progress = TRUE)
+wikidata_query(wikidata_ids, id = "P439", progress = TRUE)
+
+wikidata_uris <- c(
+  "http://www.wikidata.org/entity/Q1020", 
+  "http://www.wikidata.org/entity/Q27468",
+  "http://www.wikidata.org/entity/Q2131751"
+)
+wikidata_query(wikidata_uris, id = "P439", progress = TRUE)
 }

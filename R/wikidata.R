@@ -116,7 +116,14 @@ setGeneric("wikidata_query", function(x, ...) standardGeneric("wikidata_query"))
 #' @rdname wikidata_query
 #' @examples
 #' wikidata_ids <- c("Q1741365", "Q3840", "Q437")
-#' wikidata_query(wikidata_ids, id = "P439",progress = TRUE)
+#' wikidata_query(wikidata_ids, id = "P439", progress = TRUE)
+#' 
+#' wikidata_uris <- c(
+#'   "http://www.wikidata.org/entity/Q1020", 
+#'   "http://www.wikidata.org/entity/Q27468",
+#'   "http://www.wikidata.org/entity/Q2131751"
+#' )
+#' wikidata_query(wikidata_uris, id = "P439", progress = TRUE)
 setMethod("wikidata_query", "character", function(x, id, language = getOption("dbpedia.lang"), limit = 100L, wait = 1, verbose = TRUE, progress = FALSE){
   
   if (!requireNamespace("WikidataQueryServiceR", quietly = TRUE)){
@@ -129,6 +136,17 @@ setMethod("wikidata_query", "character", function(x, id, language = getOption("d
     is.numeric(wait), wait > 0, length(wait) == 1L,
     is.logical(progress), length(progress) == 1L
   )
+  
+  if (any(startsWith(x, "http"))){
+    if (verbose) cli_alert_info("extract wikidata ID from URI")
+    x <- gsub("^http(s|)://www.wikidata.org/entity/", "", x)
+  }
+  
+  if (!all(grepl("^Q\\d+$", x))){
+    cli_alert_warning(
+      "all wikidata IDs expected to match regex pattern '^Q\\d+$' - not TRUE"
+    )
+  }
   
   x <- na_drop(x, verbose = verbose)
   
@@ -242,7 +260,7 @@ setGeneric(
 #'
 #' uritab <- data_char_ukimmig2010 |>
 #'   corpus() |>
-#'   get_dbpedia_uris() %>% 
+#'   get_dbpedia_uris(progress = TRUE) %>% 
 #'   add_wikidata_uris(endpoint = "https://dbpedia.org/sparql/", progress = TRUE, limit = 50) %>% 
 #'   wikidata_query(id = "P31")
 #' }
