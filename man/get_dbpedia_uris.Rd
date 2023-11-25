@@ -132,9 +132,11 @@ uritab <- corpus("REUTERS") \%>\%
 # example code
 
 # Process quanteda corpus 
+\donttest{
 library(quanteda)
 uritab <- data_char_ukimmig2010 |>
   corpus() |>
   get_dbpedia_uris(verbose = FALSE)
+}
   
 }

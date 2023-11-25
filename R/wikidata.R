@@ -231,6 +231,7 @@ setGeneric(
 
 
 #' @examples
+#' \donttest{
 #' library(dbpedia)
 #' library(quanteda)
 #' 
@@ -244,6 +245,7 @@ setGeneric(
 #'   get_dbpedia_uris() %>% 
 #'   add_wikidata_uris(endpoint = "https://dbpedia.org/sparql/", progress = TRUE, limit = 50) %>% 
 #'   wikidata_query(id = "P31")
+#' }
 #'   
 #' @rdname wikidata_uris
 #' @importFrom data.table setkeyv

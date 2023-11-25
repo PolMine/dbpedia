@@ -28,9 +28,7 @@ Suggests:
     WikidataQueryServiceR,
     GermaParl2,
     quanteda
-Remotes:
-  polmineR=github::PolMine/polmineR@dev,
-  GermaParl2=url::https://polmine.github.io/drat/src/contrib/GermaParl2_2.0.0.tar.gz
+AdditionalRepositories: https://polmine.github.io/drat/
 VignetteBuilder: knitr
 SystemRequirements: docker
 LazyData: true

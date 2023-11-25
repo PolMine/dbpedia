@@ -66,6 +66,7 @@ dbpedia_get_wikidata_uris(
   limit = 2,
   progress = TRUE
 )
+\donttest{
 library(dbpedia)
 library(quanteda)
 
@@ -79,5 +80,6 @@ uritab <- data_char_ukimmig2010 |>
   get_dbpedia_uris() \%>\% 
   add_wikidata_uris(endpoint = "https://dbpedia.org/sparql/", progress = TRUE, limit = 50) \%>\% 
   wikidata_query(id = "P31")
+}
   
 }
