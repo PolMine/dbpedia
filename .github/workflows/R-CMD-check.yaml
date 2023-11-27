@@ -45,6 +45,11 @@ jobs:
           extra-packages: any::rcmdcheck, any::covr, any::remotes
           needs: check
       
+      - name: Install further dependencies
+        run: |
+          install.packages(pkgs = "GermaParl2", contriburl = "https://polmine.github.io/drat/src/contrib", type = "source")
+        shell: Rscript {0}
+      
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
