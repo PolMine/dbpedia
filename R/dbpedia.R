@@ -75,6 +75,7 @@ as.data.table.AnnotatedPlainTextDocument <- function(x, what = NULL){
   dt <- setDT(as.data.frame(x[["annotation"]]))
   if (!is.null(what)){
     dt <- dt[dt[["type"]] %in% what]
+    if (nrow(dt) == 0) return(dt) # if there are no elements of "what" in this text
     dt[, "text" := unlist(lapply(dt[["features"]], `[[`, "text"))]
     constituents <- lapply(dt[["features"]], `[[`, "constituents")
     dt[, "ne_type" := unlist(lapply(dt[["features"]], `[[`, "kind"))]
@@ -208,7 +209,7 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #' @param language The language of the input text ("en", "fr", "de", ...) to 
 #'   determine the stopwords used. 
 #' @param confidence A `numeric` value, the minimum similarity score that serves
-#'   as threshold befor DBpedia Spotlight includes a link into the report.
+#'   as threshold before DBpedia Spotlight includes a link into the report.
 #' @param api An URL of the DBpedia Spotlight API.
 #' @param verbose A `logical` value - whether to display messages.
 #' @param progress A `logical` value - whether to show progress.
@@ -293,6 +294,8 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
   } else {
     
     dt <- as.data.table(doc, what = s_attribute)
+    if (nrow(dt) == 0) return(NULL) # if there are no elements of s_attribute
+
     tab <- links[dt, on = c("start", "text")]
     
     # Corpus positions in table tab may deviate from regions of 
@@ -458,7 +461,7 @@ setMethod(
 
 #' Stopwords used by DBpedia Spotlight
 #' 
-#' `dbpedia_stopwords` is a list of character vecotrs with stopwords used by
+#' `dbpedia_stopwords` is a list of character vectors with stopwords used by
 #' DBpedia Spotlight before processing chunks of texts. The data is used for
 #' mapping offset positions returned from DBpedia Spotlight on corpus positions
 #' on the R side.
