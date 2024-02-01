@@ -2,6 +2,8 @@
 
 * Error avoided when `get_dbpedia_uris()` is restricted to pre-annotated
 named entities and the document does not contain any (addresses issue #23)
+* set default `max_len` in `get_dbpedia_uris()` to 5600 to avoid failing queries
+* `get_dbpedia_uris()` returns types now (addresses issue #24)
 
 ## dbpedia v0.1.1.9006
 

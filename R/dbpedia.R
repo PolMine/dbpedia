@@ -136,7 +136,7 @@ setGeneric("get_dbpedia_uris", function(x, ...) standardGeneric("get_dbpedia_uri
 #' )
 #' }
 #' 
-setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbpedia.lang"), max_len = 5680L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
+setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbpedia.lang"), max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
   
   if (nchar(x) > max_len){
     if (verbose) cli_alert_warning(
@@ -167,19 +167,20 @@ setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbp
       data.table(
         start = integer(),
         text = character(),
-        dbpedia_uri = character()
+        dbpedia_uri = character(),
+        types = character()
       )
     )
   }
   
-  resources_min <- resources[, c("@URI", "@surfaceForm", "@offset")]
+  resources_min <- resources[, c("@URI", "@surfaceForm", "@offset", "@types")]
   setnames(
     resources_min,
-    old = c("@URI", "@surfaceForm", "@offset"),
-    new = c("dbpedia_uri", "text", "start")
+    old = c("@URI", "@surfaceForm", "@offset", "@types"),
+    new = c("dbpedia_uri", "text", "start", "types")
   )
   resources_min[, "start" := as.integer(resources_min[["start"]]) + 1L]
-  setcolorder(resources_min, c("start", "text", "dbpedia_uri"))
+  setcolorder(resources_min, c("start", "text", "dbpedia_uri", "types"))
   
   resources_min
 })
@@ -187,7 +188,7 @@ setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbp
 
 #' @exportMethod get_dbpedia_uris
 #' @rdname get_dbpedia_uris
-setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language = getOption("dbpedia.lang"), max_len = 5680L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
+setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language = getOption("dbpedia.lang"), max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
   get_dbpedia_uris(
     x = as.character(x[["content"]]),
     language = language,
@@ -250,7 +251,7 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #'   subset(p_type == "speech") %>% 
 #'   get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 5067)
 #'   
-setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, max_len = 5680L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
+setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
   
   if (verbose) cli_progress_step("convert input to `AnnotatedPlainTextDocument`")
   doc <- decode(
@@ -285,10 +286,11 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
                    cpos_left = dt[.SD[["start"]] == dt[["start"]]][["id"]],
                    cpos_right = dt[.SD[["end"]] == dt[["end"]]][["id"]],
                    dbpedia_uri = .SD[["dbpedia_uri"]],
-                   text = .SD[["text"]]
+                   text = .SD[["text"]],
+                   types = .SD[["types"]]
                  ),
                  by = "start",
-                 .SDcols = c("start", "end", "dbpedia_uri", "text")
+                 .SDcols = c("start", "end", "dbpedia_uri", "text", "types")
     ]
     tab[, "start" := NULL]
   } else {
@@ -322,7 +324,7 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
     tab[["end"]] <- NULL
     tab[["id"]] <- NULL
     
-    setcolorder(x = tab, neworder = c("cpos_left", "cpos_right", "dbpedia_uri", "text"))
+    setcolorder(x = tab, neworder = c("cpos_left", "cpos_right", "dbpedia_uri", "text", "types"))
     
     if (verbose){
       lapply(
@@ -352,7 +354,7 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
 #' uritab <- corpus("REUTERS") %>% 
 #'   split(s_attribute = "id", verbose = FALSE) %>% 
 #'   get_dbpedia_uris(language = "en", p_attribute = "word", verbose = TRUE)
-setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = getOption("dbpedia.endpoint"), max_len = 5680L, verbose = TRUE, progress = FALSE){
+setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = getOption("dbpedia.endpoint"), max_len = 5600L, verbose = TRUE, progress = FALSE){
   
   if (progress){
     env <- parent.frame()
@@ -410,7 +412,7 @@ setMethod(
   function(
     x,
     language = getOption("dbpedia.lang"),
-    max_len = 5680L,
+    max_len = 5600L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
     verbose = TRUE,
