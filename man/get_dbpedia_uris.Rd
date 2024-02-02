@@ -15,7 +15,7 @@ get_dbpedia_uris(x, ...)
 \S4method{get_dbpedia_uris}{character}(
   x,
   language = getOption("dbpedia.lang"),
-  max_len = 5680L,
+  max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   verbose = TRUE
@@ -24,7 +24,7 @@ get_dbpedia_uris(x, ...)
 \S4method{get_dbpedia_uris}{AnnotatedPlainTextDocument}(
   x,
   language = getOption("dbpedia.lang"),
-  max_len = 5680L,
+  max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   verbose = TRUE
@@ -35,9 +35,10 @@ get_dbpedia_uris(x, ...)
   language = getOption("dbpedia.lang"),
   p_attribute = "word",
   s_attribute = NULL,
-  max_len = 5680L,
+  max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
+  types = FALSE,
   verbose = TRUE
 )
 
@@ -48,7 +49,8 @@ get_dbpedia_uris(x, ...)
   s_attribute = NULL,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
-  max_len = 5680L,
+  max_len = 5600L,
+  types = FALSE,
   verbose = TRUE,
   progress = FALSE
 )
@@ -56,9 +58,10 @@ get_dbpedia_uris(x, ...)
 \S4method{get_dbpedia_uris}{corpus}(
   x,
   language = getOption("dbpedia.lang"),
-  max_len = 5680L,
+  max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
+  types = FALSE,
   verbose = TRUE,
   progress = FALSE
 )
@@ -77,7 +80,7 @@ not exceed a defined length. If it does, an HTTP error results. The known
 threshold of 5680 characters is the default value.}
 
 \item{confidence}{A \code{numeric} value, the minimum similarity score that serves
-as threshold befor DBpedia Spotlight includes a link into the report.}
+as threshold before DBpedia Spotlight includes a link into the report.}
 
 \item{api}{An URL of the DBpedia Spotlight API.}
 
@@ -89,6 +92,9 @@ as threshold befor DBpedia Spotlight includes a link into the report.}
 DBpedia URIs will be mapped on this s-attribute. Only regions covered by
 this s-attribute will be kept. If missing, URIs will be
 mapped on the token stream, and all URIs suggested will be kept.}
+
+\item{types}{A \code{logical} value - whether to return all types provided by
+DBpedia Spotlight.}
 
 \item{progress}{A \code{logical} value - whether to show progress.}
 }

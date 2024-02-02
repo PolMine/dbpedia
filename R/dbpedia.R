@@ -181,7 +181,7 @@ setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbp
   )
   resources_min[, "start" := as.integer(resources_min[["start"]]) + 1L]
   setcolorder(resources_min, c("start", "text", "dbpedia_uri", "types"))
-  
+
   resources_min
 })
 
@@ -219,6 +219,8 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #'   this s-attribute will be kept. If missing, URIs will be
 #'   mapped on the token stream, and all URIs suggested will be kept.
 #' @param p_attribute The p-attribute used for decoding a `subcorpus` object.
+#' @param types A `logical` value - whether to return all types provided by
+#'   DBpedia Spotlight.
 #' @param ... Further arguments.
 #' @exportMethod get_dbpedia_uris
 #' @importFrom cli cli_alert_warning cli_progress_step cli_alert_danger
@@ -251,7 +253,7 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #'   subset(p_type == "speech") %>% 
 #'   get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 5067)
 #'   
-setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
+setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = FALSE, verbose = TRUE){
   
   if (verbose) cli_progress_step("convert input to `AnnotatedPlainTextDocument`")
   doc <- decode(
@@ -276,8 +278,7 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
     verbose = verbose
   )
   
-  
-  
+
   if (is.null(s_attribute)){
     dt <- as.data.table(doc, what = s_attribute)
     links[, "end" := links[["start"]] + nchar(links[["text"]]) - 1L]
@@ -344,6 +345,10 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
     }
   }
 
+  # return types (optionally)
+  if (isFALSE(types))
+    tab[, types := NULL]
+
   tab
 })
 
@@ -354,7 +359,7 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
 #' uritab <- corpus("REUTERS") %>% 
 #'   split(s_attribute = "id", verbose = FALSE) %>% 
 #'   get_dbpedia_uris(language = "en", p_attribute = "word", verbose = TRUE)
-setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = getOption("dbpedia.endpoint"), max_len = 5600L, verbose = TRUE, progress = FALSE){
+setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = getOption("dbpedia.endpoint"), max_len = 5600L, types = FALSE, verbose = TRUE, progress = FALSE){
   
   if (progress){
     env <- parent.frame()
@@ -372,6 +377,7 @@ setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOpti
         max_len = max_len,
         confidence = confidence,
         api = api,
+        types = types,
         verbose = if (progress) FALSE else verbose
       )
     }
@@ -415,6 +421,7 @@ setMethod(
     max_len = 5600L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
+    types = FALSE,
     verbose = TRUE,
     progress = FALSE
   ){
@@ -456,6 +463,11 @@ setMethod(
     if (progress) cli_progress_done(.envir = env)
     
     setcolorder(retval, neworder = "doc")
+
+    # return types (optionally)
+    if (isFALSE(types))
+      retval[, types := NULL]
+
     retval
   }
 )

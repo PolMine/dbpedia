@@ -100,24 +100,49 @@ as_chunks <- function(x, size){
 }
 
 #' Transform table with DBpedia URIs to subcorpus.
-#' 
+#'
 #' @param x A `data.table` with DBpedia URIs.
+#' @param highlight_by A `character vector` of the column in which entity names
+#'   are annotated. Defaults to NULL.
+#' @details If a `character vector` is supplied to `highlight_by`, selected
+#'   entity types  (PERSON, LOCATION, ORGANIZATION, MISC) are assigned specific
+#'   color codes. Other entities in the column are assigned a single color.
 #' @importFrom fs path
 #' @export
-as_subcorpus <- function(x){
+as_subcorpus <- function(x, highlight_by = NULL){
+
+  if (is.null(highlight_by)) {
+
+    highlights <- rep(x = c(OTHER = "lavender"), times = nrow(x))
+
+  } else {
+
+    if (!highlight_by %in% colnames(x)) {
+      stop(format_error(
+        c(
+          "{.var highlight_by} must exist in {.var x}",
+          "x" = "The character vector you supplied was not found in data.table {.var x}"
+        )
+      ))
+    }
+
+    highlights <- sapply(
+      x[[highlight_by]],
+      switch,
+      PERSON = "yellow",
+      LOCATION = "lightgreen",
+      ORGANIZATION = "lightskyblue",
+      MISC = "lightgrey",
+      "lavender"
+    )
+  }
+
   new(
     "subcorpus",
     template = path(NA_character_),
     cpos = as.matrix(x[, c("cpos_left", "cpos_right")]),
     annotations = list(
-      highlight = sapply(
-        x[["ne_type"]],
-        switch,
-        PERSON = "yellow",
-        LOCATION = "lightgreen",
-        ORGANIZATION = "lightskyblue",
-        MISC = "lightgrey"
-      ),
+      highlight = highlights,
       href = x[["dbpedia_uri"]],
       tooltips = ifelse(is.na(x[["dbpedia_uri"]]), "[no uri]", x[["dbpedia_uri"]])
     )
@@ -143,3 +168,84 @@ unique_msg <- function(x, verbose = TRUE){
   y
 }
 
+
+#' Map types returned by DBpedia Spotlight to a limited set of classes
+#'
+#' @param x A `data.table` with DBpedia URIs.
+#' @param mapping_vector A `named character vector` with desired class names
+#'     (as names) and types from the DBpedia ontology as values.
+#' @param other a `character vector` with the name of the class of all types
+#'     not matched by the `mapping_vector`.
+#' @param verbose A `logical` value - whether to display messages.
+#' @importFrom data.table is.data.table
+#' @importFrom cli format_error cli_alert_info
+#' @export
+map_types_to_class <- function(x, mapping_vector, other = "MISC", verbose = TRUE) {
+
+  if (!is.data.table(x)) {
+    stop(format_error(
+      c(
+        "input {.var x} is no data.table."
+      )
+    ))
+  }
+
+  if (!is.character(mapping_vector)) {
+    stop(format_error(
+      c(
+        "{.var mapping_vector} is no character vector.",
+        "i" = "The {.var mapping_vector} must be a named character vector."
+      )
+    ))
+  }
+
+  if (!is.character(other) | length(other) > 1) {
+
+    stop(format_error(
+      c(
+        "{.var other} is no character vector of length {.val 1}."
+      )
+    ))
+  }
+
+  if (!"types" %in% colnames(x)) {
+
+    stop(format_error(
+      c(
+        "There is no {.var types} column in the input data.table.",
+        "i" = "Types are returned by {.fn get_dbpedia_uri} only if the argument `types` is set to TRUE."
+      )
+    ))
+  }
+
+  types_to_class_fun <- function(types) {
+
+    types_with_class <- types |>
+      strsplit(split = ",") |>
+      unlist() |>
+      intersect(mapping_vector)
+
+    if (length(types_with_class) > 0) {
+      match_idx <- which(mapping_vector %in% types_with_class)
+
+      class_name <- mapping_vector |>
+        names() |>
+        _[match_idx] |>
+        unique() |>
+        paste(collapse = "|")
+
+    } else {
+      class_name <- other
+    }
+
+    return(class_name)
+  }
+
+  if (verbose)
+    cli_alert_info(
+      "mapping values in column {.var types} to new column {.var class}"
+    )
+
+  x[, class := types_to_class_fun(types = types), by = 1:nrow(x)]
+
+}

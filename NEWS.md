@@ -1,9 +1,15 @@
 ## dbpedia v0.1.1.9008
 
 * Error avoided when `get_dbpedia_uris()` is restricted to pre-annotated
-named entities and the document does not contain any (addresses issue #23)
-* set default `max_len` in `get_dbpedia_uris()` to 5600 to avoid failing queries
-* `get_dbpedia_uris()` returns types now (addresses issue #24)
+named entities and the document does not contain any (addresses issue #23).
+* set default `max_len` in `get_dbpedia_uris()` to 5600 to avoid failing queries.
+* `get_dbpedia_uris()` optionally returns types now (addresses issue #24).
+* added `map_types_to_class` as an utility function to reduce types to a
+limited set of classes.
+* modified `as_subcorpus()` to make `read()` work without pre-annotated entities
+and in tandem with `map_types_to_class()` by avoiding hard-coding the column name
+"ne_type". Also added a color code to entities which are not within "PERSON",
+"LOCATION", "ORGANIZATION" and "MISC".
 
 ## dbpedia v0.1.1.9006
 

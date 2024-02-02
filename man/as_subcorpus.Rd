@@ -4,11 +4,19 @@
 \alias{as_subcorpus}
 \title{Transform table with DBpedia URIs to subcorpus.}
 \usage{
-as_subcorpus(x)
+as_subcorpus(x, highlight_by = NULL)
 }
 \arguments{
 \item{x}{A \code{data.table} with DBpedia URIs.}
+
+\item{highlight_by}{A \verb{character vector} of the column in which entity names
+are annotated. Defaults to NULL.}
 }
 \description{
 Transform table with DBpedia URIs to subcorpus.
+}
+\details{
+If a \verb{character vector} is supplied to \code{highlight_by}, selected
+entity types  (PERSON, LOCATION, ORGANIZATION, MISC) are assigned specific
+color codes. Other entities in the column are assigned a single color.
 }
