@@ -10,6 +10,11 @@ limited set of classes.
 and in tandem with `map_types_to_class()` by avoiding hard-coding the column name
 "ne_type". Also added a color code to entities which are not within "PERSON",
 "LOCATION", "ORGANIZATION" and "MISC".
+* started to implement the `expand_to_token` argument which ultimately should
+resolve mismatches between DBpedia Spotlight's entity spans and CWB token spans
+(issue #26)
+* added `drop_inexact_annotations` argument to `get_dbpedia_uris()` to control
+keeping or omitting inexact annotations in output data.table (see issue #26)
 
 ## dbpedia v0.1.1.9006
 

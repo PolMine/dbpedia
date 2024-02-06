@@ -201,35 +201,43 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 
 
 #' Get DBpedia links.
-#' 
+#'
 #' @param x A `subcorpus` object. Will be coerced to
 #'   'AnnotatedPlainTextDocument' from NLP package.
 #' @param max_len An `integer` value. The text passed to DBpedia Spotlight may
 #'   not exceed a defined length. If it does, an HTTP error results. The known
-#'   threshold of 5680 characters is the default value.
-#' @param language The language of the input text ("en", "fr", "de", ...) to 
-#'   determine the stopwords used. 
+#'   threshold of 5600 characters is the default value.
+#' @param language The language of the input text ("en", "fr", "de", ...) to
+#'   determine the stopwords used.
 #' @param confidence A `numeric` value, the minimum similarity score that serves
 #'   as threshold before DBpedia Spotlight includes a link into the report.
 #' @param api An URL of the DBpedia Spotlight API.
 #' @param verbose A `logical` value - whether to display messages.
 #' @param progress A `logical` value - whether to show progress.
 #' @param s_attribute A length-one `character` vector indicating a s-attribute.
-#'   DBpedia URIs will be mapped on this s-attribute. Only regions covered by 
-#'   this s-attribute will be kept. If missing, URIs will be
-#'   mapped on the token stream, and all URIs suggested will be kept.
+#'   DBpedia URIs will be mapped on this s-attribute. Only regions covered by
+#'   this s-attribute will be kept. If missing, URIs will be mapped on the token
+#'   stream, and all URIs suggested will be kept.
 #' @param p_attribute The p-attribute used for decoding a `subcorpus` object.
-#' @param types A `logical` value - whether to return all types provided by
-#'   DBpedia Spotlight.
+#' @param return_types A `logical` value - whether to return all types provided
+#'   by DBpedia Spotlight.
+#' @param expand_to_token A `logical` value - whether the character offsets of
+#'   DBpedia Spotlight are mapped to the token boundaries of the `subcorpus` if
+#'   the two differ. Also see the explanation in `details`. Defaults to FALSE.
+#' @param drop_inexact_annotations A `logical` value - whether to drop entity
+#'   annotations when entity spans and token spans do not align exactly.
 #' @param ... Further arguments.
+#' @details `expand_to_token` is a rather experimental feature that resolves
+#'   mismatches between entity spans and token spans by expanding the former to
+#'   the last character position of the corresponding token. See issue #26 in
+#'   the `dbpedia` GitHub repository.
 #' @exportMethod get_dbpedia_uris
 #' @importFrom cli cli_alert_warning cli_progress_step cli_alert_danger
 #'   cli_progress_done cli_alert_info
 #' @importFrom polmineR punctuation
 #' @importFrom jsonlite fromJSON
 #' @importFrom httr GET http_error content
-#' @importFrom data.table setnames `:=` setDT setcolorder
-#'   as.data.table
+#' @importFrom data.table setnames `:=` setDT setcolorder as.data.table
 #' @importFrom stats setNames
 #' @importFrom grDevices heat.colors
 #' @importFrom polmineR decode get_token_stream
@@ -241,19 +249,19 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #' @examples
 #' library(polmineR)
 #' use("RcppCWB")
-#' 
-#' uritab <- corpus("REUTERS") %>% 
+#'
+#' uritab <- corpus("REUTERS") %>%
 #'   subset(id == "127") %>%
 #'   get_dbpedia_uris(language = "en", p_attribute = "word")
-#' 
+#'
 #' use("GermaParl2")
-#' 
-#' uritab2 <- corpus("GERMAPARL2MINI") %>% 
+#'
+#' uritab2 <- corpus("GERMAPARL2MINI") %>%
 #'   subset(speaker_name == "Carlo Schmid") %>%
-#'   subset(p_type == "speech") %>% 
+#'   subset(p_type == "speech") %>%
 #'   get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 5067)
 #'   
-setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = FALSE, verbose = TRUE){
+setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), return_types = FALSE, expand_to_token = FALSE, drop_inexact_annotations = TRUE, verbose = TRUE){
   
   if (verbose) cli_progress_step("convert input to `AnnotatedPlainTextDocument`")
   doc <- decode(
@@ -277,7 +285,17 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
     api = api,
     verbose = verbose
   )
-  
+
+  # prepare function to assign cpos_right depending on value and arguments
+  expand_fun = function(.SD) {
+    cpos_right <- dt[.SD[["end"]] == dt[["end"]]][["id"]]
+
+    if (length(cpos_right) == 0 & isTRUE(expand_to_token)) {
+      cpos_right <- dt[["id"]][which(dt[["end"]] > .SD[["end"]])[1]]
+    } else {
+      cpos_right
+    }
+  }
 
   if (is.null(s_attribute)){
     dt <- as.data.table(doc, what = s_attribute)
@@ -285,7 +303,7 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
     tab <- links[,
                  list(
                    cpos_left = dt[.SD[["start"]] == dt[["start"]]][["id"]],
-                   cpos_right = dt[.SD[["end"]] == dt[["end"]]][["id"]],
+                   cpos_right = expand_fun(.SD),
                    dbpedia_uri = .SD[["dbpedia_uri"]],
                    text = .SD[["text"]],
                    types = .SD[["types"]]
@@ -346,8 +364,16 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
   }
 
   # return types (optionally)
-  if (isFALSE(types))
+  if (isFALSE(return_types))
     tab[, types := NULL]
+
+  # drop entities which cannot be mapped exactly to the tokenstream from the
+  # output (see issue #26).
+  if (isTRUE(drop_inexact_annotations) & any(is.na(tab[["cpos_right"]]))) {
+    missing_cpos_idx <- which(is.na(tab[["cpos_right"]]))
+    cli_alert_warning("Cannot map {length(missing_cpos_idx)} entit{?y/ies} exactly to tokenstream. Dropping {?it/them} from the annotation.")
+    tab <- tab[-missing_cpos_idx, ]
+  }
 
   tab
 })
@@ -359,7 +385,7 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
 #' uritab <- corpus("REUTERS") %>% 
 #'   split(s_attribute = "id", verbose = FALSE) %>% 
 #'   get_dbpedia_uris(language = "en", p_attribute = "word", verbose = TRUE)
-setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = getOption("dbpedia.endpoint"), max_len = 5600L, types = FALSE, verbose = TRUE, progress = FALSE){
+setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = getOption("dbpedia.endpoint"), max_len = 5600L, return_types = FALSE, verbose = TRUE, progress = FALSE){
   
   if (progress){
     env <- parent.frame()
@@ -377,7 +403,7 @@ setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOpti
         max_len = max_len,
         confidence = confidence,
         api = api,
-        types = types,
+        return_types = return_types,
         verbose = if (progress) FALSE else verbose
       )
     }
@@ -421,7 +447,7 @@ setMethod(
     max_len = 5600L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
-    types = FALSE,
+    return_types = FALSE,
     verbose = TRUE,
     progress = FALSE
   ){
@@ -465,7 +491,7 @@ setMethod(
     setcolorder(retval, neworder = "doc")
 
     # return types (optionally)
-    if (isFALSE(types))
+    if (isFALSE(return_types))
       retval[, types := NULL]
 
     retval

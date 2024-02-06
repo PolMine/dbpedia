@@ -2,7 +2,7 @@ Package: dbpedia
 Type: Package
 Title: R Wrapper for DBpedia Spotlight
 Version: 0.1.1.9008
-Date: 2024-01-26
+Date: 2024-02-05
 Authors@R: c(
   person("Andreas", "Blaette", role = c("aut", "cre"), email = "andreas.blaette@uni-due.de", comment = c(ORCID = "0000-0001-8970-8010")),
   person("Christoph", "Leonhardt", role = "aut")

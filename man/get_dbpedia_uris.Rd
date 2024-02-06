@@ -38,7 +38,9 @@ get_dbpedia_uris(x, ...)
   max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
-  types = FALSE,
+  return_types = FALSE,
+  expand_to_token = FALSE,
+  drop_inexact_annotations = TRUE,
   verbose = TRUE
 )
 
@@ -50,7 +52,7 @@ get_dbpedia_uris(x, ...)
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   max_len = 5600L,
-  types = FALSE,
+  return_types = FALSE,
   verbose = TRUE,
   progress = FALSE
 )
@@ -61,7 +63,7 @@ get_dbpedia_uris(x, ...)
   max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
-  types = FALSE,
+  return_types = FALSE,
   verbose = TRUE,
   progress = FALSE
 )
@@ -77,7 +79,7 @@ determine the stopwords used.}
 
 \item{max_len}{An \code{integer} value. The text passed to DBpedia Spotlight may
 not exceed a defined length. If it does, an HTTP error results. The known
-threshold of 5680 characters is the default value.}
+threshold of 5600 characters is the default value.}
 
 \item{confidence}{A \code{numeric} value, the minimum similarity score that serves
 as threshold before DBpedia Spotlight includes a link into the report.}
@@ -90,11 +92,18 @@ as threshold before DBpedia Spotlight includes a link into the report.}
 
 \item{s_attribute}{A length-one \code{character} vector indicating a s-attribute.
 DBpedia URIs will be mapped on this s-attribute. Only regions covered by
-this s-attribute will be kept. If missing, URIs will be
-mapped on the token stream, and all URIs suggested will be kept.}
+this s-attribute will be kept. If missing, URIs will be mapped on the token
+stream, and all URIs suggested will be kept.}
 
-\item{types}{A \code{logical} value - whether to return all types provided by
-DBpedia Spotlight.}
+\item{return_types}{A \code{logical} value - whether to return all types provided
+by DBpedia Spotlight.}
+
+\item{expand_to_token}{A \code{logical} value - whether the character offsets of
+DBpedia Spotlight are mapped to the token boundaries of the \code{subcorpus} if
+the two differ. Also see the explanation in \code{details}. Defaults to FALSE.}
+
+\item{drop_inexact_annotations}{A \code{logical} value - whether to drop entity
+annotations when entity spans and token spans do not align exactly.}
 
 \item{progress}{A \code{logical} value - whether to show progress.}
 }
@@ -104,6 +113,12 @@ input object, further columns are ...
 }
 \description{
 Get DBpedia links.
+}
+\details{
+\code{expand_to_token} is a rather experimental feature that resolves
+mismatches between entity spans and token spans by expanding the former to
+the last character position of the corresponding token. See issue #26 in
+the \code{dbpedia} GitHub repository.
 }
 \examples{
 \dontrun{
@@ -121,15 +136,15 @@ tab <- get_dbpedia_uris(
 library(polmineR)
 use("RcppCWB")
 
-uritab <- corpus("REUTERS") \%>\% 
+uritab <- corpus("REUTERS") \%>\%
   subset(id == "127") \%>\%
   get_dbpedia_uris(language = "en", p_attribute = "word")
 
 use("GermaParl2")
 
-uritab2 <- corpus("GERMAPARL2MINI") \%>\% 
+uritab2 <- corpus("GERMAPARL2MINI") \%>\%
   subset(speaker_name == "Carlo Schmid") \%>\%
-  subset(p_type == "speech") \%>\% 
+  subset(p_type == "speech") \%>\%
   get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 5067)
   
 uritab <- corpus("REUTERS") \%>\% 
