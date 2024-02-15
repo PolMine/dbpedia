@@ -18,6 +18,7 @@ get_dbpedia_uris(x, ...)
   max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
+  return_types = TRUE,
   verbose = TRUE
 )
 
@@ -86,6 +87,9 @@ as threshold before DBpedia Spotlight includes a link into the report.}
 
 \item{api}{An URL of the DBpedia Spotlight API.}
 
+\item{return_types}{A \code{logical} value - whether to return all types provided
+by DBpedia Spotlight.}
+
 \item{verbose}{A \code{logical} value - whether to display messages.}
 
 \item{p_attribute}{The p-attribute used for decoding a \code{subcorpus} object.}
@@ -94,9 +98,6 @@ as threshold before DBpedia Spotlight includes a link into the report.}
 DBpedia URIs will be mapped on this s-attribute. Only regions covered by
 this s-attribute will be kept. If missing, URIs will be mapped on the token
 stream, and all URIs suggested will be kept.}
-
-\item{return_types}{A \code{logical} value - whether to return all types provided
-by DBpedia Spotlight.}
 
 \item{expand_to_token}{A \code{logical} value - whether the character offsets of
 DBpedia Spotlight are mapped to the token boundaries of the \code{subcorpus} if

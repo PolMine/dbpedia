@@ -136,7 +136,7 @@ setGeneric("get_dbpedia_uris", function(x, ...) standardGeneric("get_dbpedia_uri
 #' )
 #' }
 #' 
-setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbpedia.lang"), max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
+setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbpedia.lang"), max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), return_types = TRUE, verbose = TRUE){
   
   if (nchar(x) > max_len){
     if (verbose) cli_alert_warning(
@@ -181,6 +181,10 @@ setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbp
   )
   resources_min[, "start" := as.integer(resources_min[["start"]]) + 1L]
   setcolorder(resources_min, c("start", "text", "dbpedia_uri", "types"))
+
+  # return types (optionally)
+  if (isFALSE(return_types))
+    resources_min[, types := NULL]
 
   resources_min
 })
