@@ -18,7 +18,6 @@ get_dbpedia_uris(x, ...)
   max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
-  return_types = TRUE,
   verbose = TRUE
 )
 
@@ -39,7 +38,6 @@ get_dbpedia_uris(x, ...)
   max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
-  return_types = FALSE,
   expand_to_token = FALSE,
   drop_inexact_annotations = TRUE,
   verbose = TRUE
@@ -53,7 +51,6 @@ get_dbpedia_uris(x, ...)
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   max_len = 5600L,
-  return_types = FALSE,
   verbose = TRUE,
   progress = FALSE
 )
@@ -64,7 +61,6 @@ get_dbpedia_uris(x, ...)
   max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
-  return_types = FALSE,
   verbose = TRUE,
   progress = FALSE
 )
@@ -87,9 +83,6 @@ as threshold before DBpedia Spotlight includes a link into the report.}
 
 \item{api}{An URL of the DBpedia Spotlight API.}
 
-\item{return_types}{A \code{logical} value - whether to return all types provided
-by DBpedia Spotlight.}
-
 \item{verbose}{A \code{logical} value - whether to display messages.}
 
 \item{p_attribute}{The p-attribute used for decoding a \code{subcorpus} object.}
@@ -109,8 +102,14 @@ annotations when entity spans and token spans do not align exactly.}
 \item{progress}{A \code{logical} value - whether to show progress.}
 }
 \value{
-A \code{data.table} with columns 'dbpedia_uri' and 'text'. Depending on
-input object, further columns are ...
+A \code{data.table} with the following columns:
+\itemize{
+\item \emph{dbpedia_uri}: The DBpedia URI.
+\item \emph{text}: Text that has been annotated
+\item \emph{types}: Recognized entity types, for each row a named list, if available
+entries such as 'DBpedia', 'Schema', 'Wikidata', 'DUL'
+Depending on the input object, further columns may be available.
+}
 }
 \description{
 Get DBpedia links.

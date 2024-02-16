@@ -1,3 +1,9 @@
+## dbpedia v0.1.1.9009
+
+* dropped argument `return_types` from `get_dbpedia_uris()`. Column `types` is 
+kept in output, with parsed output #24.
+
+
 ## dbpedia v0.1.1.9008
 
 * Error avoided when `get_dbpedia_uris()` is restricted to pre-annotated
