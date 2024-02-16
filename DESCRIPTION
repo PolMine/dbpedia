@@ -12,7 +12,7 @@ Depends:
     R (>= 3.5.0)
 Imports:
     methods,
-    polmineR (>= 0.8.8.9010),
+    polmineR (>= 0.8.9.9002),
     cli,
     data.table,
     tibble,
