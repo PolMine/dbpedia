@@ -11,7 +11,7 @@ An object of class \code{list} of length 24.
 dbpedia_stopwords
 }
 \description{
-\code{dbpedia_stopwords} is a list of character vecotrs with stopwords used by
+\code{dbpedia_stopwords} is a list of character vectors with stopwords used by
 DBpedia Spotlight before processing chunks of texts. The data is used for
 mapping offset positions returned from DBpedia Spotlight on corpus positions
 on the R side.

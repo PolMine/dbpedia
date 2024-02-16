@@ -1,3 +1,21 @@
+## dbpedia v0.1.1.9008
+
+* Error avoided when `get_dbpedia_uris()` is restricted to pre-annotated
+named entities and the document does not contain any (addresses issue #23).
+* set default `max_len` in `get_dbpedia_uris()` to 5600 to avoid failing queries.
+* `get_dbpedia_uris()` optionally returns types now (addresses issue #24).
+* added `map_types_to_class` as an utility function to reduce types to a
+limited set of classes.
+* modified `as_subcorpus()` to make `read()` work without pre-annotated entities
+and in tandem with `map_types_to_class()` by avoiding hard-coding the column name
+"ne_type". Also added a color code to entities which are not within "PERSON",
+"LOCATION", "ORGANIZATION" and "MISC".
+* started to implement the `expand_to_token` argument which ultimately should
+resolve mismatches between DBpedia Spotlight's entity spans and CWB token spans
+(issue #26)
+* added `drop_inexact_annotations` argument to `get_dbpedia_uris()` to control
+keeping or omitting inexact annotations in output data.table (see issue #26)
+
 ## dbpedia v0.1.1.9006
 
 * Error avoided when `get_dbpedia_uris()` does not detect any URI.
