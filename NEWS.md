@@ -1,3 +1,6 @@
+## dbpedia v0.1.1.9010
+* new functions `to_annotation()`, `xml_enrich()` `namespaced_xpath()` and method `get_dbpedia_uris()` for xml docs.
+
 ## dbpedia v0.1.1.9009
 
 * dropped argument `return_types` from `get_dbpedia_uris()`. Column `types` is 

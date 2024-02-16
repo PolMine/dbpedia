@@ -1,7 +1,7 @@
 Package: dbpedia
 Type: Package
 Title: R Wrapper for DBpedia Spotlight
-Version: 0.1.1.9009
+Version: 0.1.1.9010
 Date: 2024-02-16
 Authors@R: c(
   person("Andreas", "Blaette", role = c("aut", "cre"), email = "andreas.blaette@uni-due.de", comment = c(ORCID = "0000-0001-8970-8010")),
@@ -20,7 +20,9 @@ Imports:
     jsonlite,
     RcppCWB,
     fs,
-    xml2
+    xml2,
+    stringi,
+    NLP
 Suggests:
     markdown (>= 1.5),
     rmarkdown,
@@ -43,6 +45,7 @@ Collate:
     'utils.R'
     'wikidata.R'
     'get_annotation_table.R'
+    'xml.R'
     'zzz.R'
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3

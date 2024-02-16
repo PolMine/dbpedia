@@ -114,6 +114,177 @@ as_annotation <- function(x){
   x
 }
 
+
+#' Transform XML to NLP::AnnotatedPlainTextDocument
+#' @param xml the xml document itself - needed to extract the namespace
+#' @param nodes which nodes constitute a single document, i.e. either a
+#'   nodeset of different segments. Can also be an entire XML document.
+#' @param token_tags ...
+#' @param feature_tag ...
+#' @importFrom stringi stri_c
+#' @importFrom NLP Annotation
+to_annotation = function(nodes, xml, token_tags, feature_tag) {
+  
+  if (class(nodes) == "xml_nodeset") {
+    
+    lapply(nodes,
+           to_annotation,
+           xml = xml,
+           token_tags = token_tags,
+           feature_tag = feature_tag)
+    
+  } else {
+    
+    token_elements <- nodes |>
+      xml2::xml_find_all(xpath = namespaced_xpath(xml = xml, tags = token_tags))
+    
+    # make token annotation data annotation
+    
+    # get tokens as character vector
+    toks <- xml2::xml_text(token_elements)
+    
+    # get info on whitespace
+    tok_joins <- xml2::xml_attr(token_elements, attr = "join")
+    
+    # get IDs
+    tok_ids <- xml2::xml_attr(token_elements, attr = "id")
+    
+    # get token length: some tokens are not followed by whitespace. This is indicated
+    # by `tok_joins` above.
+    whitespace_int <- ifelse(is.na(tok_joins), 1, 0)
+    nchars_for_toks <- nchar(toks) + whitespace_int
+    
+    # the starting position is needed for all but the first token. It is calculated
+    # using the length of the tokens.
+    
+    token_char_len <- nchars_for_toks[1:(length(nchars_for_toks) - 1)]
+    
+    # the starting position for each token after the first is calculated using
+    # cumsum().
+    
+    if (length(toks) > 1) {
+      start_positions <- cumsum(c(1, token_char_len)) 
+    } else {
+      start_positions <- 1
+    }
+    
+    # the end_position is calculcated using the cumsum of the token length minus the
+    # whitespace vector (moving each character one up but for the join tokens)
+    
+    end_positions <- cumsum(nchars_for_toks) - whitespace_int
+    
+    # data.frame split to rwos
+    
+    token_feat_dataframe <- data.frame(word = toks, id = tok_ids)
+    token_feat_list <- split(token_feat_dataframe, seq(nrow(token_feat_dataframe))) |>
+      unname()
+    
+    token_annotation <- NLP::Annotation(
+      seq_along(tok_ids), # IDs must be integer, which is a bit unfortunate
+      rep("word", length(tok_ids)),
+      start_positions,
+      end_positions,
+      token_feat_list
+    )
+    
+    # and add feature elements if chosen
+    
+    if (!is.null(feature_tag)) {
+      feature_elements <- nodes |>
+        xml2::xml_find_all(xpath = namespaced_xpath(xml = xml, tags = feature_tag))
+    } else {
+      feature_elements <- NULL
+    }
+    
+    if (length(feature_elements) > 0) {
+      
+      
+      feature_ids <- sapply(feature_elements, function(element) {
+        xml2::xml_find_first(element,
+                             xpath = namespaced_xpath(xml = xml, tags = token_tags)) |>
+          xml2::xml_attr("id") 
+      }
+      )
+      
+      feature_ids <- sprintf("%s_%s", feature_ids, feature_tag)
+      
+      # get attributes of features
+      feature_ids <- feature_ids # name has no ID. We use the first word ID (assuming that there are no overlaps?)
+      feature_kinds <- xml2::xml_attr(feature_elements, "type")
+      feature_texts <- sapply(feature_elements, function(feat) {
+        xml2::xml_children(feat) |>
+          xml2::xml_text() |>
+          paste(collapse = " ")
+      }
+      )
+      
+      # get spans for features
+      
+      entity_spans <- sapply(feature_elements, function(element) {
+        child_id <- element |>
+          xml2::xml_children() |>
+          xml2::xml_attr("id")
+        
+        child_idx <- which(tok_ids %in% child_id)
+        child_start <- min(start_positions[child_idx])
+        child_end <- max(end_positions[child_idx])
+        
+        matrix(c(child_start, child_end), nrow = 1, ncol = 2)
+        
+      }
+      ) |> t()
+      
+      
+      feature_annotation <- NLP::Annotation(
+        seq_along(feature_ids),
+        rep("name", length(feature_ids)),
+        entity_spans[, 1],
+        entity_spans[, 2]
+      )
+      
+      # combine the annotation
+      segment_annotation <- c(token_annotation, feature_annotation)
+      
+      # add feature list to spans
+      ne_annotation_components <- NLP::annotations_in_spans(segment_annotation[segment_annotation$type == "word"],
+                                                            segment_annotation[segment_annotation$type == feature_tag])
+      
+      features <- lapply(1:length(ne_annotation_components),
+                         function(i) list(
+                           text = paste(sapply(ne_annotation_components[[i]]$features, "[[", "word"), collapse = " "),
+                           kind = feature_kinds[[i]],
+                           constituents = ne_annotation_components[[i]]$id,
+                           id = feature_ids[[i]]))
+      
+      segment_annotation$features[segment_annotation$type == feature_tag] <- features
+      
+      
+      
+    } else {
+      segment_annotation <- token_annotation
+    }
+    
+    # make string
+    word_with_ws <- paste(toks, ifelse(is.na(tok_joins), " ", ""), sep = "")
+    s <- stringi::stri_c(word_with_ws, collapse = "") |> trimws()
+    
+    # add segment id as metadata (should work if segment is NULL as the TEI has
+    # an ID as well).
+    
+    meta <- list(
+      segment_id = xml2::xml_attr(nodes, "id")
+    )
+    
+    # finally, merge everything to annotation data
+    annodata <- NLP::AnnotatedPlainTextDocument(
+      s = s,
+      a = segment_annotation,
+      meta = meta
+    )
+  }
+}
+
+
 #' @rdname get_dbpedia_uris
 setGeneric("get_dbpedia_uris", function(x, ...) standardGeneric("get_dbpedia_uris"))
 
@@ -212,7 +383,7 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 
 #' Get DBpedia links.
 #'
-#' @param x A `subcorpus` object. Will be coerced to
+#' @param x A `subcorpus` (`xml`, ...) object. Will be coerced to
 #'   'AnnotatedPlainTextDocument' from NLP package.
 #' @param max_len An `integer` value. The text passed to DBpedia Spotlight may
 #'   not exceed a defined length. If it does, an HTTP error results. The known
@@ -501,6 +672,169 @@ setMethod(
     retval
   }
 )
+
+
+#' @param feature_tag Name of a tag containing named entities, etc.
+#' @param segment name of elements to segment document by
+#' @param token_tags names of elements describing tokens
+#' @param text_tag name of element that distinguishes text from other elements
+#'   such as headers
+#' @rdname get_dbpedia_uris
+#' @exportMethod get_dbpedia_uris
+setMethod("get_dbpedia_uris", "xml_document", function(x,
+                                                       language = getOption("dbpedia.lang"),
+                                                       feature_tag = NULL,
+                                                       segment = NULL,
+                                                       token_tags = c("w", "pc"),
+                                                       text_tag = NULL,
+                                                       max_len = 5600L,
+                                                       confidence = 0.35,
+                                                       api = getOption("dbpedia.endpoint"),
+                                                       expand_to_token = FALSE,
+                                                       drop_inexact_annotations = TRUE,
+                                                       verbose = TRUE){
+  
+  # sometimes, there are nodes of the same name in different parts of the
+  # document (such as <name>) in ParlaMint which describes persons in the TEI
+  # header and named entities in the text body. It can be useful to focus on the
+  # text part.
+  
+  if (!is.null(text_tag)) {
+    nodes <- xml2::xml_find_all(x, xpath = namespaced_xpath(xml = x, tags = text_tag))
+  } else {
+    nodes <- x 
+    
+    # Note: these two nodes objects are different since the first is a nodeset,
+    # the second is a xml_document.
+  }
+  
+  # get units which should be send to the DBpedia Spotlight (to account for
+  # max_len, etc.). This can be the entire text or a paragraph or a sentence,
+  # depending on the structure. Provided by "segment" argument.
+  
+  # get both tokens and features (NEs, etc.)
+  
+  if (is.null(segment)) {
+    nodes_to_process <- nodes
+  } else {
+    nodes_to_process <- xml2::xml_find_all(nodes,
+                                           xpath = namespaced_xpath(xml = x, tags = segment))
+  }
+  
+  if (verbose) cli_progress_step("preparing {.val {length(nodes_to_process)}} annotation tables.")
+  
+  docs <- to_annotation(nodes = nodes_to_process,
+                        xml = x,
+                        token_tags = token_tags,
+                        feature_tag = feature_tag)
+  
+  if (verbose) cli_progress_done()
+  
+  # prepare function to assign ID depending on value and arguments
+  expand_fun = function(.SD, dt) {
+    id_right <- dt[.SD[["end"]] == dt[["end"]]][["id"]]
+    
+    if (length(id_right) == 0 & isTRUE(expand_to_token)) {
+      id_right <- dt[["id"]][which(dt[["end"]] > .SD[["end"]])[1]]
+    } else {
+      id_right
+    }
+  }
+  
+  # Note: The following function should probably overload the existing
+  # dbpedia:::as.data.table.AnnotatedPlainTextDocument() function.
+  
+  AnnotatedPlainTextDocument_to_datatable2 = function (x, what = NULL)  {
+    dt <- setDT(as.data.frame(x[["annotation"]]))
+    if (!is.null(what)) {
+      dt <- dt[dt[["type"]] %in% what]
+      if (nrow(dt) == 0)  return(dt)
+      dt[, `:=`("text", unlist(lapply(dt[["features"]], `[[`, "text")))]
+      constituents <- lapply(dt[["features"]], `[[`, "constituents")
+      dt[, `:=`("feature_kind", unlist(lapply(dt[["features"]],  `[[`, "kind")))]
+      dt[, `:=`("id_left", sapply(constituents, min))]
+      dt[, `:=`("id_right", sapply(constituents, max))]
+      dt[, `:=`("original_id", unlist(lapply(dt[["features"]],  `[[`, "id")))]
+      dt[, `:=`("features", NULL)]
+    } else {
+      # always retrieve original ID from features
+      dt[, `:=`("original_id", unlist(lapply(dt[["features"]],  `[[`, "id")))]
+      dt <- dt[, `:=`("features", NULL)]
+    }
+    dt
+  }
+  
+  annotations <- lapply(docs, function(doc) {
+    
+    links <- get_dbpedia_uris(
+      x = doc,
+      language = language,
+      max_len = max_len,
+      confidence = confidence,
+      api = api,
+      verbose = verbose
+    )
+    
+    if (nrow(links) == 0) return(NULL) # no entities in this segment
+    
+    if (is.null(feature_tag)) {
+      dt <- AnnotatedPlainTextDocument_to_datatable2(doc, what = feature_tag)
+      links[, "end" := links[["start"]] + nchar(links[["text"]]) - 1L]
+      tab <- links[,
+                   list(
+                     original_id = paste(dt[which(.SD[["start"]] == dt[["start"]]):which(.SD[["end"]] == dt[["end"]])][["original_id"]], collapse = "|"),
+                     dbpedia_uri = .SD[["dbpedia_uri"]],
+                     text = .SD[["text"]],
+                     types = .SD[["types"]]
+                   ),
+                   by = "start",
+                   .SDcols = c("start", "end", "dbpedia_uri", "text", "types")
+      ]
+      tab[, "start" := NULL]
+      
+    } else {
+      
+      dt <- AnnotatedPlainTextDocument_to_datatable2(doc, what = feature_tag)
+      if (nrow(dt) == 0) return(NULL) # if there are no elements of s_attribute
+      
+      tab <- links[dt, on = c("start", "text")]
+      
+      # does #11 apply here, too? For CWB, this can be an issue?
+      
+      # actually, the original ID can be used to add?
+      
+      tab[["start"]] <- NULL
+      tab[["end"]] <- NULL
+      tab[["i.end"]] <- NULL
+      tab[["id"]] <- NULL
+      tab[["type"]] <- NULL
+      tab[["feature_kind"]] <- NULL
+      
+      tab[["id_left"]] <- NULL
+      tab[["id_right"]] <- NULL
+      
+      setcolorder(x = tab, neworder = c("dbpedia_uri", "text", "types", "original_id"))
+      
+    }
+    
+    # add segment id from document's metadata
+    tab$segment_id <- doc$meta[["segment_id"]]
+    
+    if (isTRUE(drop_inexact_annotations) & any(is.na(tab[["original_id"]]))) {
+      missing_id_idx <- which(is.na(tab[["original_id"]]))
+      cli_alert_warning("Cannot map {length(missing_id_idx)} entit{?y/ies} exactly to tokenstream. Dropping {?it/them} from the annotation.")
+      tab <- tab[-missing_id_idx, ]
+    }
+    
+    tab
+    # MAYBE SLEEP?
+    
+  }
+  )
+  
+  data.table::rbindlist(annotations)
+})
+
 
 
 #' Stopwords used by DBpedia Spotlight

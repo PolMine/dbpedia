@@ -8,6 +8,7 @@
 \alias{get_dbpedia_uris,subcorpus-method}
 \alias{get_dbpedia_uris,subcorpus_bundle-method}
 \alias{get_dbpedia_uris,corpus-method}
+\alias{get_dbpedia_uris,xml_document-method}
 \title{Get DBpedia links.}
 \usage{
 get_dbpedia_uris(x, ...)
@@ -64,9 +65,24 @@ get_dbpedia_uris(x, ...)
   verbose = TRUE,
   progress = FALSE
 )
+
+\S4method{get_dbpedia_uris}{xml_document}(
+  x,
+  language = getOption("dbpedia.lang"),
+  feature_tag = NULL,
+  segment = NULL,
+  token_tags = c("w", "pc"),
+  text_tag = NULL,
+  max_len = 5600L,
+  confidence = 0.35,
+  api = getOption("dbpedia.endpoint"),
+  expand_to_token = FALSE,
+  drop_inexact_annotations = TRUE,
+  verbose = TRUE
+)
 }
 \arguments{
-\item{x}{A \code{subcorpus} object. Will be coerced to
+\item{x}{A \code{subcorpus} (\code{xml}, ...) object. Will be coerced to
 'AnnotatedPlainTextDocument' from NLP package.}
 
 \item{...}{Further arguments.}
@@ -100,6 +116,15 @@ the two differ. Also see the explanation in \code{details}. Defaults to FALSE.}
 annotations when entity spans and token spans do not align exactly.}
 
 \item{progress}{A \code{logical} value - whether to show progress.}
+
+\item{feature_tag}{Name of a tag containing named entities, etc.}
+
+\item{segment}{name of elements to segment document by}
+
+\item{token_tags}{names of elements describing tokens}
+
+\item{text_tag}{name of element that distinguishes text from other elements
+such as headers}
 }
 \value{
 A \code{data.table} with the following columns:
