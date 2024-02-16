@@ -28,7 +28,7 @@ speech <- corpus("GERMAPARL2MINI") %>%
 
 get named entities/NEs present (previous annotation using StanfordCore NLP)
 
-```{r get_named_entities}
+```{r get_named_entities, eval = FALSE}
 named_entities <- speech %>%
   subset(ne_type) %>%
   as_annotation()
@@ -36,13 +36,13 @@ named_entities <- speech %>%
 
 inspect article with NE annotation before linking step
 
-```{r read_speech}
+```{r read_speech, eval = FALSE}
 read(speech, annotation = named_entities)
 ```
 
 get DBpedia links for named entities using DBpedia Spotlight
 
-```{r get_uris}
+```{r get_uris, eval = FALSE}
 dbpedia_uris <- get_dbpedia_uris(
   x = speech,
   language = "de",
@@ -53,7 +53,7 @@ dbpedia_uris <- get_dbpedia_uris(
 
 inspect DBpedia resource URIs
 
-```{r inspect_result}
+```{r inspect_result, eval = FALSE}
 read(speech, annotation = as_subcorpus(dbpedia_uris))
 ```
 
