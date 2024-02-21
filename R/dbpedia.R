@@ -566,7 +566,7 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
 #' uritab <- corpus("REUTERS") %>% 
 #'   split(s_attribute = "id", verbose = FALSE) %>% 
 #'   get_dbpedia_uris(language = "en", p_attribute = "word", verbose = TRUE)
-setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = getOption("dbpedia.endpoint"), max_len = 5600L, verbose = TRUE, progress = FALSE){
+setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = getOption("dbpedia.endpoint"), max_len = 5600L, expand_to_token = FALSE, verbose = TRUE, progress = FALSE){
   
   if (progress){
     env <- parent.frame()
@@ -584,6 +584,7 @@ setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOpti
         max_len = max_len,
         confidence = confidence,
         api = api,
+        expand_to_token = expand_to_token,
         verbose = if (progress) FALSE else verbose
       )
     }

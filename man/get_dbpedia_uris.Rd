@@ -52,6 +52,7 @@ get_dbpedia_uris(x, ...)
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   max_len = 5600L,
+  expand_to_token = FALSE,
   verbose = TRUE,
   progress = FALSE
 )

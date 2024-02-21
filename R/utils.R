@@ -171,14 +171,23 @@ unique_msg <- function(x, verbose = TRUE){
 
 #' Map types returned by DBpedia Spotlight to a limited set of classes
 #'
+#' This function takes the output of `get_dbpedia_uris()` and compares values in
+#' the `types` column with a named character vector. The main purpose of this
+#' function is to reduce the number of types to a limited set of classes.
+#'
 #' @param x A `data.table` with DBpedia URIs.
-#' @param mapping_vector A `named character vector` with desired class names
-#'     (as names) and types from the DBpedia ontology as values.
-#' @param other a `character vector` with the name of the class of all types
-#'     not matched by the `mapping_vector`.
+#' @param mapping_vector A `named character vector` with desired class names (as
+#'   names) and types from the DBpedia ontology as values. For example:
+#'   c("PERSON" = "DBpedia:Person"). Can contain more than one pair of class and
+#'   type.
+#' @param other a `character vector` with the name of the class of all types not
+#'   matched by the `mapping_vector`.
 #' @param verbose A `logical` value - whether to display messages.
 #' @importFrom data.table is.data.table
 #' @importFrom cli format_error cli_alert_info
+#' @details If there is more than one match between the retrieved types and the
+#'   `mapping vector`, unique classes are sorted alphabetically and collapsed.
+#' @return Function adds classes to input data.table by reference.
 #' @export
 map_types_to_class <- function(x, mapping_vector, other = "MISC", verbose = TRUE) {
 
@@ -220,8 +229,14 @@ map_types_to_class <- function(x, mapping_vector, other = "MISC", verbose = TRUE
 
   types_to_class_fun <- function(types) {
 
-    types_with_class <- types |>
-      strsplit(split = ",") |>
+    # types is a list of lists. Transform to single character vector.
+    type_list <- unlist(types, recursive = FALSE)
+
+    types_with_class <- lapply(seq_along(type_list), function(i) {
+      list_name <- names(type_list)[[i]]
+      list_elements <- type_list[[i]]
+      paste0(list_name, ":", list_elements)
+    }) |>
       unlist() |>
       intersect(mapping_vector)
 
@@ -232,6 +247,7 @@ map_types_to_class <- function(x, mapping_vector, other = "MISC", verbose = TRUE
         names() |>
         _[match_idx] |>
         unique() |>
+        sort() |>
         paste(collapse = "|")
 
     } else {

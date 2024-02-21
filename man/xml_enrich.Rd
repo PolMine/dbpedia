@@ -7,25 +7,32 @@
 xml_enrich(
   xml,
   annotation_dt,
-  entity_tags = c("w", "pc", "name"),
-  entity_name = "name",
   token_tags = c("w", "pc"),
+  entity_name = "name",
+  feature_tag = NULL,
   attributes = "dbpedia_uri"
 )
 }
 \arguments{
-\item{xml}{...}
+\item{xml}{The XML document to be modified in place.}
 
-\item{annotation_dt}{...}
+\item{annotation_dt}{A \code{data.frame} or \code{data.table} of annotations returned
+by \code{get_dbpedia_uris()}. Must contain token IDs and values to be added
+(e.g. URIs).}
 
-\item{entity_tags}{...}
+\item{token_tags}{A \verb{character vector}, the names of XML nodes containing
+tokens, i.e. which potentially can be (part of) entities.}
 
-\item{entity_name}{...}
+\item{entity_name}{A \verb{character vector}, the name of added XML nodes
+describing entities.}
 
-\item{token_tags}{...}
+\item{feature_tag}{A \verb{character vector}, the name of pre-annotated features
+to be used and enriched.}
 
-\item{attributes}{...}
+\item{attributes}{A \verb{character vector}, the names of attributes to be added.
+Must correspond to column names in \code{annotation_dt}.}
 }
 \description{
-Add entities to original XML
+Enrich original XML with retrieved Uniform Resource Identifiers and
+additional information.
 }

@@ -9,14 +9,25 @@ map_types_to_class(x, mapping_vector, other = "MISC", verbose = TRUE)
 \arguments{
 \item{x}{A \code{data.table} with DBpedia URIs.}
 
-\item{mapping_vector}{A \verb{named character vector} with desired class names
-(as names) and types from the DBpedia ontology as values.}
+\item{mapping_vector}{A \verb{named character vector} with desired class names (as
+names) and types from the DBpedia ontology as values. For example:
+c("PERSON" = "DBpedia:Person"). Can contain more than one pair of class and
+type.}
 
-\item{other}{a \verb{character vector} with the name of the class of all types
-not matched by the \code{mapping_vector}.}
+\item{other}{a \verb{character vector} with the name of the class of all types not
+matched by the \code{mapping_vector}.}
 
 \item{verbose}{A \code{logical} value - whether to display messages.}
 }
+\value{
+Function adds classes to input data.table by reference.
+}
 \description{
-Map types returned by DBpedia Spotlight to a limited set of classes
+This function takes the output of \code{get_dbpedia_uris()} and compares values in
+the \code{types} column with a named character vector. The main purpose of this
+function is to reduce the number of types to a limited set of classes.
+}
+\details{
+If there is more than one match between the retrieved types and the
+\verb{mapping vector}, unique classes are sorted alphabetically and collapsed.
 }
