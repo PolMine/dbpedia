@@ -25,12 +25,6 @@ At this stage, the dbpedia R package is a GitHub-only package. Install it as fol
 devtools::install_github("PolMine/dbpedia", ref = "main")
 ```
 
-The SPARQL package is a suggested package used internally by functions `` and was archived at CRAN. The latest version (1.16) can be installed as follows.
-
-```{r install_sparql_pkg_from_archive, eval = FALSE}
-devtools::install_version("SPARQL", version = "1.16", repos = "http://cran.us.r-project.org") 
-```
-
 
 ## Run dockerized DBpedia Spotlight
 
