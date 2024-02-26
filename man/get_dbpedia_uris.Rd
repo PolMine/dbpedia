@@ -20,6 +20,7 @@ get_dbpedia_uris(x, ...)
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   types = character(),
+  support = 20,
   verbose = TRUE
 )
 
@@ -30,6 +31,7 @@ get_dbpedia_uris(x, ...)
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   types = character(),
+  support = 20,
   verbose = TRUE
 )
 
@@ -42,6 +44,7 @@ get_dbpedia_uris(x, ...)
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   types = character(),
+  support = 20,
   expand_to_token = FALSE,
   drop_inexact_annotations = TRUE,
   verbose = TRUE
@@ -55,6 +58,7 @@ get_dbpedia_uris(x, ...)
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   types = character(),
+  support = 20,
   max_len = 5600L,
   expand_to_token = FALSE,
   verbose = TRUE,
@@ -68,6 +72,7 @@ get_dbpedia_uris(x, ...)
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   types = character(),
+  support = 20,
   verbose = TRUE,
   progress = FALSE
 )
@@ -83,6 +88,7 @@ get_dbpedia_uris(x, ...)
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   types = character(),
+  support = 20,
   expand_to_token = FALSE,
   drop_inexact_annotations = TRUE,
   verbose = TRUE
@@ -109,6 +115,9 @@ as threshold before DBpedia Spotlight includes a link into the report.}
 \item{types}{A \code{character} vector to restrict result returned to certain
 entity types, such as 'Company' or 'Organization'. If the \code{character}
 vector is empty (default), no restrictions are applied.}
+
+\item{support}{The number of indegrees at Wikidata. Useful for limiting the
+the number of results by excluding insignificant entities.}
 
 \item{verbose}{A \code{logical} value - whether to display messages.}
 

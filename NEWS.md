@@ -1,6 +1,7 @@
 ## dbpedia v0.1.1.9012
-* `get_dbpedia_uris()` has new argument `types'
+* `get_dbpedia_uris()` has new argument `types`
 * `dbpedia_spotlight_status()` without warnings if docker not available / not running #32.
+* `get_dbpedia_uris()` has new argument `support` #30.
 
 ## dbpedia v0.1.1.9011
 * `xml_enrich()` now adds new attributes to pre-annotated features

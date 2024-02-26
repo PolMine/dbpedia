@@ -352,7 +352,7 @@ setGeneric("get_dbpedia_uris", function(x, ...) standardGeneric("get_dbpedia_uri
 #'   types = "Company",
 #'   api = "http://api.dbpedia-spotlight.org/en/annotate"
 #' )
-setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbpedia.lang"), max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), verbose = TRUE){
+setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbpedia.lang"), max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), support = 20, verbose = TRUE){
   
   if (nchar(x) > max_len){
     if (verbose) cli_alert_warning(
@@ -361,16 +361,23 @@ setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbp
     x <- substr(x, 1L, max_len)
   }
   
+  if (!is.numeric(support) | !(length(support) == 1)){
+    cli_alert_warning("argument `support` required to be a numeric value")
+  }
+  
   if (verbose) cli_progress_step("send request to DBpedia Spotlight")
   request <- httr::GET(
     url = api,
     query = c(
-      list(text = x),
+      list(
+        text = x,
+        support = as.character(support),
+        confidence = confidence
+      ),
       if (length(types) == 0L)
         list()
       else
-        list(types = paste(types, collapse = ",")),
-      list(confidence = confidence)
+        list(types = paste(types, collapse = ","))
     ),
     httr::add_headers('Accept' = 'application/json')
   )
@@ -423,7 +430,7 @@ setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbp
 
 #' @exportMethod get_dbpedia_uris
 #' @rdname get_dbpedia_uris
-setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language = getOption("dbpedia.lang"), max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), verbose = TRUE){
+setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language = getOption("dbpedia.lang"), max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), support = 20, verbose = TRUE){
   get_dbpedia_uris(
     x = as.character(x[["content"]]),
     language = language,
@@ -431,6 +438,7 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
     confidence = confidence,
     api = api,
     types = types,
+    support = support,
     verbose = verbose
   )
 })
@@ -451,6 +459,8 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #' @param types A `character` vector to restrict result returned to certain
 #'   entity types, such as 'Company' or 'Organization'. If the `character` 
 #'   vector is empty (default), no restrictions are applied.
+#' @param support The number of indegrees at Wikidata. Useful for limiting the 
+#'   the number of results by excluding insignificant entities.
 #' @param verbose A `logical` value - whether to display messages.
 #' @param progress A `logical` value - whether to show progress.
 #' @param s_attribute A length-one `character` vector indicating a s-attribute.
@@ -508,7 +518,7 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #'   subset(p_type == "speech") %>%
 #'   get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 5067)
 #'   
-setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), expand_to_token = FALSE, drop_inexact_annotations = TRUE, verbose = TRUE){
+setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), support = 20, expand_to_token = FALSE, drop_inexact_annotations = TRUE, verbose = TRUE){
   
   if (verbose) cli_progress_step("convert input to `AnnotatedPlainTextDocument`")
   doc <- decode(
@@ -531,6 +541,7 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
     confidence = confidence,
     api = api,
     types = types,
+    support = support,
     verbose = verbose
   )
 
@@ -642,7 +653,7 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
 #'     p_attribute = "word",
 #'     verbose = TRUE
 #'   )
-setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), max_len = 5600L, expand_to_token = FALSE, verbose = TRUE, progress = FALSE){
+setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), support = 20, max_len = 5600L, expand_to_token = FALSE, verbose = TRUE, progress = FALSE){
   
   if (progress){
     env <- parent.frame()
@@ -661,6 +672,7 @@ setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOpti
         confidence = confidence,
         api = api,
         types = types,
+        support = support,
         expand_to_token = expand_to_token,
         verbose = if (progress) FALSE else verbose
       )
@@ -706,6 +718,7 @@ setMethod(
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
     types = character(),
+    support = 20,
     verbose = TRUE,
     progress = FALSE
   ){
@@ -739,6 +752,7 @@ setMethod(
             confidence = confidence,
             api = api,
             types = types,
+            support = support,
             verbose = if (progress) FALSE else verbose
           )[, "doc" := docname]
         }
@@ -775,6 +789,7 @@ setMethod(
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
     types = character(),
+    support = 20,
     expand_to_token = FALSE,
     drop_inexact_annotations = TRUE,
     verbose = TRUE
@@ -859,6 +874,7 @@ setMethod(
       confidence = confidence,
       api = api,
       types = types,
+      support = support,
       verbose = verbose
     )
     
