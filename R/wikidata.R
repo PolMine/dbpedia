@@ -261,7 +261,7 @@ setGeneric(
 #' options(dbpedia.lang = "en")
 #' options(dbpedia.endpoint = "http://api.dbpedia-spotlight.org/en/annotate")
 #' 
-#' httr::set_config(httr::config(ssl_verifypeer = 0L))
+#' httr::set_config(httr::config(ssl_verifypeer = 0L, http_version = 1.1))
 #'
 #' uritab <- data_char_ukimmig2010 %>%
 #'   corpus() %>%
