@@ -337,7 +337,22 @@ setGeneric("get_dbpedia_uris", function(x, ...) standardGeneric("get_dbpedia_uri
 #' )
 #' }
 #' 
-setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbpedia.lang"), max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
+#' # Use argument types to limit result to certain types
+#' 
+#' library(polmineR)
+#' use("RcppCWB") # make REUTERS corpus available
+#' 
+#' reuters_article <- corpus("REUTERS") %>%
+#'   subset(id == "127") %>%
+#'   get_token_stream(p_attribute = "word", collapse = " ")
+#' 
+#' uris <- get_dbpedia_uris(
+#'   reuters_article,
+#'   language = "en",
+#'   types = "Company",
+#'   api = "http://api.dbpedia-spotlight.org/en/annotate"
+#' )
+setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbpedia.lang"), max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), verbose = TRUE){
   
   if (nchar(x) > max_len){
     if (verbose) cli_alert_warning(
@@ -349,7 +364,14 @@ setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbp
   if (verbose) cli_progress_step("send request to DBpedia Spotlight")
   request <- httr::GET(
     url = api,
-    query = list(text = x, confidence = confidence),
+    query = c(
+      list(text = x),
+      if (length(types) == 0L)
+        list()
+      else
+        list(types = paste(types, collapse = ",")),
+      list(confidence = confidence)
+    ),
     httr::add_headers('Accept' = 'application/json')
   )
   
@@ -401,13 +423,14 @@ setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbp
 
 #' @exportMethod get_dbpedia_uris
 #' @rdname get_dbpedia_uris
-setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language = getOption("dbpedia.lang"), max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), verbose = TRUE){
+setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language = getOption("dbpedia.lang"), max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), verbose = TRUE){
   get_dbpedia_uris(
     x = as.character(x[["content"]]),
     language = language,
     max_len = max_len,
     confidence = confidence,
     api = api,
+    types = types,
     verbose = verbose
   )
 })
@@ -425,6 +448,9 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #' @param confidence A `numeric` value, the minimum similarity score that serves
 #'   as threshold before DBpedia Spotlight includes a link into the report.
 #' @param api An URL of the DBpedia Spotlight API.
+#' @param types A `character` vector to restrict result returned to certain
+#'   entity types, such as 'Company' or 'Organization'. If the `character` 
+#'   vector is empty (default), no restrictions are applied.
 #' @param verbose A `logical` value - whether to display messages.
 #' @param progress A `logical` value - whether to show progress.
 #' @param s_attribute A length-one `character` vector indicating a s-attribute.
@@ -469,7 +495,11 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #'
 #' uritab <- corpus("REUTERS") %>%
 #'   subset(id == "127") %>%
-#'   get_dbpedia_uris(language = "en", p_attribute = "word")
+#'   get_dbpedia_uris(
+#'     api = "http://api.dbpedia-spotlight.org/en/annotate",
+#'     language = "en",
+#'     p_attribute = "word"
+#'   )
 #'
 #' use("GermaParl2")
 #'
@@ -478,7 +508,7 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #'   subset(p_type == "speech") %>%
 #'   get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 5067)
 #'   
-setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), expand_to_token = FALSE, drop_inexact_annotations = TRUE, verbose = TRUE){
+setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), expand_to_token = FALSE, drop_inexact_annotations = TRUE, verbose = TRUE){
   
   if (verbose) cli_progress_step("convert input to `AnnotatedPlainTextDocument`")
   doc <- decode(
@@ -500,6 +530,7 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
     max_len = max_len,
     confidence = confidence,
     api = api,
+    types = types,
     verbose = verbose
   )
 
@@ -605,8 +636,13 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
 #' @examples
 #' uritab <- corpus("REUTERS") %>% 
 #'   split(s_attribute = "id", verbose = FALSE) %>% 
-#'   get_dbpedia_uris(language = "en", p_attribute = "word", verbose = TRUE)
-setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = getOption("dbpedia.endpoint"), max_len = 5600L, expand_to_token = FALSE, verbose = TRUE, progress = FALSE){
+#'   get_dbpedia_uris(
+#'     api = "http://api.dbpedia-spotlight.org/en/annotate",
+#'     language = "en",
+#'     p_attribute = "word",
+#'     verbose = TRUE
+#'   )
+setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), max_len = 5600L, expand_to_token = FALSE, verbose = TRUE, progress = FALSE){
   
   if (progress){
     env <- parent.frame()
@@ -624,6 +660,7 @@ setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOpti
         max_len = max_len,
         confidence = confidence,
         api = api,
+        types = types,
         expand_to_token = expand_to_token,
         verbose = if (progress) FALSE else verbose
       )
@@ -668,6 +705,7 @@ setMethod(
     max_len = 5600L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
+    types = character(),
     verbose = TRUE,
     progress = FALSE
   ){
@@ -700,6 +738,7 @@ setMethod(
             max_len = max_len,
             confidence = confidence,
             api = api,
+            types = types,
             verbose = if (progress) FALSE else verbose
           )[, "doc" := docname]
         }
@@ -722,19 +761,25 @@ setMethod(
 #'   such as headers
 #' @rdname get_dbpedia_uris
 #' @exportMethod get_dbpedia_uris
-setMethod("get_dbpedia_uris", "xml_document", function(x,
-                                                       language = getOption("dbpedia.lang"),
-                                                       feature_tag = NULL,
-                                                       segment = NULL,
-                                                       token_tags = c("w", "pc"),
-                                                       text_tag = NULL,
-                                                       max_len = 5600L,
-                                                       confidence = 0.35,
-                                                       api = getOption("dbpedia.endpoint"),
-                                                       expand_to_token = FALSE,
-                                                       drop_inexact_annotations = TRUE,
-                                                       verbose = TRUE){
-  
+setMethod(
+  "get_dbpedia_uris",
+  "xml_document",
+  function(
+    x,
+    language = getOption("dbpedia.lang"),
+    feature_tag = NULL,
+    segment = NULL,
+    token_tags = c("w", "pc"),
+    text_tag = NULL,
+    max_len = 5600L,
+    confidence = 0.35,
+    api = getOption("dbpedia.endpoint"),
+    types = character(),
+    expand_to_token = FALSE,
+    drop_inexact_annotations = TRUE,
+    verbose = TRUE
+  ){
+    
   # sometimes, there are nodes of the same name in different parts of the
   # document (such as <name>) in ParlaMint which describes persons in the TEI
   # header and named entities in the text body. It can be useful to focus on the
@@ -813,6 +858,7 @@ setMethod("get_dbpedia_uris", "xml_document", function(x,
       max_len = max_len,
       confidence = confidence,
       api = api,
+      types = types,
       verbose = verbose
     )
     

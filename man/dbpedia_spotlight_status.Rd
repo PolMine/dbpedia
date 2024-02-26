@@ -16,7 +16,7 @@ dbpedia_spotlight_status()
 technical reasons.}
 }
 \value{
-Object of class \code{dbpedia_spotlight_stats}, a \code{list} with elements
+Object of class \code{dbpedia_spotlight_status}, a \code{list} with elements
 "docker" (\code{TRUE}/\code{FALSE}), "lang" and "endpoint".
 }
 \description{

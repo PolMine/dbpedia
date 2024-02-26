@@ -19,6 +19,7 @@ get_dbpedia_uris(x, ...)
   max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
+  types = character(),
   verbose = TRUE
 )
 
@@ -28,6 +29,7 @@ get_dbpedia_uris(x, ...)
   max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
+  types = character(),
   verbose = TRUE
 )
 
@@ -39,6 +41,7 @@ get_dbpedia_uris(x, ...)
   max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
+  types = character(),
   expand_to_token = FALSE,
   drop_inexact_annotations = TRUE,
   verbose = TRUE
@@ -51,6 +54,7 @@ get_dbpedia_uris(x, ...)
   s_attribute = NULL,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
+  types = character(),
   max_len = 5600L,
   expand_to_token = FALSE,
   verbose = TRUE,
@@ -63,6 +67,7 @@ get_dbpedia_uris(x, ...)
   max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
+  types = character(),
   verbose = TRUE,
   progress = FALSE
 )
@@ -77,6 +82,7 @@ get_dbpedia_uris(x, ...)
   max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
+  types = character(),
   expand_to_token = FALSE,
   drop_inexact_annotations = TRUE,
   verbose = TRUE
@@ -99,6 +105,10 @@ threshold of 5600 characters is the default value.}
 as threshold before DBpedia Spotlight includes a link into the report.}
 
 \item{api}{An URL of the DBpedia Spotlight API.}
+
+\item{types}{A \code{character} vector to restrict result returned to certain
+entity types, such as 'Company' or 'Organization'. If the \code{character}
+vector is empty (default), no restrictions are applied.}
 
 \item{verbose}{A \code{logical} value - whether to display messages.}
 
@@ -159,12 +169,31 @@ tab <- get_dbpedia_uris(
 )
 }
 
+# Use argument types to limit result to certain types
+
+library(polmineR)
+use("RcppCWB") # make REUTERS corpus available
+
+reuters_article <- corpus("REUTERS") \%>\%
+  subset(id == "127") \%>\%
+  get_token_stream(p_attribute = "word", collapse = " ")
+
+uris <- get_dbpedia_uris(
+  reuters_article,
+  language = "en",
+  types = "Company",
+  api = "http://api.dbpedia-spotlight.org/en/annotate"
+)
 library(polmineR)
 use("RcppCWB")
 
 uritab <- corpus("REUTERS") \%>\%
   subset(id == "127") \%>\%
-  get_dbpedia_uris(language = "en", p_attribute = "word")
+  get_dbpedia_uris(
+    api = "http://api.dbpedia-spotlight.org/en/annotate",
+    language = "en",
+    p_attribute = "word"
+  )
 
 use("GermaParl2")
 
@@ -175,7 +204,12 @@ uritab2 <- corpus("GERMAPARL2MINI") \%>\%
   
 uritab <- corpus("REUTERS") \%>\% 
   split(s_attribute = "id", verbose = FALSE) \%>\% 
-  get_dbpedia_uris(language = "en", p_attribute = "word", verbose = TRUE)
+  get_dbpedia_uris(
+    api = "http://api.dbpedia-spotlight.org/en/annotate",
+    language = "en",
+    p_attribute = "word",
+    verbose = TRUE
+  )
 # example code
 
 # Process quanteda corpus 
