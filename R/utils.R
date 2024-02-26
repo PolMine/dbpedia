@@ -191,40 +191,27 @@ unique_msg <- function(x, verbose = TRUE){
 #' @export
 map_types_to_class <- function(x, mapping_vector, other = "MISC", verbose = TRUE) {
 
-  if (!is.data.table(x)) {
-    stop(format_error(
-      c(
-        "input {.var x} is no data.table."
-      )
-    ))
-  }
+  if (!is.data.table(x)) 
+    stop(format_error("input {.var x} is no data.table."))
 
   if (!is.character(mapping_vector)) {
-    stop(format_error(
-      c(
+    stop(format_error(c(
         "{.var mapping_vector} is no character vector.",
         "i" = "The {.var mapping_vector} must be a named character vector."
-      )
-    ))
+      )))
   }
 
   if (!is.character(other) | length(other) > 1) {
 
-    stop(format_error(
-      c(
-        "{.var other} is no character vector of length {.val 1}."
-      )
-    ))
+    stop(format_error("{.var other} not character vector of length {.val 1}."))
   }
 
   if (!"types" %in% colnames(x)) {
 
-    stop(format_error(
-      c(
+    stop(format_error(c(
         "There is no {.var types} column in the input data.table.",
         "i" = "Types are returned by {.fn get_dbpedia_uri} only if the argument `types` is set to TRUE."
-      )
-    ))
+      )))
   }
 
   types_to_class_fun <- function(types) {
@@ -262,6 +249,6 @@ map_types_to_class <- function(x, mapping_vector, other = "MISC", verbose = TRUE
       "mapping values in column {.var types} to new column {.var class}"
     )
 
-  x[, class := types_to_class_fun(types = types), by = 1:nrow(x)]
+  x[, class := types_to_class_fun(types = x[["types"]]), by = 1:nrow(x)]
 
 }
