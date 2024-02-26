@@ -1,27 +1,15 @@
-## dbpedia v0.1.1.9012
-* `get_dbpedia_uris()` has new argument `types`
+## dbpedia v0.1.2
+* `get_dbpedia_uris()` has new argument `types` to filter results.
 * `dbpedia_spotlight_status()` without warnings if docker not available / not running #32.
 * `get_dbpedia_uris()` has new argument `support` #30.
 * The confusingly mixed usage of argument 'limit' in `dbpedia_get_wikidata_uris()` is resolved by adding a new argument 'chunksize' #29.
 * As a matter of consistency, argument 'limit' of `query_wikidata()` has been renamed to `chunksize` #29.
-
-## dbpedia v0.1.1.9011
 * `xml_enrich()` now adds new attributes to pre-annotated features
 * `get_dbpedia_uris()` method now includes argument `expand_to_token` for subcorpus_bundles as well
 * `map_types_to_class()` works with the list representation in the types column
-
-
-## dbpedia v0.1.1.9010
 * new functions `to_annotation()`, `xml_enrich()` `namespaced_xpath()` and method `get_dbpedia_uris()` for xml docs.
-
-## dbpedia v0.1.1.9009
-
 * dropped argument `return_types` from `get_dbpedia_uris()`. Column `types` is 
 kept in output, with parsed output #24.
-
-
-## dbpedia v0.1.1.9008
-
 * Error avoided when `get_dbpedia_uris()` is restricted to pre-annotated
 named entities and the document does not contain any (addresses issue #23).
 * set default `max_len` in `get_dbpedia_uris()` to 5600 to avoid failing queries.
@@ -37,9 +25,6 @@ resolve mismatches between DBpedia Spotlight's entity spans and CWB token spans
 (issue #26)
 * added `drop_inexact_annotations` argument to `get_dbpedia_uris()` to control
 keeping or omitting inexact annotations in output data.table (see issue #26)
-
-## dbpedia v0.1.1.9006
-
 * Error avoided when `get_dbpedia_uris()` does not detect any URI.
 * More telling progress messages of `wikidata_query()` and
 `dbpedia_get_wikidata_uris()`.
