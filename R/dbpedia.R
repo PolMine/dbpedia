@@ -15,7 +15,12 @@
 #' getOption("dbpedia.lang")
 dbpedia_spotlight_status <- function(){
   
-  status <- list(docker = FALSE, lang = NA_character_, api = NA_character_)
+  status <- list(
+    docker = FALSE,
+    container_id = NA_character_,
+    lang = NA_character_,
+    api = NA_character_
+  )
   class(status) <- c("dbpedia_spotlight_status", class(status))
   
   # Check whether Docker is installed
@@ -39,12 +44,25 @@ dbpedia_spotlight_status <- function(){
           "status of running `docker container ls`: {attr(stdout, 'status')}"
         )
       }
-    } else if (grepl("dbpedia/dbpedia-spotlight", stdout[2])){
+    } else if (any(grepl("dbpedia/dbpedia-spotlight", stdout))){
+      stdout_line <- grep("dbpedia/dbpedia-spotlight", stdout)
+      if (length(stdout_line) > 1L){
+        cli_alert_warning(paste0(c(
+          "found {.val {length(stdout_line)}} dbpedia-spotlight containers ",
+          "using first"
+        )))
+        stdout_line <- stdout_line[1L]
+      }
       status[["docker"]] <- TRUE
       status[["lang"]] <- gsub(
         '^.*"spotlight.sh\\s+(\\w{2})".*$',
         "\\1",
-        stdout[2]
+        stdout[stdout_line]
+      )
+      status[["container_id"]] <- gsub(
+        '^(.*?)\\s.*$',
+        "\\1",
+        stdout[stdout_line]
       )
       status[["endpoint"]] <- "http://localhost:2222/rest/annotate"
     } else {
@@ -75,6 +93,7 @@ print.dbpedia_spotlight_status <- function(x, ...){
   cli_bullets(
     c(
       "*" = "docker engine: {col_cyan({if (x[['docker']]) 'running' else 'not running'})}",
+      "*" = "container ID: {col_cyan({if (is.na(x[['container_id']])) 'not available' else x[['container_id']]})}",
       "*" = "endpoint: {col_cyan({x[['endpoint']]})}",
       "*" = "language: {col_cyan({x[['lang']]})}"
     )
@@ -487,7 +506,6 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
   # prepare function to assign cpos_right depending on value and arguments
   expand_fun = function(.SD) {
     cpos_right <- dt[.SD[["end"]] == dt[["end"]]][["id"]]
-
     if (length(cpos_right) == 0 & isTRUE(expand_to_token)) {
       cpos_right <- dt[["id"]][which(dt[["end"]] > .SD[["end"]])[1]]
     } else {
@@ -513,7 +531,16 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
   } else {
     
     dt <- as.data.table(doc, what = s_attribute)
-    if (nrow(dt) == 0) return(NULL) # if there are no elements of s_attribute
+    if (nrow(dt) == 0){ # if there are no elements of s_attribute #23
+      return(
+        data.table(
+          start = integer(),
+          text = character(),
+          dbpedia_uri = character(),
+          types = character()
+        )
+      )
+    } 
 
     tab <- links[dt, on = c("start", "text")]
     
