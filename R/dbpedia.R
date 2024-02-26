@@ -157,13 +157,15 @@ as_annotation <- function(x){
 #' @importFrom NLP Annotation
 to_annotation = function(nodes, xml, token_tags, feature_tag) {
   
-  if (class(nodes) == "xml_nodeset") {
+  if (inherits(nodes, "xml_nodeset")) {
     
-    lapply(nodes,
-           to_annotation,
-           xml = xml,
-           token_tags = token_tags,
-           feature_tag = feature_tag)
+    lapply(
+      nodes,
+      to_annotation,
+      xml = xml,
+      token_tags = token_tags,
+      feature_tag = feature_tag
+    )
     
   } else {
     
