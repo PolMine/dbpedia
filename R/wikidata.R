@@ -5,8 +5,10 @@
 #' @param optional Optional information to retrieve (passed as length-one
 #'   character vector, e.g. 'municipalityCode').
 #' @param endpoint Endpoint to query (a `character` vector).
-#' @param limit Single numeric value with maximum size of chunks to process at
+#' @param chunksize Single numeric value with maximum size of chunks to process at
 #'   a time.
+#' @param limit Single numeric value, the maximum number of results to retrieve
+#'   from Wikidata.
 #' @param wait A numeric value passed into `Sys.sleep()` to slow down sequence
 #'   of requests (and avoid denial of service). Defaults to 100.
 #' @param progress Whether to show progress bar (`logical` value).
@@ -24,14 +26,15 @@
 #'   optional = "municipalityCode",
 #'   endpoint = "http://de.dbpedia.org/sparql",
 #'   wait = 0,
-#'   limit = 2,
+#'   chunksize = 2,
 #'   progress = TRUE
 #' )
 #' @importFrom cli cli_progress_bar cli_progress_done cli_progress_update
-dbpedia_get_wikidata_uris <- function(x, optional, endpoint, limit = 100, wait = 1, verbose = TRUE, progress = FALSE){
+dbpedia_get_wikidata_uris <- function(x, optional, endpoint, chunksize = 100, limit = 2, wait = 1, verbose = TRUE, progress = FALSE){
   
   stopifnot(
     is.character(x),
+    is.numeric(chunksize), length(chunksize) == 1L,
     is.numeric(limit), length(limit) == 1L,
     is.logical(progress), length(progress) == 1L,
     is.numeric(wait), length(wait) == 1L, wait >= 0
@@ -58,7 +61,7 @@ dbpedia_get_wikidata_uris <- function(x, optional, endpoint, limit = 100, wait =
       LIMIT %d'
   
 
-  chunks <- as_chunks(x = x, size = limit)
+  chunks <- as_chunks(x = x, size = chunksize)
   retval_li <- list()
   
   if (progress){

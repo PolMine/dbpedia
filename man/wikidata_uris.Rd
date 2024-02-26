@@ -10,7 +10,8 @@ dbpedia_get_wikidata_uris(
   x,
   optional,
   endpoint,
-  limit = 100,
+  chunksize = 100,
+  limit = 2,
   wait = 1,
   verbose = TRUE,
   progress = FALSE
@@ -37,8 +38,11 @@ character vector, e.g. 'municipalityCode').}
 
 \item{endpoint}{Endpoint to query (a \code{character} vector).}
 
-\item{limit}{Single numeric value with maximum size of chunks to process at
+\item{chunksize}{Single numeric value with maximum size of chunks to process at
 a time.}
+
+\item{limit}{Single numeric value, the maximum number of results to retrieve
+from Wikidata.}
 
 \item{wait}{A numeric value passed into \code{Sys.sleep()} to slow down sequence
 of requests (and avoid denial of service). Defaults to 100.}
@@ -63,7 +67,7 @@ dbpedia_get_wikidata_uris(
   optional = "municipalityCode",
   endpoint = "http://de.dbpedia.org/sparql",
   wait = 0,
-  limit = 2,
+  chunksize = 2,
   progress = TRUE
 )
 \donttest{
