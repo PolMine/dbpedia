@@ -8,7 +8,7 @@ v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/li
 [![R-CMD-check](https://github.com/PolMine/dbpedia/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/PolMine/dbpedia/actions/workflows/R-CMD-check.yaml)
 [![codecov](https://codecov.io/gh/PolMine/dbpedia/branch/main/graph/badge.svg)](https://codecov.io/gh/PolMine/dbpedia/branch/main)
 [![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html#maturing)
 <!-- badges: end -->
 
 ## About
@@ -68,11 +68,10 @@ correspond with. The return value of the method is a data.table
 containing identified entities along with their respective DBpedia URIs
 and starting positions in the document.
 
-| start | text         | dbpedia_uri                                |
-|------:|:-------------|:-------------------------------------------|
-|     1 | Berlin       | <http://dbpedia.org/resource/Berlin>       |
-|    15 | capital city | <http://dbpedia.org/resource/Capital_city> |
-|    31 | Germany      | <http://dbpedia.org/resource/Germany>      |
+| start | text    | dbpedia_uri                                  |
+|------:|:--------|:---------------------------------------------|
+|     1 | Berlin  | <http://de.dbpedia.org/resource/Berlin>      |
+|    31 | Germany | <http://de.dbpedia.org/resource/Deutschland> |
 
 ## Installation and Setup
 
@@ -208,13 +207,13 @@ position in the text and, most importantly, their respective URI in the
 DBpedia Knowledge Graph (only the first five entities are shown here and
 the column containing the types of the entities is omitted):
 
-| doc          | start | text           | dbpedia_uri                                                                         |
-|:-------------|------:|:---------------|:------------------------------------------------------------------------------------|
-| 1973-Nixon.1 |     5 | Vice President | <http://dbpedia.org/resource/Vice_President_of_the_United_States>                   |
-| 1973-Nixon.1 |    25 | Speaker        | <http://dbpedia.org/resource/Speaker_of_the_United_States_House_of_Representatives> |
-| 1973-Nixon.1 |    38 | Chief Justice  | <http://dbpedia.org/resource/Chief_Justice_of_the_United_States>                    |
-| 1973-Nixon.1 |    72 | Eisenhower     | <http://dbpedia.org/resource/Dwight_D._Eisenhower>                                  |
-| 1973-Nixon.6 |   154 | Peking         | <http://dbpedia.org/resource/Beijing>                                               |
+| doc          | start | text          | dbpedia_uri                                                         |
+|:-------------|------:|:--------------|:--------------------------------------------------------------------|
+| 1973-Nixon.1 |     1 | Mr            | <http://de.dbpedia.org/resource/Master_of_the_Rolls>                |
+| 1973-Nixon.1 |    21 | Mr            | <http://de.dbpedia.org/resource/Master_of_the_Rolls>                |
+| 1973-Nixon.1 |    25 | Speaker       | <http://de.dbpedia.org/resource/Speaker>                            |
+| 1973-Nixon.1 |    34 | Mr            | <http://de.dbpedia.org/resource/Master_of_the_Rolls>                |
+| 1973-Nixon.1 |    38 | Chief Justice | <http://de.dbpedia.org/resource/Chief_Justice_of_the_United_States> |
 
 The package’s vignette provides some more details to the approach and
 parameters.
@@ -269,20 +268,18 @@ reuters_newswire_annotation <- reuters_newswire |>
   map_types_to_class(mapping_vector = mapping_vector)
 ```
 
-    ## ! Cannot map 4 entities exactly to tokenstream. Dropping them from the annotation.
-
     ## ℹ mapping values in column `types` to new column `class`
 
 This results in the following annotations (only the first five entities
 are shown here and the column of types is omitted):
 
-| cpos_left | cpos_right | dbpedia_uri                                      | text         | class    |
-|----------:|-----------:|:-------------------------------------------------|:-------------|:---------|
-|        92 |         92 | <http://dbpedia.org/resource/OPEC>               | OPEC         | LOCATION |
-|       117 |        117 | <http://dbpedia.org/resource/Reversal_film>      | slide        | MISC     |
-|       119 |        120 | <http://dbpedia.org/resource/Price_of_oil>       | oil prices   | MISC     |
-|       121 |        122 | <http://dbpedia.org/resource/Petroleum_industry> | oil industry | MISC     |
-|       129 |        130 | <http://dbpedia.org/resource/Price_of_oil>       | oil prices   | MISC     |
+| cpos_left | cpos_right | dbpedia_uri                                                              | text    | class                          |
+|----------:|-----------:|:-------------------------------------------------------------------------|:--------|:-------------------------------|
+|        92 |         92 | <http://de.dbpedia.org/resource/Organisation_erdölexportierender_Länder> | OPEC    | LOCATION\|ORGANIZATION\|PERSON |
+|        93 |         93 | <http://de.dbpedia.org/resource/Brian_May>                               | may     | LOCATION\|ORGANIZATION\|PERSON |
+|       101 |        101 | <http://de.dbpedia.org/resource/June_Carter_Cash>                        | June    | LOCATION\|ORGANIZATION\|PERSON |
+|       102 |        102 | <http://de.dbpedia.org/resource/Session_(Schweiz)>                       | session | LOCATION\|ORGANIZATION\|PERSON |
+|       105 |        105 | <http://de.dbpedia.org/resource/Integrated_Truss_Structure>              | its     | LOCATION\|ORGANIZATION\|PERSON |
 
 #### Mapping the Results to the Corpus
 
