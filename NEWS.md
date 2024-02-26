@@ -2,6 +2,7 @@
 * `xml_enrich()` now adds new attributes to pre-annotated features
 * `get_dbpedia_uris()` method now includes argument `expand_to_token` for subcorpus_bundles as well
 * `map_types_to_class()` works with the list representation in the types column
+* `dbpedia_spotlight_status()` without warnings if docker not available / not running #32.
 
 ## dbpedia v0.1.1.9010
 * new functions `to_annotation()`, `xml_enrich()` `namespaced_xpath()` and method `get_dbpedia_uris()` for xml docs.

@@ -5,7 +5,7 @@
 #' 
 #' Check whether Docker container with DBpedia Spotlight is running locally 
 #' and set options 'dbpedia.lang' and 'dbpedia.endpoint' accordingly.
-#' @return Object of class `dbpedia_spotlight_stats`, a `list` with elements
+#' @return Object of class `dbpedia_spotlight_status`, a `list` with elements
 #'   "docker" (`TRUE`/`FALSE`), "lang" and "endpoint".
 #' @rdname dbpedia_spotlight_status
 #' @export
@@ -18,16 +18,28 @@ dbpedia_spotlight_status <- function(){
   status <- list(docker = FALSE, lang = NA_character_, api = NA_character_)
   class(status) <- c("dbpedia_spotlight_status", class(status))
   
+  # Check whether Docker is installed
   stdout <- system2(command = "docker", stdout = FALSE, stderr = NULL)
   
   if (stdout == 0){
-    stdout <- system2(
+    stdout <- suppressWarnings(system2(
       command = "docker",
       args = c("container", "ls"),
-      stdout = TRUE
-    )
+      stdout = TRUE,
+      stderr = NULL
+    ))
     
-    if (grepl("dbpedia/dbpedia-spotlight", stdout[2])){
+    if (!is.null(attr(stdout, "status"))){ # Docker installed, but not running
+      if (attr(stdout, "status") == 1L){
+        status[["docker"]] <- FALSE
+        status[["lang"]] <- "en"
+        status[["endpoint"]] <- "http://api.dbpedia-spotlight.org/en/annotate"
+      } else {
+        cli_alert_warning(
+          "status of running `docker container ls`: {attr(stdout, 'status')}"
+        )
+      }
+    } else if (grepl("dbpedia/dbpedia-spotlight", stdout[2])){
       status[["docker"]] <- TRUE
       status[["lang"]] <- gsub(
         '^.*"spotlight.sh\\s+(\\w{2})".*$',
@@ -62,6 +74,7 @@ print.dbpedia_spotlight_status <- function(x, ...){
   cli_text(style_bold("DBpedia Spotlight settings:"))
   cli_bullets(
     c(
+      "*" = "docker engine: {col_cyan({if (x[['docker']]) 'running' else 'not running'})}",
       "*" = "endpoint: {col_cyan({x[['endpoint']]})}",
       "*" = "language: {col_cyan({x[['lang']]})}"
     )
