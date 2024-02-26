@@ -155,6 +155,7 @@ as_annotation <- function(x){
 #' @param feature_tag ...
 #' @importFrom stringi stri_c
 #' @importFrom NLP Annotation
+#' @importFrom xml2 xml_children
 to_annotation = function(nodes, xml, token_tags, feature_tag) {
   
   if (inherits(nodes, "xml_nodeset")) {
@@ -169,8 +170,10 @@ to_annotation = function(nodes, xml, token_tags, feature_tag) {
     
   } else {
     
-    token_elements <- nodes |>
-      xml2::xml_find_all(xpath = namespaced_xpath(xml = xml, tags = token_tags))
+    token_elements <- xml2::xml_find_all(
+        nodes,
+        xpath = namespaced_xpath(xml = xml, tags = token_tags)
+      )
     
     # make token annotation data annotation
     
@@ -210,9 +213,10 @@ to_annotation = function(nodes, xml, token_tags, feature_tag) {
     # data.frame split to rwos
     
     token_feat_dataframe <- data.frame(word = toks, id = tok_ids)
-    token_feat_list <- split(token_feat_dataframe, seq(nrow(token_feat_dataframe))) |>
-      unname()
-    
+    token_feat_list <- unname(
+      split(token_feat_dataframe, seq(nrow(token_feat_dataframe)))
+    )
+
     token_annotation <- NLP::Annotation(
       seq_along(tok_ids), # IDs must be integer, which is a bit unfortunate
       rep("word", length(tok_ids)),
@@ -224,49 +228,45 @@ to_annotation = function(nodes, xml, token_tags, feature_tag) {
     # and add feature elements if chosen
     
     if (!is.null(feature_tag)) {
-      feature_elements <- nodes |>
-        xml2::xml_find_all(xpath = namespaced_xpath(xml = xml, tags = feature_tag))
+      feature_elements <-  xml2::xml_find_all(
+        nodes,
+        xpath = namespaced_xpath(xml = xml, tags = feature_tag)
+      )
     } else {
       feature_elements <- NULL
     }
     
     if (length(feature_elements) > 0) {
       
-      
-      feature_ids <- sapply(feature_elements, function(element) {
-        xml2::xml_find_first(element,
-                             xpath = namespaced_xpath(xml = xml, tags = token_tags)) |>
-          xml2::xml_attr("id") 
-      }
-      )
+      feature_ids <- sapply(
+        feature_elements,
+        function(element) {
+          el <- xml2::xml_find_first(
+            element,
+            xpath = namespaced_xpath(xml = xml, tags = token_tags)
+          )
+          xml2::xml_attr(el, "id") 
+        })
       
       feature_ids <- sprintf("%s_%s", feature_ids, feature_tag)
       
       # get attributes of features
       feature_ids <- feature_ids # name has no ID. We use the first word ID (assuming that there are no overlaps?)
       feature_kinds <- xml2::xml_attr(feature_elements, "type")
-      feature_texts <- sapply(feature_elements, function(feat) {
-        xml2::xml_children(feat) |>
-          xml2::xml_text() |>
-          paste(collapse = " ")
-      }
+      feature_texts <- sapply(
+        feature_elements,
+        function(feat) paste(xml_text(xml_children(feat)), collapse = " ")
       )
       
       # get spans for features
       
-      entity_spans <- sapply(feature_elements, function(element) {
-        child_id <- element |>
-          xml2::xml_children() |>
-          xml2::xml_attr("id")
-        
+      entity_spans <- t(sapply(feature_elements, function(element) {
+        child_id <- xml_attr(xml_children(element), "id")
         child_idx <- which(tok_ids %in% child_id)
         child_start <- min(start_positions[child_idx])
         child_end <- max(end_positions[child_idx])
-        
-        matrix(c(child_start, child_end), nrow = 1, ncol = 2)
-        
-      }
-      ) |> t()
+        matrix(c(child_start, child_end), nrow = 1L, ncol = 2L)
+      }))
       
       
       feature_annotation <- NLP::Annotation(
@@ -300,7 +300,7 @@ to_annotation = function(nodes, xml, token_tags, feature_tag) {
     
     # make string
     word_with_ws <- paste(toks, ifelse(is.na(tok_joins), " ", ""), sep = "")
-    s <- stringi::stri_c(word_with_ws, collapse = "") |> trimws()
+    s <- trimws(stringi::stri_c(word_with_ws, collapse = ""))
     
     # add segment id as metadata (should work if segment is NULL as the TEI has
     # an ID as well).
@@ -705,13 +705,12 @@ setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOpti
 #' 
 #' # Process quanteda corpus 
 #' library(quanteda)
-#' uritab <- data_char_ukimmig2010 |>
-#'   corpus() |>
+#' uritab <- data_char_ukimmig2010 %>%
+#'   corpus() %>%
 #'   get_dbpedia_uris(
 #'     verbose = FALSE,
 #'     config = httr::config(http_version = 1.1)
 #'   )
-#'   
 #' @rdname get_dbpedia_uris
 setMethod(
   "get_dbpedia_uris",

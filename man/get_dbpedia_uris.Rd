@@ -227,11 +227,10 @@ uritab <- corpus("REUTERS") \%>\%
 
 # Process quanteda corpus 
 library(quanteda)
-uritab <- data_char_ukimmig2010 |>
-  corpus() |>
+uritab <- data_char_ukimmig2010 \%>\%
+  corpus() \%>\%
   get_dbpedia_uris(
     verbose = FALSE,
     config = httr::config(http_version = 1.1)
   )
-  
 }

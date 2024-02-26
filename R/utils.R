@@ -222,23 +222,20 @@ map_types_to_class <- function(x, mapping_vector, other = "MISC", verbose = TRUE
     # types is a list of lists. Transform to single character vector.
     type_list <- unlist(types, recursive = FALSE)
 
-    types_with_class <- lapply(seq_along(type_list), function(i) {
+    types_with_class_raw <- lapply(seq_along(type_list), function(i) {
       list_name <- names(type_list)[[i]]
       list_elements <- type_list[[i]]
       paste0(list_name, ":", list_elements)
-    }) |>
-      unlist() |>
-      intersect(mapping_vector)
+    })
+    types_with_class <- intersect(unlist(types_with_class_raw), mapping_vector)
 
-    if (length(types_with_class) > 0) {
+    if (length(types_with_class) > 0L) {
       match_idx <- which(mapping_vector %in% types_with_class)
 
-      class_name <- mapping_vector |>
-        names() |>
-        _[match_idx] |>
-        unique() |>
-        sort() |>
-        paste(collapse = "|")
+      class_name <- paste(
+        sort(unique(names(mapping_vector)[match_idx])),
+        collapse = "|"
+      )
 
     } else {
       class_name <- other

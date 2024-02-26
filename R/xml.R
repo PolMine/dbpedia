@@ -26,11 +26,12 @@ xml_enrich <- function(xml,
 ) {
 
   # get all nodes which might contain entities
-  nodes <- xml |>
-    xml2::xml_find_all(xpath = namespaced_xpath(xml = xml, tags = token_tags))
+  nodes <- xml2::xml_find_all(
+    xml,
+    xpath = namespaced_xpath(xml = xml, tags = token_tags)
+  )
 
-  node_ids <- nodes |>
-    xml2::xml_attr("id")
+  node_ids <- xml2::xml_attr(nodes, "id")
 
   # for each annotation, extract identified words 
 
@@ -46,9 +47,11 @@ xml_enrich <- function(xml,
       # if there is no feature tag, pre-annotated named entities weren't
       # provided. Add identified named entities to tokens.
 
-      annotation_id <- annotation_dt[i, ][["original_id"]] |>
-        strsplit(split = "\\|") |>
-        unlist()
+      annotation_id <- unlist(strsplit(
+        annotation_dt[i, ][["original_id"]],
+        split = "\\|"
+      )
+      )
 
       # there could be additional values such as the type?
       nodes_idx <- which(node_ids %in% annotation_id)

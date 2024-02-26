@@ -263,10 +263,17 @@ setGeneric(
 #' 
 #' httr::set_config(httr::config(ssl_verifypeer = 0L))
 #'
-#' uritab <- data_char_ukimmig2010 |>
-#'   corpus() |>
-#'   get_dbpedia_uris(progress = TRUE) %>% 
-#'   add_wikidata_uris(endpoint = "https://dbpedia.org/sparql/", progress = TRUE, chunksize = 100) %>% 
+#' uritab <- data_char_ukimmig2010 %>%
+#'   corpus() %>%
+#'   get_dbpedia_uris(
+#'     progress = TRUE,
+#'     config = httr::config(http_version = 1.1)
+#'   ) %>% 
+#'   add_wikidata_uris(
+#'     endpoint = "https://dbpedia.org/sparql/",
+#'     progress = TRUE,
+#'     chunksize = 100
+#'   ) %>% 
 #'   wikidata_query(id = "P31")
 #' }
 #'   
