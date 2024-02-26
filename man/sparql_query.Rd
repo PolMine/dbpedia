@@ -18,7 +18,10 @@ Query SPARQL endpoint
 sparql_endpoint <- "http://de.dbpedia.org/sparql"
 query <- 'SELECT distinct ?item ?wikidata_uri ?key
   WHERE {
-    VALUES ?item {<http://de.dbpedia.org/resource/Bayernpartei> <http://de.dbpedia.org/resource/Deutsches_Kaiserreich>}
+    VALUES ?item {
+      <http://de.dbpedia.org/resource/Bayernpartei>
+      <http://de.dbpedia.org/resource/Deutsches_Kaiserreich>
+    }
     ?item owl:sameAs ?wikidata_uri
     FILTER(regex(str(?wikidata_uri), "www.wikidata.org" ) )
   }
