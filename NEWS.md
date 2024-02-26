@@ -3,6 +3,7 @@
 * `dbpedia_spotlight_status()` without warnings if docker not available / not running #32.
 * `get_dbpedia_uris()` has new argument `support` #30.
 * The confusingly mixed usage of argument 'limit' in `dbpedia_get_wikidata_uris()` is resolved by adding a new argument 'chunksize' #29.
+* As a matter of consistency, argument 'limit' of `query_wikidata()` has been renamed to `chunksize` #29.
 
 ## dbpedia v0.1.1.9011
 * `xml_enrich()` now adds new attributes to pre-annotated features

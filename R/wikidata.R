@@ -30,7 +30,7 @@
 #'   progress = TRUE
 #' )
 #' @importFrom cli cli_progress_bar cli_progress_done cli_progress_update
-dbpedia_get_wikidata_uris <- function(x, optional, endpoint, chunksize = 100, limit = 2, wait = 1, verbose = TRUE, progress = FALSE){
+dbpedia_get_wikidata_uris <- function(x, optional, endpoint, chunksize = 100, limit = chunksize, wait = 1, verbose = TRUE, progress = FALSE){
   
   stopifnot(
     is.character(x),
@@ -106,7 +106,8 @@ dbpedia_get_wikidata_uris <- function(x, optional, endpoint, chunksize = 100, li
 #' @param x A vector of wikidata ids.  NA values are dropped, only unique values
 #'   will be processed.
 #' @param id Wikidata ID for information to retrieve (`character` vector).
-#' @param limit Maximum number of wikidata IDs to be sent to endpoint at a time.
+#' @param chunksize Single numeric value with maximum size of chunks to process at
+#'   a time.
 #' @param verbose Whether to output messages (`logical` value).
 #' @param progress Whether to show progress information (`logical` value).
 #' @param wait A numeric value - slow down requests to avoid denial of service.
@@ -127,7 +128,8 @@ setGeneric("wikidata_query", function(x, ...) standardGeneric("wikidata_query"))
 #'   "http://www.wikidata.org/entity/Q2131751"
 #' )
 #' wikidata_query(wikidata_uris, id = "P439", progress = TRUE)
-setMethod("wikidata_query", "character", function(x, id, language = getOption("dbpedia.lang"), limit = 100L, wait = 1, verbose = TRUE, progress = FALSE){
+#' @importFrom stats na.omit
+setMethod("wikidata_query", "character", function(x, id, language = getOption("dbpedia.lang"), chunksize = 100L, wait = 1, verbose = TRUE, progress = FALSE){
   
   if (!requireNamespace("WikidataQueryServiceR", quietly = TRUE)){
     stop("R package WikidataQueryServiceR required but not available. ")
@@ -135,12 +137,12 @@ setMethod("wikidata_query", "character", function(x, id, language = getOption("d
   
   stopifnot(
     is.character(id), length(id) == 1L,
-    is.numeric(limit), limit > 0,
+    is.numeric(chunksize), chunksize > 0,
     is.numeric(wait), wait > 0, length(wait) == 1L,
     is.logical(progress), length(progress) == 1L
   )
   
-  if (any(startsWith(x, "http"))){
+  if (any(startsWith(na.omit(x), "http"))){
     if (verbose) cli_alert_info("extract wikidata ID from URI")
     x <- gsub("^http(s|)://www.wikidata.org/entity/", "", x)
   }
@@ -165,7 +167,7 @@ setMethod("wikidata_query", "character", function(x, id, language = getOption("d
         SERVICE wikibase:label { bd:serviceParam wikibase:language "%s". }
       }'
   
-  chunks <- as_chunks(x = x, size = limit)
+  chunks <- as_chunks(x = x, size = chunksize)
   retval_li <- list()
   
   if (progress){
@@ -211,7 +213,7 @@ setMethod("wikidata_query", "character", function(x, id, language = getOption("d
 setMethod(
   "wikidata_query",
   "data.table",
-  function(x, id, language = getOption("dbpedia.lang"), limit = 100L, wait = 1, verbose = TRUE, progress = FALSE){
+  function(x, id, language = getOption("dbpedia.lang"), chunksize = 100L, wait = 1, verbose = TRUE, progress = FALSE){
     if (!"wikidata_id" %in% colnames(x)){
       cli_alert_danger("{.fn wikidata_query} requires column {.val wikidata_id}")
       stop()
@@ -220,7 +222,7 @@ setMethod(
     tbl <- wikidata_query(
       x = x[["wikidata_id"]],
       id = id,
-      limit = limit,
+      chunksize = chunksize,
       wait = wait,
       verbose = verbose,
       progress = progress
@@ -264,7 +266,7 @@ setGeneric(
 #' uritab <- data_char_ukimmig2010 |>
 #'   corpus() |>
 #'   get_dbpedia_uris(progress = TRUE) %>% 
-#'   add_wikidata_uris(endpoint = "https://dbpedia.org/sparql/", progress = TRUE, limit = 50) %>% 
+#'   add_wikidata_uris(endpoint = "https://dbpedia.org/sparql/", progress = TRUE, chunksize = 100) %>% 
 #'   wikidata_query(id = "P31")
 #' }
 #'   
@@ -277,7 +279,8 @@ setMethod(
     x,
     optional,
     endpoint,
-    limit = 100,
+    chunksize = 100,
+    limit = chunksize,
     wait = 1,
     verbose = TRUE,
     progress = FALSE
@@ -292,6 +295,7 @@ setMethod(
       optional = optional,
       endpoint = endpoint,
       wait = wait,
+      chunksize = chunksize,
       limit = limit,
       progress = progress
     )

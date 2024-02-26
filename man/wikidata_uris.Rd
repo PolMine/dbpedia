@@ -11,7 +11,7 @@ dbpedia_get_wikidata_uris(
   optional,
   endpoint,
   chunksize = 100,
-  limit = 2,
+  limit = chunksize,
   wait = 1,
   verbose = TRUE,
   progress = FALSE
@@ -23,7 +23,8 @@ add_wikidata_uris(x, ...)
   x,
   optional,
   endpoint,
-  limit = 100,
+  chunksize = 100,
+  limit = chunksize,
   wait = 1,
   verbose = TRUE,
   progress = FALSE
@@ -82,7 +83,7 @@ httr::set_config(httr::config(ssl_verifypeer = 0L))
 uritab <- data_char_ukimmig2010 |>
   corpus() |>
   get_dbpedia_uris(progress = TRUE) \%>\% 
-  add_wikidata_uris(endpoint = "https://dbpedia.org/sparql/", progress = TRUE, limit = 50) \%>\% 
+  add_wikidata_uris(endpoint = "https://dbpedia.org/sparql/", progress = TRUE, chunksize = 100) \%>\% 
   wikidata_query(id = "P31")
 }
   

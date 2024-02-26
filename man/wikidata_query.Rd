@@ -12,7 +12,7 @@ wikidata_query(x, ...)
   x,
   id,
   language = getOption("dbpedia.lang"),
-  limit = 100L,
+  chunksize = 100L,
   wait = 1,
   verbose = TRUE,
   progress = FALSE
@@ -22,7 +22,7 @@ wikidata_query(x, ...)
   x,
   id,
   language = getOption("dbpedia.lang"),
-  limit = 100L,
+  chunksize = 100L,
   wait = 1,
   verbose = TRUE,
   progress = FALSE
@@ -38,7 +38,8 @@ will be processed.}
 
 \item{language}{Language to be used in Wikidata query.}
 
-\item{limit}{Maximum number of wikidata IDs to be sent to endpoint at a time.}
+\item{chunksize}{Single numeric value with maximum size of chunks to process at
+a time.}
 
 \item{wait}{A numeric value - slow down requests to avoid denial of service.}
 
