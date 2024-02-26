@@ -21,6 +21,7 @@ get_dbpedia_uris(x, ...)
   api = getOption("dbpedia.endpoint"),
   types = character(),
   support = 20,
+  config = list(),
   verbose = TRUE
 )
 
@@ -73,6 +74,7 @@ get_dbpedia_uris(x, ...)
   api = getOption("dbpedia.endpoint"),
   types = character(),
   support = 20,
+  config = list(),
   verbose = TRUE,
   progress = FALSE
 )
@@ -118,6 +120,8 @@ vector is empty (default), no restrictions are applied.}
 
 \item{support}{The number of indegrees at Wikidata. Useful for limiting the
 the number of results by excluding insignificant entities.}
+
+\item{config}{Configuration settings passed into \code{httr::GET()}.}
 
 \item{verbose}{A \code{logical} value - whether to display messages.}
 
@@ -222,11 +226,12 @@ uritab <- corpus("REUTERS") \%>\%
 # example code
 
 # Process quanteda corpus 
-\donttest{
 library(quanteda)
 uritab <- data_char_ukimmig2010 |>
   corpus() |>
-  get_dbpedia_uris(verbose = FALSE)
-}
+  get_dbpedia_uris(
+    verbose = FALSE,
+    config = httr::config(http_version = 1.1)
+  )
   
 }

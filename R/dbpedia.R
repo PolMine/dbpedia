@@ -354,7 +354,7 @@ setGeneric("get_dbpedia_uris", function(x, ...) standardGeneric("get_dbpedia_uri
 #'   types = "Company",
 #'   api = "http://api.dbpedia-spotlight.org/en/annotate"
 #' )
-setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbpedia.lang"), max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), support = 20, verbose = TRUE){
+setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbpedia.lang"), max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), support = 20, config = list(), verbose = TRUE){
   
   if (nchar(x) > max_len){
     if (verbose) cli_alert_warning(
@@ -381,6 +381,7 @@ setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbp
       else
         list(types = paste(types, collapse = ","))
     ),
+    config = config,
     httr::add_headers('Accept' = 'application/json')
   )
   
@@ -463,6 +464,7 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #'   vector is empty (default), no restrictions are applied.
 #' @param support The number of indegrees at Wikidata. Useful for limiting the 
 #'   the number of results by excluding insignificant entities.
+#' @param config Configuration settings passed into `httr::GET()`.
 #' @param verbose A `logical` value - whether to display messages.
 #' @param progress A `logical` value - whether to show progress.
 #' @param s_attribute A length-one `character` vector indicating a s-attribute.
@@ -702,12 +704,13 @@ setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOpti
 #' # example code
 #' 
 #' # Process quanteda corpus 
-#' \donttest{
 #' library(quanteda)
 #' uritab <- data_char_ukimmig2010 |>
 #'   corpus() |>
-#'   get_dbpedia_uris(verbose = FALSE)
-#' }
+#'   get_dbpedia_uris(
+#'     verbose = FALSE,
+#'     config = httr::config(http_version = 1.1)
+#'   )
 #'   
 #' @rdname get_dbpedia_uris
 setMethod(
@@ -721,6 +724,7 @@ setMethod(
     api = getOption("dbpedia.endpoint"),
     types = character(),
     support = 20,
+    config = list(),
     verbose = TRUE,
     progress = FALSE
   ){
@@ -755,6 +759,7 @@ setMethod(
             api = api,
             types = types,
             support = support,
+            config = config,
             verbose = if (progress) FALSE else verbose
           )[, "doc" := docname]
         }
