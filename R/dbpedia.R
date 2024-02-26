@@ -354,7 +354,7 @@ setGeneric("get_dbpedia_uris", function(x, ...) standardGeneric("get_dbpedia_uri
 #'   types = "Company",
 #'   api = "http://api.dbpedia-spotlight.org/en/annotate"
 #' )
-setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbpedia.lang"), max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), support = 20, config = list(), verbose = TRUE){
+setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbpedia.lang"), max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), support = 20, verbose = TRUE){
   
   if (nchar(x) > max_len){
     if (verbose) cli_alert_warning(
@@ -381,7 +381,6 @@ setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbp
       else
         list(types = paste(types, collapse = ","))
     ),
-    config = config,
     httr::add_headers('Accept' = 'application/json')
   )
   
@@ -448,6 +447,18 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 
 
 #' Get DBpedia links.
+#' 
+#' #' @details
+#' `expand_to_token` is a rather experimental feature that resolves mismatches
+#' between entity spans and token spans by expanding the former to the last
+#' character position of the corresponding token. See issue #26 in the `dbpedia`
+#' GitHub repository.
+#' The configuration of the `httr::GET()` calls used can be controlled using
+#' `httr::config()`. A relevant scenario is SSL verification issues that can be
+#' addressed using `httr::set_config(httr::config(ssl_verifypeer = 0L))` (at own
+#' risk!). The error "HTTP/2 stream 1 was not closed cleanly before end of the
+#' underlying stream" can be addressed using
+#' `httr::set_config(httr::config(http_verson = 1.1))`
 #'
 #' @param x A `subcorpus` (`xml`, ...) object. Will be coerced to
 #'   'AnnotatedPlainTextDocument' from NLP package.
@@ -464,7 +475,6 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #'   vector is empty (default), no restrictions are applied.
 #' @param support The number of indegrees at Wikidata. Useful for limiting the 
 #'   the number of results by excluding insignificant entities.
-#' @param config Configuration settings passed into `httr::GET()`.
 #' @param verbose A `logical` value - whether to display messages.
 #' @param progress A `logical` value - whether to show progress.
 #' @param s_attribute A length-one `character` vector indicating a s-attribute.
@@ -478,10 +488,6 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #' @param drop_inexact_annotations A `logical` value - whether to drop entity
 #'   annotations when entity spans and token spans do not align exactly.
 #' @param ... Further arguments.
-#' @details `expand_to_token` is a rather experimental feature that resolves
-#'   mismatches between entity spans and token spans by expanding the former to
-#'   the last character position of the corresponding token. See issue #26 in
-#'   the `dbpedia` GitHub repository.
 #' @return A `data.table` with the following columns:
 #' - *dbpedia_uri*: The DBpedia URI.
 #' - *text*: Text that has been annotated
@@ -705,12 +711,11 @@ setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOpti
 #' 
 #' # Process quanteda corpus 
 #' library(quanteda)
+#' httr::set_config(httr::config(ssl_verifypeer = 0L, http_version = 1.1))
+#' 
 #' uritab <- data_char_ukimmig2010 %>%
 #'   corpus() %>%
-#'   get_dbpedia_uris(
-#'     verbose = FALSE,
-#'     config = httr::config(http_version = 1.1)
-#'   )
+#'   get_dbpedia_uris(verbose = FALSE)
 #' @rdname get_dbpedia_uris
 setMethod(
   "get_dbpedia_uris",
@@ -723,7 +728,6 @@ setMethod(
     api = getOption("dbpedia.endpoint"),
     types = character(),
     support = 20,
-    config = list(),
     verbose = TRUE,
     progress = FALSE
   ){
@@ -758,7 +762,6 @@ setMethod(
             api = api,
             types = types,
             support = support,
-            config = config,
             verbose = if (progress) FALSE else verbose
           )[, "doc" := docname]
         }

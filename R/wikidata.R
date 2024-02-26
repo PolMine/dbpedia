@@ -266,8 +266,7 @@ setGeneric(
 #' uritab <- data_char_ukimmig2010 %>%
 #'   corpus() %>%
 #'   get_dbpedia_uris(
-#'     progress = TRUE,
-#'     config = httr::config(http_version = 1.1)
+#'     progress = TRUE
 #'   ) %>% 
 #'   add_wikidata_uris(
 #'     endpoint = "https://dbpedia.org/sparql/",

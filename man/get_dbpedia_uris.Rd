@@ -21,7 +21,6 @@ get_dbpedia_uris(x, ...)
   api = getOption("dbpedia.endpoint"),
   types = character(),
   support = 20,
-  config = list(),
   verbose = TRUE
 )
 
@@ -74,7 +73,6 @@ get_dbpedia_uris(x, ...)
   api = getOption("dbpedia.endpoint"),
   types = character(),
   support = 20,
-  config = list(),
   verbose = TRUE,
   progress = FALSE
 )
@@ -121,8 +119,6 @@ vector is empty (default), no restrictions are applied.}
 \item{support}{The number of indegrees at Wikidata. Useful for limiting the
 the number of results by excluding insignificant entities.}
 
-\item{config}{Configuration settings passed into \code{httr::GET()}.}
-
 \item{verbose}{A \code{logical} value - whether to display messages.}
 
 \item{p_attribute}{The p-attribute used for decoding a \code{subcorpus} object.}
@@ -161,13 +157,17 @@ Depending on the input object, further columns may be available.
 }
 }
 \description{
-Get DBpedia links.
-}
-\details{
-\code{expand_to_token} is a rather experimental feature that resolves
-mismatches between entity spans and token spans by expanding the former to
-the last character position of the corresponding token. See issue #26 in
-the \code{dbpedia} GitHub repository.
+#' @details
+\code{expand_to_token} is a rather experimental feature that resolves mismatches
+between entity spans and token spans by expanding the former to the last
+character position of the corresponding token. See issue #26 in the \code{dbpedia}
+GitHub repository.
+The configuration of the \code{httr::GET()} calls used can be controlled using
+\code{httr::config()}. A relevant scenario is SSL verification issues that can be
+addressed using \code{httr::set_config(httr::config(ssl_verifypeer = 0L))} (at own
+risk!). The error "HTTP/2 stream 1 was not closed cleanly before end of the
+underlying stream" can be addressed using
+\code{httr::set_config(httr::config(http_verson = 1.1))}
 }
 \examples{
 \dontrun{
@@ -227,10 +227,9 @@ uritab <- corpus("REUTERS") \%>\%
 
 # Process quanteda corpus 
 library(quanteda)
+httr::set_config(httr::config(ssl_verifypeer = 0L, http_version = 1.1))
+
 uritab <- data_char_ukimmig2010 \%>\%
   corpus() \%>\%
-  get_dbpedia_uris(
-    verbose = FALSE,
-    config = httr::config(http_version = 1.1)
-  )
+  get_dbpedia_uris(verbose = FALSE)
 }
