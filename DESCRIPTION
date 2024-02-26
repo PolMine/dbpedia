@@ -29,7 +29,8 @@ Suggests:
     knitr,
     WikidataQueryServiceR,
     GermaParl2,
-    quanteda
+    quanteda,
+    testthat
 Remotes:
   polmineR=github::PolMine/polmineR@dev
 AdditionalRepositories: https://polmine.github.io/drat/
