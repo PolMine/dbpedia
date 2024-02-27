@@ -21,6 +21,7 @@ get_dbpedia_uris(x, ...)
   api = getOption("dbpedia.endpoint"),
   types = character(),
   support = 20,
+  types_src = c("DBpedia", "Wikidata"),
   verbose = TRUE
 )
 
@@ -118,6 +119,12 @@ vector is empty (default), no restrictions are applied.}
 
 \item{support}{The number of indegrees at Wikidata. Useful for limiting the
 the number of results by excluding insignificant entities.}
+
+\item{types_src}{A \code{character} vector specifying knowledge bases as sources
+for entity types. If provided, columns following the pattern '(src)_type'
+(e.g. "DBpedia_types") with entity types (\code{NA} if not available) will be
+added to the table. Values are wrapped and separated by vertical bars.
+\code{types_src} defaults to "DBpedia" and "Wikidata".}
 
 \item{verbose}{A \code{logical} value - whether to display messages.}
 

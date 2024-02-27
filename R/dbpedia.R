@@ -354,7 +354,19 @@ setGeneric("get_dbpedia_uris", function(x, ...) standardGeneric("get_dbpedia_uri
 #'   types = "Company",
 #'   api = "http://api.dbpedia-spotlight.org/en/annotate"
 #' )
-setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbpedia.lang"), max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), support = 20, verbose = TRUE){
+setMethod(
+  "get_dbpedia_uris", "character",
+  function(
+    x,
+    language = getOption("dbpedia.lang"),
+    max_len = 5600L,
+    confidence = 0.35,
+    api = getOption("dbpedia.endpoint"),
+    types = character(),
+    support = 20,
+    types_src = c("DBpedia", "Wikidata"),
+    verbose = TRUE
+  ){
   
   if (nchar(x) > max_len){
     if (verbose) cli_alert_warning(
@@ -425,6 +437,28 @@ setMethod("get_dbpedia_uris", "character", function(x, language = getOption("dbp
       )
     }
   )]
+  
+  if (length(types_src) > 0L){
+    src_all <- unique(unlist(lapply(resources_min[["types"]], names)))
+    src_unused <- setdiff(src_all, types_src)
+    if (length(src_unused) > 0L)
+      cli_alert_info(
+        "dropping available types from: {paste(src_unused, collapse = ' / ')}"
+      )
+    for (src in types_src){
+      types_vec <- unlist(lapply(
+        lapply(resources_min[["types"]], `[[`, src),
+        function(x){
+          if (is.null(x))
+            NA_character_
+          else
+            sprintf("|%s|", paste(x, collapse = "|"))
+        }
+      ))
+      
+      resources_min[, (paste(src, "type", sep = "_")) := types_vec]
+    }
+  }
 
   resources_min
 })
@@ -475,6 +509,11 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #'   vector is empty (default), no restrictions are applied.
 #' @param support The number of indegrees at Wikidata. Useful for limiting the 
 #'   the number of results by excluding insignificant entities.
+#' @param types_src A `character` vector specifying knowledge bases as sources
+#'   for entity types. If provided, columns following the pattern '(src)_type'
+#'   (e.g. "DBpedia_types") with entity types (`NA` if not available) will be
+#'   added to the table. Values are wrapped and separated by vertical bars.
+#'   `types_src` defaults to "DBpedia" and "Wikidata".
 #' @param verbose A `logical` value - whether to display messages.
 #' @param progress A `logical` value - whether to show progress.
 #' @param s_attribute A length-one `character` vector indicating a s-attribute.
@@ -765,7 +804,8 @@ setMethod(
             verbose = if (progress) FALSE else verbose
           )[, "doc" := docname]
         }
-      )
+      ),
+      fill = TRUE
     )
     
     if (progress) cli_progress_done(.envir = env)

@@ -12,19 +12,24 @@
 #' @param other a `character vector` with the name of the class of all types not
 #'   matched by the `mapping_vector`.
 #' @param verbose A `logical` value - whether to display messages.
+#' @param ... Further arguments.
 #' @importFrom data.table is.data.table
 #' @importFrom cli format_error cli_alert_info
 #' @details If there is more than one match between the retrieved types and the
 #'   `mapping vector`, unique classes are sorted alphabetically and collapsed.
 #' @return Function adds classes to input data.table by reference.
-#' @exportMethod generic
+#' @exportMethod entity_types_map
 #' @rdname entity_types_map
-setGeneric("entity_types_map", function(x, ...)
-  standardGeneric("entity_types_map"))
+setGeneric(
+  "entity_types_map",
+  function(x, ...) standardGeneric("entity_types_map")
+)
 
 
 #' @rdname entity_types_map
 #' @examples
+#' library(quanteda)
+#' 
 #' inaugural_paragraphs <- data_corpus_inaugural %>%
 #'   corpus_subset(Year == 2009) %>% # limit to Barack Obama 2009
 #'   corpus_reshape(to = "paragraphs")
@@ -116,4 +121,4 @@ setMethod(
   
   x[, class := entity_types_map(x = x[["types"]])]
   x
-}
+})
