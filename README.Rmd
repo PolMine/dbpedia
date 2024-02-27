@@ -41,9 +41,10 @@ library(dbpedia)
 
 doc <- "Berlin is the capital city of Germany."
 
-uri_table <- get_dbpedia_uris(x = doc,
-                              language = getOption("dbpedia.lang"),
-                              api = getOption("dbpedia.endpoint")
+uri_table <- get_dbpedia_uris(
+  x = doc,
+  language = getOption("dbpedia.lang"),
+  api = getOption("dbpedia.endpoint")
 )
 ```
 
