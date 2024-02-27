@@ -49,6 +49,7 @@ Collate:
     'wikidata.R'
     'get_annotation_table.R'
     'xml.R'
+    'entity_types.R'
     'zzz.R'
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
