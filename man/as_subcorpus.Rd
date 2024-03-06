@@ -9,8 +9,8 @@ as_subcorpus(x, highlight_by = NULL)
 \arguments{
 \item{x}{A \code{data.table} with DBpedia URIs.}
 
-\item{highlight_by}{A \verb{character vector} of the column in which entity names
-are annotated. Defaults to NULL.}
+\item{highlight_by}{A \verb{character vector} of the column in which the types of
+entities are annotated. Defaults to NULL.}
 }
 \description{
 Transform table with DBpedia URIs to subcorpus.
@@ -18,5 +18,5 @@ Transform table with DBpedia URIs to subcorpus.
 \details{
 If a \verb{character vector} is supplied to \code{highlight_by}, selected
 entity types  (PERSON, LOCATION, ORGANIZATION, MISC) are assigned specific
-color codes. Other entities in the column are assigned a single color.
+color codes. Other types in the column are assigned a single color.
 }

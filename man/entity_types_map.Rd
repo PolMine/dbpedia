@@ -4,7 +4,7 @@
 \alias{entity_types_map}
 \alias{entity_types_map,list-method}
 \alias{entity_types_map,data.table-method}
-\title{Map types returned by DBpedia Spotlight to a limited set of classes}
+\title{Map types returned by DBpedia Spotlight to a limited set of categories}
 \usage{
 entity_types_map(x, ...)
 
@@ -17,8 +17,8 @@ entity_types_map(x, ...)
 
 \item{...}{Further arguments.}
 
-\item{mapping_vector}{A \verb{named character vector} with desired class names (as
-names) and types from the DBpedia ontology as values. For example:
+\item{mapping_vector}{A \verb{named character vector} with desired category names
+(as names) and types from the DBpedia ontology as values. For example:
 c("PERSON" = "DBpedia:Person"). Can contain more than one pair of class and
 type.}
 
@@ -33,7 +33,7 @@ Function adds classes to input data.table by reference.
 \description{
 This function takes the output of \code{get_dbpedia_uris()} and compares values in
 the \code{types} column with a named character vector. The main purpose of this
-function is to reduce the number of types to a limited set of classes.
+function is to reduce the number of types to a limited set of categories.
 }
 \details{
 If there is more than one match between the retrieved types and the

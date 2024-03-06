@@ -1,12 +1,12 @@
-#' Map types returned by DBpedia Spotlight to a limited set of classes
+#' Map types returned by DBpedia Spotlight to a limited set of categories
 #'
 #' This function takes the output of `get_dbpedia_uris()` and compares values in
 #' the `types` column with a named character vector. The main purpose of this
-#' function is to reduce the number of types to a limited set of classes.
+#' function is to reduce the number of types to a limited set of categories.
 #'
 #' @param x A `data.table` with DBpedia URIs.
-#' @param mapping_vector A `named character vector` with desired class names (as
-#'   names) and types from the DBpedia ontology as values. For example:
+#' @param mapping_vector A `named character vector` with desired category names
+#'   (as names) and types from the DBpedia ontology as values. For example:
 #'   c("PERSON" = "DBpedia:Person"). Can contain more than one pair of class and
 #'   type.
 #' @param other a `character vector` with the name of the class of all types not
@@ -70,32 +70,28 @@ setMethod(
     if (!is.character(other) | length(other) > 1)
       stop(format_error("{.var other} not character vector of length {.val 1}."))
     
-    lapply(
+    sapply(
       x,
       function(el){
-        # types is a list of lists. Transform to single character vector.
-        type_list <- unlist(el, recursive = FALSE)
-        
-        # An unintended consequence here is that you may get DBpedia1, DBpedia2, ...
-        
-        types_with_class_raw <- lapply(
-          seq_along(type_list),
+        types_with_category_raw <- lapply(
+          seq_along(el),
           function(i) {
-            list_name <- names(type_list)[[i]]
-            list_elements <- type_list[[i]]
+            list_name <- names(el)[[i]]
+            list_elements <- el[[i]]
             paste0(list_name, ":", list_elements)
           })
-        types_with_class <- intersect(unlist(types_with_class_raw), mapping_vector)
-        
-        if (length(types_with_class) > 0L) {
-          match_idx <- which(mapping_vector %in% types_with_class)
-          
-          class_name <- paste(
+
+        types_with_category <- intersect(unlist(types_with_category_raw), mapping_vector)
+
+        if (length(types_with_category) > 0L) {
+          match_idx <- which(mapping_vector %in% types_with_category)
+
+          category <- paste(
             sort(unique(names(mapping_vector)[match_idx])),
             collapse = "|"
           )
         } else {
-          class_name <- other
+          category <- other
         }
       }
     )
@@ -116,9 +112,9 @@ setMethod(
 
   if (verbose)
     cli_alert_info(
-      "mapping values in column {.var types} to new column {.var class}"
+      "mapping values in column {.var types} to new column {.var category}"
     )
   
-  x[, class := entity_types_map(x = x[["types"]])]
+  x[, category := entity_types_map(x = x[["types"]], mapping_vector = mapping_vector, other = other, verbose = verbose)]
   x
 })

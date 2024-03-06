@@ -1,3 +1,9 @@
+## dbpedia v0.1.2.9001
+* `entity_types_map()` now creates assignments again (#40) and returns them as character vectors
+* `entity_types_map()` also passes all arguments when used with data.table objects
+* `types_src` works in `get_dbpedia_uris()` for documents with a single type (#41)
+* messages for `types_src` follow verbosity set by the argument `verbose`
+
 ## dbpedia v0.1.2
 * `get_dbpedia_uris()` has new argument `types` to filter results.
 * `dbpedia_spotlight_status()` without warnings if docker not available / not running #32.

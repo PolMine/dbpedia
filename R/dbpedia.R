@@ -424,24 +424,33 @@ setMethod(
     new = c("dbpedia_uri", "text", "start", "types")
   )
   setcolorder(resources_min, c("start", "text", "dbpedia_uri", "types"))
-  
+
   resources_min[, "start" := as.integer(resources_min[["start"]]) + 1L]
+
+  # See issue 41.
+  types_list <- strsplit(x = resources_min[["types"]], split = ",")
+
   resources_min[, "types" := lapply(
-    strsplit(x = resources_min[["types"]], split = ","),
+    types_list,
     function(x){
       if (length(x) == 0L) return(list())
       spl <- strsplit(x, split = ":")
-      split(
+      types <- split(
         x = unlist(lapply(spl, `[`, 2L)),
         f = unlist(lapply(spl, `[`, 1L))
       )
+      if (length(types) == 1L & length(types_list) == 1L) {
+        list(types)
+      } else {
+        types
+      }
     }
   )]
-  
+
   if (length(types_src) > 0L){
     src_all <- unique(unlist(lapply(resources_min[["types"]], names)))
     src_unused <- setdiff(src_all, types_src)
-    if (length(src_unused) > 0L)
+    if (length(src_unused) > 0L & isTRUE(verbose))
       cli_alert_info(
         "dropping available types from: {paste(src_unused, collapse = ' / ')}"
       )
@@ -481,17 +490,17 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 
 
 #' Get DBpedia links.
-#' 
-#' #' @details
-#' `expand_to_token` is a rather experimental feature that resolves mismatches
-#' between entity spans and token spans by expanding the former to the last
-#' character position of the corresponding token. See issue #26 in the `dbpedia`
-#' GitHub repository.
-#' The configuration of the `httr::GET()` calls used can be controlled using
-#' `httr::config()`. A relevant scenario is SSL verification issues that can be
-#' addressed using `httr::set_config(httr::config(ssl_verifypeer = 0L))` (at own
-#' risk!). The error "HTTP/2 stream 1 was not closed cleanly before end of the
-#' underlying stream" can be addressed using
+#'
+#' @details - `expand_to_token` is a rather experimental feature that resolves
+#' mismatches between entity spans and token spans by expanding the former to
+#' the last character position of the corresponding token. See issue #26 in the
+#' `dbpedia` GitHub repository.
+#' - The configuration of the `httr::GET()` calls
+#' used can be controlled using `httr::config()`. A relevant scenario is SSL
+#' verification issues that can be addressed using
+#' `httr::set_config(httr::config(ssl_verifypeer = 0L))` (at own risk!). The
+#' error "HTTP/2 stream 1 was not closed cleanly before end of the underlying
+#' stream" can be addressed using
 #' `httr::set_config(httr::config(http_verson = 1.1))`
 #'
 #' @param x A `subcorpus` (`xml`, ...) object. Will be coerced to
@@ -505,9 +514,9 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #'   as threshold before DBpedia Spotlight includes a link into the report.
 #' @param api An URL of the DBpedia Spotlight API.
 #' @param types A `character` vector to restrict result returned to certain
-#'   entity types, such as 'Company' or 'Organization'. If the `character` 
+#'   entity types, such as 'Company' or 'Organization'. If the `character`
 #'   vector is empty (default), no restrictions are applied.
-#' @param support The number of indegrees at Wikidata. Useful for limiting the 
+#' @param support The number of indegrees at Wikidata. Useful for limiting the
 #'   the number of results by excluding insignificant entities.
 #' @param types_src A `character` vector specifying knowledge bases as sources
 #'   for entity types. If provided, columns following the pattern '(src)_type'
@@ -530,9 +539,9 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #' @return A `data.table` with the following columns:
 #' - *dbpedia_uri*: The DBpedia URI.
 #' - *text*: Text that has been annotated
-#' - *types*: Recognized entity types, for each row a named list, if available 
-#'   entries such as 'DBpedia', 'Schema', 'Wikidata', 'DUL'
-#' Depending on the input object, further columns may be available.
+#' - *types*: Recognized entity types, for each row a named list, if available
+#'   entries such as 'DBpedia', 'Schema', 'Wikidata', 'DUL'.
+#'   Depending on the input object, further columns may be available.
 #' @exportMethod get_dbpedia_uris
 #' @importFrom cli cli_alert_warning cli_progress_step cli_alert_danger
 #'   cli_progress_done cli_alert_info

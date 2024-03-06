@@ -105,11 +105,11 @@ as_chunks <- function(x, size){
 #' Transform table with DBpedia URIs to subcorpus.
 #'
 #' @param x A `data.table` with DBpedia URIs.
-#' @param highlight_by A `character vector` of the column in which entity names
-#'   are annotated. Defaults to NULL.
+#' @param highlight_by A `character vector` of the column in which the types of
+#'   entities are annotated. Defaults to NULL.
 #' @details If a `character vector` is supplied to `highlight_by`, selected
 #'   entity types  (PERSON, LOCATION, ORGANIZATION, MISC) are assigned specific
-#'   color codes. Other entities in the column are assigned a single color.
+#'   color codes. Other types in the column are assigned a single color.
 #' @importFrom fs path
 #' @export
 as_subcorpus <- function(x, highlight_by = NULL){
