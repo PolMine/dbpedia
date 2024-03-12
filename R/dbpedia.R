@@ -604,12 +604,22 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
   )
 
   # prepare function to assign cpos_right depending on value and arguments
-  expand_fun = function(.SD) {
-    cpos_right <- dt[.SD[["end"]] == dt[["end"]]][["id"]]
-    if (length(cpos_right) == 0 & isTRUE(expand_to_token)) {
-      cpos_right <- dt[["id"]][which(dt[["end"]] > .SD[["end"]])[1]]
+  expand_fun = function(.SD, direction) {
+    if (direction == "right") {
+      cpos_right <- dt[.SD[["end"]] == dt[["end"]]][["id"]]
+      if (length(cpos_right) == 0 & isTRUE(expand_to_token)) {
+        cpos_right <- dt[["id"]][which(dt[["end"]] > .SD[["end"]])[1]]
+      } else {
+        cpos_right
+      }
     } else {
-      cpos_right
+      cpos_left <- dt[.SD[["start"]] == dt[["start"]]][["id"]]
+      if (length(cpos_left) == 0 & isTRUE(expand_to_token)) {
+        cpos_vec <- which(dt[["start"]] < .SD[["start"]])
+        cpos_left <- dt[["id"]][cpos_vec[length(cpos_vec)]]
+      } else {
+        cpos_left
+      }
     }
   }
 
@@ -618,8 +628,8 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
     links[, "end" := links[["start"]] + nchar(links[["text"]]) - 1L]
     tab <- links[,
                  list(
-                   cpos_left = dt[.SD[["start"]] == dt[["start"]]][["id"]],
-                   cpos_right = expand_fun(.SD),
+                   cpos_left = expand_fun(.SD, direction = "left"),
+                   cpos_right = expand_fun(.SD, direction = "right"),
                    dbpedia_uri = .SD[["dbpedia_uri"]],
                    text = .SD[["text"]],
                    types = .SD[["types"]]
@@ -689,9 +699,9 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
   }
 
   # drop entities which cannot be mapped exactly to the tokenstream from the
-  # output (see issue #26).
-  if (isTRUE(drop_inexact_annotations) & any(is.na(tab[["cpos_right"]]))) {
-    missing_cpos_idx <- which(is.na(tab[["cpos_right"]]))
+  # output (see issues #26, #44).
+  if (isTRUE(drop_inexact_annotations) & (any(is.na(tab[["cpos_right"]])) | any(is.na(tab[["cpos_left"]])))) {
+    missing_cpos_idx <- unique(c(which(is.na(tab[["cpos_right"]])), which(is.na(tab[["cpos_left"]]))))
     cli_alert_warning("Cannot map {length(missing_cpos_idx)} entit{?y/ies} exactly to tokenstream. Dropping {?it/them} from the annotation.")
     tab <- tab[-missing_cpos_idx, ]
   }

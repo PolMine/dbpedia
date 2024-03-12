@@ -1,3 +1,6 @@
+## dbpedia v0.1.2.9002
+* `expand_to_token` of `get_dbpedia_uris()` also expands spans to the left now (#44)
+
 ## dbpedia v0.1.2.9001
 * `entity_types_map()` now creates assignments again (#40) and returns them as character vectors
 * `entity_types_map()` also passes all arguments when used with data.table objects
