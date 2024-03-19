@@ -1,5 +1,3 @@
-testthat::context("dbpedia")
-
 test_that(
   "get_dbpedia_uris() for quanteda corpus",
   {

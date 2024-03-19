@@ -634,10 +634,11 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
                    text = .SD[["text"]],
                    types = .SD[["types"]]
                  ),
-                 by = "start",
+                 by = c("start", "end"),
                  .SDcols = c("start", "end", "dbpedia_uri", "text", "types")
     ]
     tab[, "start" := NULL]
+    tab[, "end" := NULL]
   } else {
     
     dt <- as.data.table(doc, what = s_attribute)

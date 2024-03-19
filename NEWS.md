@@ -1,5 +1,8 @@
 ## dbpedia v0.1.2.9002
 * `expand_to_token` of `get_dbpedia_uris()` also expands spans to the left now (#44)
+* added `end` to data.table grouping in `get_dbpedia_uris()` for subcorpora to address issue #43. This avoids processing multiple entities at the same time.
+* reorganized tests via `testthat`, i.e. removed `context` and renamed files to start with "test-"
+* added test for `expand_to_token` argument
 
 ## dbpedia v0.1.2.9001
 * `entity_types_map()` now creates assignments again (#40) and returns them as character vectors
