@@ -1,7 +1,7 @@
 test_that(
   "argument expand_to_tokens results in additional matches",
   {
-    library(polmineR)
+    withr::local_package("polmineR")
     use("RcppCWB")
 
     reuters_newswire <- corpus("REUTERS") |>

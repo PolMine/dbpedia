@@ -1,8 +1,8 @@
 Package: dbpedia
 Type: Package
 Title: R Wrapper for DBpedia Spotlight
-Version: 0.1.2.9002
-Date: 2024-03-12
+Version: 0.1.2.9003
+Date: 2024-03-19
 Authors@R: c(
   person("Andreas", "Blaette", role = c("aut", "cre"), email = "andreas.blaette@uni-due.de", comment = c(ORCID = "0000-0001-8970-8010")),
   person("Christoph", "Leonhardt", role = "aut")
@@ -30,7 +30,8 @@ Suggests:
     WikidataQueryServiceR,
     GermaParl2,
     quanteda,
-    testthat
+    testthat,
+    withr
 Remotes:
   polmineR=github::PolMine/polmineR@dev
 AdditionalRepositories: https://polmine.github.io/drat/
@@ -50,6 +51,7 @@ Collate:
     'get_annotation_table.R'
     'xml.R'
     'entity_types.R'
+    'overlaps.R'
     'zzz.R'
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3

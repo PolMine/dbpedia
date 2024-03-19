@@ -1,3 +1,8 @@
+## dbpedia v0.1.2.9003
+* started introducing functionality to detect and resolve overlaps (see issue #42) with `detect_overlap()`
+* introduced tests for `detect_overlap()`
+* modified test suite to follow recommendations of "R Packages" (2nd edition) by Wickham and Bryan, in particular by using `withr` for self-contained tests
+
 ## dbpedia v0.1.2.9002
 * `expand_to_token` of `get_dbpedia_uris()` also expands spans to the left now (#44)
 * added `end` to data.table grouping in `get_dbpedia_uris()` for subcorpora to address issue #43. This avoids processing multiple entities at the same time.
