@@ -9,7 +9,7 @@
 #'   (as names) and types from the DBpedia ontology as values. For example:
 #'   c("PERSON" = "DBpedia:Person"). Can contain more than one pair of class and
 #'   type.
-#' @param other a `character vector` with the name of the class of all types not
+#' @param other A `character vector` with the name of the class of all types not
 #'   matched by the `mapping_vector`.
 #' @param verbose A `logical` value - whether to display messages.
 #' @param ... Further arguments.
@@ -72,7 +72,7 @@ setMethod(
     
     sapply(
       x,
-      function(el){
+      function(el) {
         types_with_category_raw <- lapply(
           seq_along(el),
           function(i) {

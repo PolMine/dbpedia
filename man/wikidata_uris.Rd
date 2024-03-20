@@ -4,7 +4,7 @@
 \alias{dbpedia_get_wikidata_uris}
 \alias{add_wikidata_uris}
 \alias{add_wikidata_uris,data.table-method}
-\title{Get Wikipedia IDs for DBpedia IDS.}
+\title{Get Wikipedia IDs for DBpedia URIs.}
 \usage{
 dbpedia_get_wikidata_uris(
   x,
@@ -55,7 +55,7 @@ of requests (and avoid denial of service). Defaults to 100.}
 \item{...}{Further arguments.}
 }
 \description{
-Get Wikipedia IDs for DBpedia IDS.
+Get Wikipedia IDs for DBpedia URIs.
 }
 \examples{
 dbpedia_uris <- c(

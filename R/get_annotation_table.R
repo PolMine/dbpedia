@@ -14,7 +14,7 @@ setGeneric(
 setMethod(
   "get_annotation_table",
   "subcorpus",
-  function(x){
+  function(x) {
     df <- as_tibble(slot(x, "annotations"))
     df[["type"]] <- gsub(
       'type=\\"(.*?)\\"$', "\\1",

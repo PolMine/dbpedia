@@ -1,4 +1,4 @@
-#' Get Wikipedia IDs for DBpedia IDS.
+#' Get Wikipedia IDs for DBpedia URIs.
 #' 
 #' @param x A character vector with DBpedia URIs. NA values are dropped, only
 #'   unique values will be processed.
@@ -30,7 +30,7 @@
 #'   progress = TRUE
 #' )
 #' @importFrom cli cli_progress_bar cli_progress_done cli_progress_update
-dbpedia_get_wikidata_uris <- function(x, optional, endpoint, chunksize = 100, limit = chunksize, wait = 1, verbose = TRUE, progress = FALSE){
+dbpedia_get_wikidata_uris <- function(x, optional, endpoint, chunksize = 100, limit = chunksize, wait = 1, verbose = TRUE, progress = FALSE) {
   
   stopifnot(
     is.character(x),
@@ -40,7 +40,7 @@ dbpedia_get_wikidata_uris <- function(x, optional, endpoint, chunksize = 100, li
     is.numeric(wait), length(wait) == 1L, wait >= 0
   )
   
-  if (!missing(optional)){
+  if (!missing(optional)) {
     stopifnot(is.character(optional), length(optional) == 1L)
     optional <- sprintf('OPTIONAL { ?item dbo:%s ?key . }', optional)
   } else {
@@ -64,14 +64,14 @@ dbpedia_get_wikidata_uris <- function(x, optional, endpoint, chunksize = 100, li
   chunks <- as_chunks(x = x, size = chunksize)
   retval_li <- list()
   
-  if (progress){
+  if (progress) {
     cli_progress_bar(
       "Processing chunks of DBpedia URIs to get Wikidata URIs",
       total = length(chunks),
       type = "tasks"
     )
   }
-  for (i in 1L:length(chunks)){
+  for (i in 1L:length(chunks)) {
     if (progress) cli_progress_update()
     query <- sprintf(
       template,
@@ -129,9 +129,9 @@ setGeneric("wikidata_query", function(x, ...) standardGeneric("wikidata_query"))
 #' )
 #' wikidata_query(wikidata_uris, id = "P439", progress = TRUE)
 #' @importFrom stats na.omit
-setMethod("wikidata_query", "character", function(x, id, language = getOption("dbpedia.lang"), chunksize = 100L, wait = 1, verbose = TRUE, progress = FALSE){
+setMethod("wikidata_query", "character", function(x, id, language = getOption("dbpedia.lang"), chunksize = 100L, wait = 1, verbose = TRUE, progress = FALSE) {
   
-  if (!requireNamespace("WikidataQueryServiceR", quietly = TRUE)){
+  if (!requireNamespace("WikidataQueryServiceR", quietly = TRUE)) {
     stop("R package WikidataQueryServiceR required but not available. ")
   }
   
@@ -142,12 +142,12 @@ setMethod("wikidata_query", "character", function(x, id, language = getOption("d
     is.logical(progress), length(progress) == 1L
   )
   
-  if (any(startsWith(na.omit(x), "http"))){
+  if (any(startsWith(na.omit(x), "http"))) {
     if (verbose) cli_alert_info("extract wikidata ID from URI")
     x <- gsub("^http(s|)://www.wikidata.org/entity/", "", x)
   }
   
-  if (!all(grepl("^Q\\d+$", x))){
+  if (!all(grepl("^Q\\d+$", x))) {
     cli_alert_warning(
       "all wikidata IDs expected to match regex pattern '^Q\\d+$' - not TRUE"
     )
@@ -170,14 +170,14 @@ setMethod("wikidata_query", "character", function(x, id, language = getOption("d
   chunks <- as_chunks(x = x, size = chunksize)
   retval_li <- list()
   
-  if (progress){
+  if (progress) {
     cli_progress_bar(
       "Processing chunks of Wikidata URIs",
       total = length(chunks),
       type = "tasks"
     )
   }
-  for (i in 1L:length(chunks)){
+  for (i in 1L:length(chunks)) {
     if (progress) cli_progress_update()
     query <- sprintf(
       template,
@@ -213,8 +213,8 @@ setMethod("wikidata_query", "character", function(x, id, language = getOption("d
 setMethod(
   "wikidata_query",
   "data.table",
-  function(x, id, language = getOption("dbpedia.lang"), chunksize = 100L, wait = 1, verbose = TRUE, progress = FALSE){
-    if (!"wikidata_id" %in% colnames(x)){
+  function(x, id, language = getOption("dbpedia.lang"), chunksize = 100L, wait = 1, verbose = TRUE, progress = FALSE) {
+    if (!"wikidata_id" %in% colnames(x)) {
       cli_alert_danger("{.fn wikidata_query} requires column {.val wikidata_id}")
       stop()
     }
@@ -290,8 +290,8 @@ setMethod(
     wait = 1,
     verbose = TRUE,
     progress = FALSE
-  ){
-    if (!"dbpedia_uri" %in% colnames(x)){
+  ) {
+    if (!"dbpedia_uri" %in% colnames(x)) {
       cli_alert_danger("{.fn add_dbpedia_uris} requires column {.val dbpedia_uri}")
       stop()
     }

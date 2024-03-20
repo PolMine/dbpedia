@@ -13,7 +13,7 @@
 #' dbpedia_spotlight_status()
 #' getOption("dbpedia.endpoint")
 #' getOption("dbpedia.lang")
-dbpedia_spotlight_status <- function(){
+dbpedia_spotlight_status <- function() {
   
   status <- list(
     docker = FALSE,
@@ -26,16 +26,16 @@ dbpedia_spotlight_status <- function(){
   # Check whether Docker is installed
   stdout <- system2(command = "docker", stdout = FALSE, stderr = NULL)
   
-  if (stdout == 0){
+  if (stdout == 0) {
     stdout <- suppressWarnings(system2(
       command = "docker",
       args = c("container", "ls"),
       stdout = TRUE,
       stderr = NULL
     ))
-    
-    if (!is.null(attr(stdout, "status"))){ # Docker installed, but not running
-      if (attr(stdout, "status") == 1L){
+
+    if (!is.null(attr(stdout, "status"))) { # Docker installed, but not running
+      if (attr(stdout, "status") == 1L) {
         status[["docker"]] <- FALSE
         status[["lang"]] <- "en"
         status[["endpoint"]] <- "http://api.dbpedia-spotlight.org/en/annotate"
@@ -44,9 +44,9 @@ dbpedia_spotlight_status <- function(){
           "status of running `docker container ls`: {attr(stdout, 'status')}"
         )
       }
-    } else if (any(grepl("dbpedia/dbpedia-spotlight", stdout))){
+    } else if (any(grepl("dbpedia/dbpedia-spotlight", stdout))) {
       stdout_line <- grep("dbpedia/dbpedia-spotlight", stdout)
-      if (length(stdout_line) > 1L){
+      if (length(stdout_line) > 1L) {
         cli_alert_warning(paste0(c(
           "found {.val {length(stdout_line)}} dbpedia-spotlight containers ",
           "using first"
@@ -88,7 +88,7 @@ dbpedia_spotlight_status <- function(){
 #' @exportS3Method
 #' @rdname dbpedia_spotlight_status
 #' @importFrom cli col_cyan cli_text cli_bullets style_bold col_cyan
-print.dbpedia_spotlight_status <- function(x, ...){
+print.dbpedia_spotlight_status <- function(x, ...) {
   cli_text(style_bold("DBpedia Spotlight settings:"))
   cli_bullets(
     c(
@@ -103,9 +103,9 @@ print.dbpedia_spotlight_status <- function(x, ...){
 }
 
 
-as.data.table.AnnotatedPlainTextDocument <- function(x, what = NULL){
+as.data.table.AnnotatedPlainTextDocument <- function(x, what = NULL) {
   dt <- setDT(as.data.frame(x[["annotation"]]))
-  if (!is.null(what)){
+  if (!is.null(what)) {
     dt <- dt[dt[["type"]] %in% what]
     if (nrow(dt) == 0) return(dt) # if there are no elements of "what" in this text
     dt[, "text" := unlist(lapply(dt[["features"]], `[[`, "text"))]
@@ -126,7 +126,7 @@ as.data.table.AnnotatedPlainTextDocument <- function(x, what = NULL){
 #' @param x A `subcorpus` object.
 #' @export as_annotation
 #' @importFrom RcppCWB cl_struc2str
-as_annotation <- function(x){
+as_annotation <- function(x) {
   ne_type <- cl_struc2str(
     corpus = x@corpus,
     registry = x@registry_dir,
@@ -167,66 +167,67 @@ to_annotation = function(nodes, xml, token_tags, feature_tag) {
       token_tags = token_tags,
       feature_tag = feature_tag
     )
-    
+
   } else {
-    
+
     token_elements <- xml2::xml_find_all(
         nodes,
         xpath = namespaced_xpath(xml = xml, tags = token_tags)
       )
-    
+
     # make token annotation data annotation
-    
+
     # get tokens as character vector
     toks <- xml2::xml_text(token_elements)
-    
+
     # get info on whitespace
     tok_joins <- xml2::xml_attr(token_elements, attr = "join")
-    
+
     # get IDs
     tok_ids <- xml2::xml_attr(token_elements, attr = "id")
-    
-    # get token length: some tokens are not followed by whitespace. This is indicated
-    # by `tok_joins` above.
+
+    # get token length: some tokens are not followed by whitespace. This is
+    # indicated by `tok_joins` above.
     whitespace_int <- ifelse(is.na(tok_joins), 1, 0)
     nchars_for_toks <- nchar(toks) + whitespace_int
-    
-    # the starting position is needed for all but the first token. It is calculated
-    # using the length of the tokens.
-    
+
+    # the starting position is needed for all but the first token. It is
+    # calculated using the length of the tokens.
+
     token_char_len <- nchars_for_toks[1:(length(nchars_for_toks) - 1)]
-    
+
     # the starting position for each token after the first is calculated using
     # cumsum().
-    
+
     if (length(toks) > 1) {
       start_positions <- cumsum(c(1, token_char_len)) 
     } else {
       start_positions <- 1
     }
-    
-    # the end_position is calculcated using the cumsum of the token length minus the
-    # whitespace vector (moving each character one up but for the join tokens)
-    
+
+    # the end_position is calculated using the cumsum of the token length minus
+    # the whitespace vector (moving each character one up but for the join
+    # tokens)
+
     end_positions <- cumsum(nchars_for_toks) - whitespace_int
-    
-    # data.frame split to rwos
-    
+
+    # data.frame split to rows
+
     token_feat_dataframe <- data.frame(word = toks, id = tok_ids)
     token_feat_list <- unname(
       split(token_feat_dataframe, seq(nrow(token_feat_dataframe)))
     )
 
     token_annotation <- NLP::Annotation(
-      seq_along(tok_ids), # IDs must be integer, which is a bit unfortunate
+      seq_along(tok_ids), # IDs must be integer
       rep("word", length(tok_ids)),
       start_positions,
       end_positions,
       token_feat_list
     )
-    
+
     # and add feature elements if chosen
-    
+
     if (!is.null(feature_tag)) {
       feature_elements <-  xml2::xml_find_all(
         nodes,
@@ -235,9 +236,9 @@ to_annotation = function(nodes, xml, token_tags, feature_tag) {
     } else {
       feature_elements <- NULL
     }
-    
+
     if (length(feature_elements) > 0) {
-      
+
       feature_ids <- sapply(
         feature_elements,
         function(element) {
@@ -247,9 +248,9 @@ to_annotation = function(nodes, xml, token_tags, feature_tag) {
           )
           xml2::xml_attr(el, "id") 
         })
-      
+
       feature_ids <- sprintf("%s_%s", feature_ids, feature_tag)
-      
+
       # get attributes of features
       feature_ids <- feature_ids # name has no ID. We use the first word ID (assuming that there are no overlaps?)
       feature_kinds <- xml2::xml_attr(feature_elements, "type")
@@ -257,9 +258,9 @@ to_annotation = function(nodes, xml, token_tags, feature_tag) {
         feature_elements,
         function(feat) paste(xml_text(xml_children(feat)), collapse = " ")
       )
-      
+
       # get spans for features
-      
+
       entity_spans <- t(sapply(feature_elements, function(element) {
         child_id <- xml_attr(xml_children(element), "id")
         child_idx <- which(tok_ids %in% child_id)
@@ -267,48 +268,45 @@ to_annotation = function(nodes, xml, token_tags, feature_tag) {
         child_end <- max(end_positions[child_idx])
         matrix(c(child_start, child_end), nrow = 1L, ncol = 2L)
       }))
-      
-      
+
       feature_annotation <- NLP::Annotation(
         seq_along(feature_ids),
         rep("name", length(feature_ids)),
         entity_spans[, 1],
         entity_spans[, 2]
       )
-      
+
       # combine the annotation
       segment_annotation <- c(token_annotation, feature_annotation)
-      
+
       # add feature list to spans
       ne_annotation_components <- NLP::annotations_in_spans(segment_annotation[segment_annotation$type == "word"],
                                                             segment_annotation[segment_annotation$type == feature_tag])
-      
+
       features <- lapply(1:length(ne_annotation_components),
                          function(i) list(
                            text = paste(sapply(ne_annotation_components[[i]]$features, "[[", "word"), collapse = " "),
                            kind = feature_kinds[[i]],
                            constituents = ne_annotation_components[[i]]$id,
                            id = feature_ids[[i]]))
-      
+
       segment_annotation$features[segment_annotation$type == feature_tag] <- features
-      
-      
-      
+
     } else {
       segment_annotation <- token_annotation
     }
-    
+
     # make string
     word_with_ws <- paste(toks, ifelse(is.na(tok_joins), " ", ""), sep = "")
     s <- trimws(stringi::stri_c(word_with_ws, collapse = ""))
-    
+
     # add segment id as metadata (should work if segment is NULL as the TEI has
     # an ID as well).
-    
+
     meta <- list(
       segment_id = xml2::xml_attr(nodes, "id")
     )
-    
+
     # finally, merge everything to annotation data
     annodata <- NLP::AnnotatedPlainTextDocument(
       s = s,
@@ -321,7 +319,6 @@ to_annotation = function(nodes, xml, token_tags, feature_tag) {
 
 #' @rdname get_dbpedia_uris
 setGeneric("get_dbpedia_uris", function(x, ...) standardGeneric("get_dbpedia_uris"))
-
 
 #' @exportMethod get_dbpedia_uris
 #' @rdname get_dbpedia_uris
@@ -366,19 +363,19 @@ setMethod(
     support = 20,
     types_src = c("DBpedia", "Wikidata"),
     verbose = TRUE
-  ){
-  
-  if (nchar(x) > max_len){
+  ) {
+
+  if (nchar(x) > max_len) {
     if (verbose) cli_alert_warning(
       "input text has length {nchar(x)}, truncate to max_len ({.val {max_len}})"
     )
     x <- substr(x, 1L, max_len)
   }
-  
-  if (!is.numeric(support) | !(length(support) == 1)){
+
+  if (!is.numeric(support) | !(length(support) == 1)) {
     cli_alert_warning("argument `support` required to be a numeric value")
   }
-  
+
   if (verbose) cli_progress_step("send request to DBpedia Spotlight")
   request <- httr::GET(
     url = api,
@@ -395,18 +392,18 @@ setMethod(
     ),
     httr::add_headers('Accept' = 'application/json')
   )
-  
-  if (httr::http_error(request)){
+
+  if (httr::http_error(request)) {
     cli_alert_danger("http error response")
     stop("abort")
   }
-  
+
   if (verbose) cli_progress_step("parse result")
   txt <- httr::content(request, as = "text", encoding = "UTF-8")
   json <- jsonlite::fromJSON(txt)
   resources <- as.data.table(json[["Resources"]])
-  
-  if (nrow(resources) == 0L){
+
+  if (nrow(resources) == 0L) {
     return(
       data.table(
         start = integer(),
@@ -416,7 +413,7 @@ setMethod(
       )
     )
   }
-  
+
   resources_min <- resources[, c("@URI", "@surfaceForm", "@offset", "@types")]
   setnames(
     resources_min,
@@ -432,7 +429,7 @@ setMethod(
 
   resources_min[, "types" := lapply(
     types_list,
-    function(x){
+    function(x) {
       if (length(x) == 0L) return(list())
       spl <- strsplit(x, split = ":")
       types <- split(
@@ -447,7 +444,7 @@ setMethod(
     }
   )]
 
-  if (length(types_src) > 0L){
+  if (length(types_src) > 0L) {
     src_all <- unique(unlist(lapply(resources_min[["types"]], names)))
     src_unused <- setdiff(src_all, types_src)
     if (length(src_unused) > 0L & isTRUE(verbose))
@@ -457,14 +454,14 @@ setMethod(
     for (src in types_src){
       types_vec <- unlist(lapply(
         lapply(resources_min[["types"]], `[[`, src),
-        function(x){
+        function(x) {
           if (is.null(x))
             NA_character_
           else
             sprintf("|%s|", paste(x, collapse = "|"))
         }
       ))
-      
+
       resources_min[, (paste(src, "type", sep = "_")) := types_vec]
     }
   }
@@ -475,19 +472,28 @@ setMethod(
 
 #' @exportMethod get_dbpedia_uris
 #' @rdname get_dbpedia_uris
-setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language = getOption("dbpedia.lang"), max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), support = 20, verbose = TRUE){
-  get_dbpedia_uris(
-    x = as.character(x[["content"]]),
-    language = language,
-    max_len = max_len,
-    confidence = confidence,
-    api = api,
-    types = types,
-    support = support,
-    verbose = verbose
-  )
-})
+setMethod("get_dbpedia_uris",
+          "AnnotatedPlainTextDocument",
+          function(x,
+                   language = getOption("dbpedia.lang"),
+                   max_len = 5600L,
+                   confidence = 0.35,
+                   api = getOption("dbpedia.endpoint"),
+                   types = character(),
+                   support = 20,
+                   verbose = TRUE) {
 
+            get_dbpedia_uris(
+              x = as.character(x[["content"]]),
+              language = language,
+              max_len = max_len,
+              confidence = confidence,
+              api = api,
+              types = types,
+              support = support,
+              verbose = verbose
+            )
+          })
 
 #' Get DBpedia links.
 #'
@@ -576,7 +582,7 @@ setMethod("get_dbpedia_uris", "AnnotatedPlainTextDocument", function(x, language
 #'   subset(p_type == "speech") %>%
 #'   get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 5067)
 #'   
-setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), support = 20, expand_to_token = FALSE, drop_inexact_annotations = TRUE, verbose = TRUE){
+setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), support = 20, expand_to_token = FALSE, drop_inexact_annotations = TRUE, verbose = TRUE) {
   
   if (verbose) cli_progress_step("convert input to `AnnotatedPlainTextDocument`")
   doc <- decode(
@@ -623,7 +629,7 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
     }
   }
 
-  if (is.null(s_attribute)){
+  if (is.null(s_attribute)) {
     dt <- as.data.table(doc, what = s_attribute)
     links[, "end" := links[["start"]] + nchar(links[["text"]]) - 1L]
     tab <- links[,
@@ -639,8 +645,9 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
     ]
     tab[, "start" := NULL]
     tab[, "end" := NULL]
+
   } else {
-    
+
     dt <- as.data.table(doc, what = s_attribute)
     if (nrow(dt) == 0){ # if there are no elements of s_attribute #23
       return(
@@ -654,13 +661,14 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
     } 
 
     tab <- links[dt, on = c("start", "text")]
-    
+
     # Corpus positions in table tab may deviate from regions of 
     # s-attribute if region starts or ends with stopword (see #11)
     if (verbose)
       cli_progress_step(
         "map DBpedia Spotlight result on regions of s-attribute {.val {s_attribute}}"
       )
+
     strucs <- cl_cpos2struc(
       corpus = x@corpus,
       s_attribute = s_attribute,
@@ -681,11 +689,11 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
     
     setcolorder(x = tab, neworder = c("cpos_left", "cpos_right", "dbpedia_uri", "text", "types"))
     
-    if (verbose){
+    if (verbose) {
       lapply(
         1L:nrow(tab),
         function(i)
-          if (tab[["cpos_left"]][i] !=  r[i,1] || tab[["cpos_right"]][i] != r[i,2]){
+          if (tab[["cpos_left"]][i] !=  r[i,1] || tab[["cpos_right"]][i] != r[i,2]) {
             ne <- get_token_stream(
               r[i,1]:r[i,2],
               corpus = x@corpus,
@@ -722,16 +730,16 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
 #'     p_attribute = "word",
 #'     verbose = TRUE
 #'   )
-setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), support = 20, max_len = 5600L, expand_to_token = FALSE, verbose = TRUE, progress = FALSE){
+setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), support = 20, max_len = 5600L, expand_to_token = FALSE, verbose = TRUE, progress = FALSE) {
   
-  if (progress){
+  if (progress) {
     env <- parent.frame()
     cli_progress_bar("Tasks", total = length(x), type = "tasks", .envir = env)
   }
   
   li <- lapply(
     x@objects, 
-    function(sc){
+    function(sc) {
       if (progress) cli_progress_update(.envir = env)
       get_dbpedia_uris(
         x = sc,
@@ -753,8 +761,8 @@ setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOpti
   setorderv(y, cols = "cpos_left", order = 1L)
   
   
-  if (verbose){
-    if (!is.null(s_attribute)){
+  if (verbose) {
+    if (!is.null(s_attribute)) {
       cli_alert_info(
         "coverage of DBpedia URIs: {.val {nrow(y)}} regions of s-attribute {.val {s_attribute}} / {.val {length(na.omit(y[['dbpedia_uri']]))}} URIs"
       )
@@ -789,10 +797,10 @@ setMethod(
     support = 20,
     verbose = TRUE,
     progress = FALSE
-  ){
+  ) {
     
     # ensure that input object is corpus class from quanteda pkg
-    if (isS4(x)){
+    if (isS4(x)) {
       cli::cli_alert_danger(
         "input of {.fn get_dbpedia_uris} is S4 class 'corpus' 
         from package {.pkg {getClass('corpus')@package}} -
@@ -803,7 +811,7 @@ setMethod(
 
     docs <- as.character(x)
     
-    if (progress){
+    if (progress) {
       env <- parent.frame()
       cli_progress_bar("Tasks", total = length(x), type = "tasks", .envir = env)
     }
@@ -811,7 +819,7 @@ setMethod(
     retval <- rbindlist(
       lapply(
         names(docs),
-        function(docname){
+        function(docname) {
           if (progress) cli_progress_update(.envir = env)
           dt <- get_dbpedia_uris(
             x = docs[[docname]],
@@ -862,7 +870,7 @@ setMethod(
     expand_to_token = FALSE,
     drop_inexact_annotations = TRUE,
     verbose = TRUE
-  ){
+  ) {
     
   # sometimes, there are nodes of the same name in different parts of the
   # document (such as <name>) in ParlaMint which describes persons in the TEI
@@ -888,7 +896,8 @@ setMethod(
     nodes_to_process <- nodes
   } else {
     nodes_to_process <- xml2::xml_find_all(nodes,
-                                           xpath = namespaced_xpath(xml = x, tags = segment))
+                                           xpath = namespaced_xpath(xml = x,
+                                                                    tags = segment))
   }
   
   if (verbose) cli_progress_step("preparing {.val {length(nodes_to_process)}} annotation tables.")
@@ -954,7 +963,9 @@ setMethod(
       links[, "end" := links[["start"]] + nchar(links[["text"]]) - 1L]
       tab <- links[,
                    list(
-                     original_id = paste(dt[which(.SD[["start"]] == dt[["start"]]):which(.SD[["end"]] == dt[["end"]])][["original_id"]], collapse = "|"),
+                     original_id = paste(
+                       dt[which(.SD[["start"]] == dt[["start"]]):which(.SD[["end"]] == dt[["end"]])][["original_id"]],
+                       collapse = "|"),
                      dbpedia_uri = .SD[["dbpedia_uri"]],
                      text = .SD[["text"]],
                      types = .SD[["types"]]
@@ -963,44 +974,44 @@ setMethod(
                    .SDcols = c("start", "end", "dbpedia_uri", "text", "types")
       ]
       tab[, "start" := NULL]
-      
+
     } else {
-      
+
       dt <- AnnotatedPlainTextDocument_to_datatable2(doc, what = feature_tag)
       if (nrow(dt) == 0) return(NULL) # if there are no elements of s_attribute
-      
+
       tab <- links[dt, on = c("start", "text")]
-      
+
       # does #11 apply here, too? For CWB, this can be an issue?
-      
+
       # actually, the original ID can be used to add?
-      
+
       tab[["start"]] <- NULL
       tab[["end"]] <- NULL
       tab[["i.end"]] <- NULL
       tab[["id"]] <- NULL
       tab[["type"]] <- NULL
       tab[["feature_kind"]] <- NULL
-      
+
       tab[["id_left"]] <- NULL
       tab[["id_right"]] <- NULL
-      
+
       setcolorder(x = tab, neworder = c("dbpedia_uri", "text", "types", "original_id"))
-      
+
     }
-    
+
     # add segment id from document's metadata
     tab$segment_id <- doc$meta[["segment_id"]]
-    
+
     if (isTRUE(drop_inexact_annotations) & any(is.na(tab[["original_id"]]))) {
       missing_id_idx <- which(is.na(tab[["original_id"]]))
       cli_alert_warning("Cannot map {length(missing_id_idx)} entit{?y/ies} exactly to tokenstream. Dropping {?it/them} from the annotation.")
       tab <- tab[-missing_id_idx, ]
     }
-    
+
     tab
     # MAYBE SLEEP?
-    
+
   }
   )
   

@@ -20,7 +20,7 @@
 #'   LIMIT 100
 #' '
 #' sparql_query(endpoint = sparql_endpoint, query = query)
-sparql_query <- function(endpoint, query){
+sparql_query <- function(endpoint, query) {
   
   stopifnot(
     is.character(endpoint), length(endpoint) == 1L,
@@ -53,12 +53,12 @@ sparql_query <- function(endpoint, query){
   
   data <- lapply(
     attrs,
-    function(attr){
+    function(attr) {
       nodes <- xml_find_all(
         results,
         xpath = sprintf("//d1:binding[@name='%s']", attr)
       )
-      if (length(nodes) == 0L){
+      if (length(nodes) == 0L) {
         rep(NA, times = length(results))
       } else {
         xml_text(nodes)
@@ -77,11 +77,11 @@ sparql_query <- function(endpoint, query){
 #' @return A list of vectors.
 #' @param x A vector to be split into equally sized chunks.
 #' @param size Numeric value, maximum size of chunks.
-as_chunks <- function(x, size){
+as_chunks <- function(x, size) {
   if (isFALSE(is.vector(x))) stop("as_chunks() requires x to be vector")
   if (isFALSE(is.numeric(size))) stop("as_chunks() requires size to be numeric")
   
-  if (length(x) <= size){
+  if (length(x) <= size) {
     li <- list(x)
   } else {
     n_chunks <- length(x) / size
@@ -112,7 +112,7 @@ as_chunks <- function(x, size){
 #'   color codes. Other types in the column are assigned a single color.
 #' @importFrom fs path
 #' @export
-as_subcorpus <- function(x, highlight_by = NULL){
+as_subcorpus <- function(x, highlight_by = NULL) {
 
   if (is.null(highlight_by)) {
 
@@ -152,8 +152,8 @@ as_subcorpus <- function(x, highlight_by = NULL){
   )
 }
 
-na_drop <- function(x, verbose = TRUE){
-  if (any(is.na(x))){
+na_drop <- function(x, verbose = TRUE) {
+  if (any(is.na(x))) {
     nas <- is.na(x)
     if (verbose)
       cli_alert_info(
@@ -164,7 +164,7 @@ na_drop <- function(x, verbose = TRUE){
   x
 }
 
-unique_msg <- function(x, verbose = TRUE){
+unique_msg <- function(x, verbose = TRUE) {
   y <- unique(x)
   if (length(y) < length(x) && verbose)
     cli_alert_info("{.val {length(y)}} unique values to process")

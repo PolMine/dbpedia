@@ -7,16 +7,16 @@
 detect_overlap(x, start_col, end_col = NULL, verbose = TRUE)
 }
 \arguments{
-\item{x}{the input \code{data.table} containing a start and an end position of
+\item{x}{The input \code{data.table} containing a start and an end position of
 regions to be compared.}
 
-\item{start_col}{a \verb{character vector} of length 1, referring to the name of
+\item{start_col}{A \verb{character vector} of length 1, referring to the name of
 the column containing the start positions of the regions to be compared.}
 
-\item{end_col}{a \verb{character vector} of length 1, referring to the name of the
+\item{end_col}{A \verb{character vector} of length 1, referring to the name of the
 column containing the end positions of the regions to be compared.}
 
-\item{verbose}{a \verb{logical value} of whether to print messages or not.}
+\item{verbose}{A \verb{logical value} of whether to print messages or not.}
 }
 \value{
 The input \code{data.table} is modified by reference. The column "ovl_id"
@@ -42,5 +42,5 @@ get_dbpedia_uris(
   types_src = c("DBpedia", "Wikidata"),
   verbose = TRUE
 ) |>
-  detect_overlap(start = "start", verbose = TRUE)
+  detect_overlap(start_col = "start", verbose = TRUE)
 }

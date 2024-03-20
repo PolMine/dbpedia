@@ -3,13 +3,13 @@
 #' The function detects overlapping regions of annotations in a `data.table`
 #' object and assigns an overlap id to each group of overlapping entities.
 #'
-#' @param x the input `data.table` containing a start and an end position of
+#' @param x The input `data.table` containing a start and an end position of
 #'   regions to be compared.
-#' @param start_col a `character vector` of length 1, referring to the name of
+#' @param start_col A `character vector` of length 1, referring to the name of
 #'   the column containing the start positions of the regions to be compared.
-#' @param end_col a `character vector` of length 1, referring to the name of the
+#' @param end_col A `character vector` of length 1, referring to the name of the
 #'   column containing the end positions of the regions to be compared.
-#' @param verbose a `logical value` of whether to print messages or not.
+#' @param verbose A `logical value` of whether to print messages or not.
 #' @return The input `data.table` is modified by reference. The column "ovl_id"
 #'   (overlap ID) is added. Each group of overlapping entities is annotated with
 #'   a unique ID. The functions `classify_overlap()` and `resolve_overlap()` can
@@ -31,8 +31,14 @@
 #'   types_src = c("DBpedia", "Wikidata"),
 #'   verbose = TRUE
 #' ) |>
-#'   detect_overlap(start = "start", verbose = TRUE)
+#'   detect_overlap(start_col = "start", verbose = TRUE)
 detect_overlap <- function(x, start_col, end_col = NULL, verbose = TRUE) {
+
+  if (!start_col %in% colnames(x)) {
+    cli_abort(
+      c("x" = "{.var start_col} is no column in input data.table {.var x}.")
+    )
+  }
 
   # Preparation: Add column "end" if necessary
   if (is.null(end_col)) {
@@ -59,19 +65,25 @@ detect_overlap <- function(x, start_col, end_col = NULL, verbose = TRUE) {
                                      end_col = end_col,
                                      verbose = verbose),
       by = doc]
+
   } else {
+
     x[, ovl_id := detect_overlap_aux(x,
                                      group_id = NULL,
                                      start_col = start_col,
                                      end_col = end_col,
                                      verbose = verbose)]
   }
-  return(x)
+
+  invisible(x)
 }
 
-detect_overlap_aux <- function(input_dt, group_id, start_col, end_col, verbose = TRUE) {
+detect_overlap_aux <- function(input_dt,
+                               group_id,
+                               start_col,
+                               end_col,
+                               verbose = TRUE) {
 
-  # create subset of data.table
   ovl_dt <- input_dt[, which(colnames(input_dt) %in% c("doc", "start", "end",
                                                        "text", start_col, end_col)),
                      with = FALSE]
@@ -118,7 +130,6 @@ detect_overlap_aux <- function(input_dt, group_id, start_col, end_col, verbose =
                               measure.vars = c("xid", "yid"),
                               value.name = "row_idx")
 
-    # remove variable name
     overlaps_out_long[, variable := NULL]
 
     # print number of overlapping entities and rows
@@ -133,6 +144,4 @@ detect_overlap_aux <- function(input_dt, group_id, start_col, end_col, verbose =
 
     retval <- ovl_dt[["ovl_id"]]
   }
-
-  return(retval)
 }

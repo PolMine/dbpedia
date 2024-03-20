@@ -22,7 +22,7 @@ entity_types_map(x, ...)
 c("PERSON" = "DBpedia:Person"). Can contain more than one pair of class and
 type.}
 
-\item{other}{a \verb{character vector} with the name of the class of all types not
+\item{other}{A \verb{character vector} with the name of the class of all types not
 matched by the \code{mapping_vector}.}
 
 \item{verbose}{A \code{logical} value - whether to display messages.}
