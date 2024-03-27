@@ -1,6 +1,6 @@
 ## dbpedia v0.1.2.9003
-* started introducing functionality to detect and resolve overlaps (see issue #42) with `detect_overlap()`
-* introduced tests for `detect_overlap()`
+* started introducing functionality to detect and resolve overlaps (see issue #42) with `detect_overlap()` and `categorize_overlap()`
+* introduced tests for `detect_overlap()` and `categorize_overlap()`
 * modified test suite to follow recommendations of "R Packages" (2nd edition) by Wickham and Bryan, in particular by using `withr` for self-contained tests
 
 ## dbpedia v0.1.2.9002

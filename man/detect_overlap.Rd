@@ -21,22 +21,25 @@ column containing the end positions of the regions to be compared.}
 \value{
 The input \code{data.table} is modified by reference. The column "ovl_id"
 (overlap ID) is added. Each group of overlapping entities is annotated with
-a unique ID. The functions \code{classify_overlap()} and \code{resolve_overlap()} can
-be used thereafter.
+a unique ID. The functions \code{categorize_overlap()} and \code{resolve_overlap()}
+can be used thereafter.
 }
 \description{
-The function detects overlapping regions of annotations in a \code{data.table}
+\code{detect_overlap()} detects overlapping regions of annotations in a \code{data.table}
 object and assigns an overlap id to each group of overlapping entities.
+\strong{This functionality is currently experimental}. The correctness of results
+is subject to ongoing checks. The syntax is likely to change in future
+updates.
 }
 \examples{
 doc <- "Der Deutsche Bundestag tagt in Berlin."
 
-get_dbpedia_uris(
+x <- get_dbpedia_uris(
   x = doc,
-  language = getOption("dbpedia.lang"),
+  language = "de",
   max_len = 5600L,
   confidence = 0.35,
-  api = getOption("dbpedia.endpoint"),
+  api = "https://api.dbpedia-spotlight.org/de/annotate",
   types = character(),
   support = 20,
   types_src = c("DBpedia", "Wikidata"),

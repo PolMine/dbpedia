@@ -3,6 +3,7 @@
 S3method(print,dbpedia_spotlight_status)
 export(as_annotation)
 export(as_subcorpus)
+export(categorize_overlap)
 export(dbpedia_get_wikidata_uris)
 export(dbpedia_spotlight_status)
 export(detect_overlap)
