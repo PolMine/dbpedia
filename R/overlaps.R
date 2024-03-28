@@ -523,3 +523,114 @@ get_combined_text = function(.SD, start_col, end_col, segment, corpus = NULL) {
     }
   }
 }
+
+#' Resolve overlapping entities
+#'
+#' The function resolves detected and categorized overlapping regions of
+#' annotations in a `data.table` object.
+#' **This functionality is currently experimental**. The correctness of results
+#' is subject of ongoing checks. The syntax is likely to change in future
+#' updates.
+#'
+#' @param x The input `data.table` containing annotations with classified
+#'   overlaps.
+#' @param keep A `character vector` of the names of the overlap types to be
+#'   kept. These should refer to the types described in `?categorize_overlap`
+#'   without the leading `ovl_`, i.e. to `longest`, `shortest`, etc. If the
+#'   length of the `character vector` is longer than 1, columns are evaluated in
+#'   order, i.e the first column is preferred over the second, etc.
+#' @param omit A `character vector` of the names of the overlap types to be
+#'   omitted from the final output. These should refer to the types described in
+#'   `?categorize_overlap` without the leading `ovl_`, i.e. to `longest`,
+#'   `shortest`, etc.
+#' @param tiebreak A `character vector` describing a strategy to handle
+#'   unresolved overlaps, i.e. groups of overlapping entities in which the
+#'   combination of `keep` and `omit` does not indicate a single remaining
+#'   entity. Valid values are `first` (for each unresolved overlap, keep the
+#'   first entity in the order of the row index), `sample` (for each unresolved
+#'   overlap, sample one random entity) or `remove` (for each unresolved
+#'   overlap, remove all entities).
+#' @inheritParams detect_overlap
+#' @return A `data.table` only containing one entity per overlap.
+#' @export
+resolve_overlap = function(x, keep, omit = NULL, tiebreak, verbose = TRUE) {
+
+  ovl_unique_before <- length(unique(x[!is.na(ovl_id), ][["ovl_id"]])) # number of overlaps
+
+  # first, keep all non-overlapping entities
+  x[is.na(ovl_id), ovl_keep := 1L]
+
+  if (isTRUE(verbose)) {
+    cli_alert_info("Identifing entities to {.strong keep}.")
+  }
+
+  for (i in seq_along(keep)) {
+    keep_i <- paste0("ovl_", keep[i])
+    x[x[, .I[which(get(keep_i) == TRUE)], by = ovl_id]$V1, c("ovl_keep", "ovl_by") := list(i, keep[i])]
+  }
+
+  if (!is.null(omit)) {
+
+    if (isTRUE(verbose)) {
+      cli_alert_info("Identifing entities to {.strong omit}.")
+    }
+
+    for (i in seq_along(omit)) {
+      omit_i <- paste0("ovl_", omit[i])
+      x[x[, .I[which(get(omit_i) == TRUE)], by = ovl_id]$V1, ovl_keep := -1L]
+    }
+  }
+
+  if (isTRUE(verbose)) {
+    cli_alert_info("Resolving ties.")
+  }
+
+  tiebreak_fun = function(.SD, tiebreak_mode = tiebreak) {
+    v_keep <- .SD[["ovl_keep"]]
+
+    if (all(is.na(v_keep))) {
+      candidates <- seq_along(v_keep)
+    } else if (all(is.na(v_keep[!v_keep < 0]))) {
+      candidates <- seq_along(v_keep)
+      candidates[which(v_keep < 0)] <- NA
+    } else if (length(which(v_keep == min(v_keep[!is.na(v_keep) & v_keep > 0]))) > 1) {
+      candidates <- which(v_keep == min(v_keep[!is.na(v_keep) & v_keep > 0]))
+    } else {
+      return(list(.SD[["ovl_keep"]], .SD[["ovl_by"]]))
+    }
+    if (tiebreak_mode == "first") {
+      v_keep <- rep(NA, times = length(v_keep))
+      v_keep[candidates[!is.na(candidates)][1]] <- 1L
+    } else if (tiebreak_mode == "sample") {
+      v_keep <- rep(NA, times = length(v_keep))
+      v_keep[sample(candidates[!is.na(candidates)], 1)] <- 1L
+    } else if (tiebreak_mode == "remove") {
+      v_keep <- rep(-1L, times = length(v_keep))
+    } else {
+      cli::cli_alert_warning(text = "No way to break ties provided in argument {.var tiebreak}.")
+    }
+    return(list(
+      v_keep,
+      "tiebreak"
+    )
+    )
+  }
+
+  x[!is.na(ovl_id), c("ovl_keep", "ovl_by") := tiebreak_fun(.SD, tiebreak_mode = tiebreak), by = ovl_id]
+  x <- x[x[, .I[which(.SD[["ovl_keep"]] > 0 & .SD[["ovl_keep"]] == min(.SD[["ovl_keep"]], na.rm = TRUE))], by = ovl_id][["V1"]], ]
+
+  ovl_unique_after <- length(unique(x[!is.na(ovl_id), ][["ovl_id"]]))
+
+  if (isTRUE(verbose)) {
+    cli::cli_alert_info(
+      text = "Resolved {ovl_unique_after} out of {ovl_unique_before} overlap{?s}. Removed {ovl_unique_before - ovl_unique_after} overlap{?s}."
+    )
+  }
+
+  x[, ovl_keep := NULL]
+
+  # as a result, all overlap IDs should only occur once
+  stopifnot(all(table(x$ovl_id) == 1))
+
+  return(x)
+}
