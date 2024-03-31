@@ -318,7 +318,10 @@ to_annotation = function(nodes, xml, token_tags, feature_tag) {
 
 
 #' @rdname get_dbpedia_uris
-setGeneric("get_dbpedia_uris", function(x, ...) standardGeneric("get_dbpedia_uris"))
+setGeneric(
+  "get_dbpedia_uris",
+  function(x, ...) standardGeneric("get_dbpedia_uris")
+)
 
 #' @exportMethod get_dbpedia_uris
 #' @rdname get_dbpedia_uris
@@ -359,141 +362,209 @@ setMethod(
     max_len = 5600L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
+    retry = TRUE,
+    logfile = NULL,
     types = character(),
     support = 20,
     types_src = c("DBpedia", "Wikidata"),
     verbose = TRUE
   ) {
-
-  if (nchar(x) > max_len) {
-    if (verbose) cli_alert_warning(
-      "input text has length {nchar(x)}, truncate to max_len ({.val {max_len}})"
-    )
-    x <- substr(x, 1L, max_len)
-  }
-
-  if (!is.numeric(support) | !(length(support) == 1)) {
-    cli_alert_warning("argument `support` required to be a numeric value")
-  }
-
-  if (verbose) cli_progress_step("send request to DBpedia Spotlight")
-  request <- httr::GET(
-    url = api,
-    query = c(
-      list(
-        text = x,
-        support = as.character(support),
-        confidence = confidence
-      ),
-      if (length(types) == 0L)
-        list()
-      else
-        list(types = paste(types, collapse = ","))
-    ),
-    httr::add_headers('Accept' = 'application/json')
-  )
-
-  if (httr::http_error(request)) {
-    cli_alert_danger("http error response")
-    stop("abort")
-  }
-
-  if (verbose) cli_progress_step("parse result")
-  txt <- httr::content(request, as = "text", encoding = "UTF-8")
-  json <- jsonlite::fromJSON(txt)
-  resources <- as.data.table(json[["Resources"]])
-
-  if (nrow(resources) == 0L) {
-    return(
-      data.table(
-        start = integer(),
-        text = character(),
-        dbpedia_uri = character(),
-        types = character()
+    
+    if (nchar(x) > max_len) {
+      if (verbose) cli_alert_warning(
+        "input text has length {nchar(x)}, truncate to max_len ({.val {max_len}})"
       )
+      x <- substr(x, 1L, max_len)
+    }
+    
+    if (!is.numeric(support) | !(length(support) == 1)) {
+      cli_alert_warning("argument `support` required to be a numeric value")
+    }
+    
+    dt_empty <- data.table(
+      start = integer(),
+      text = character(),
+      dbpedia_uri = character(),
+      types = character()
     )
-  }
-
-  resources_min <- resources[, c("@URI", "@surfaceForm", "@offset", "@types")]
-  setnames(
-    resources_min,
-    old = c("@URI", "@surfaceForm", "@offset", "@types"),
-    new = c("dbpedia_uri", "text", "start", "types")
-  )
-  setcolorder(resources_min, c("start", "text", "dbpedia_uri", "types"))
-
-  resources_min[, "start" := as.integer(resources_min[["start"]]) + 1L]
-
-  # See issue 41.
-  types_list <- strsplit(x = resources_min[["types"]], split = ",")
-
-  resources_min[, "types" := lapply(
-    types_list,
-    function(x) {
-      if (length(x) == 0L) return(list())
-      spl <- strsplit(x, split = ":")
-      types <- split(
-        x = unlist(lapply(spl, `[`, 2L)),
-        f = unlist(lapply(spl, `[`, 1L))
+    
+    if (verbose) cli_progress_step("send request to DBpedia Spotlight")
+    request_max <- if (is.logical(retry)) as.integer(request) else retry
+    request_number <- 1L
+    proceed <- TRUE
+    
+    while (proceed) {
+      if (!is.null(logfile)){
+        cat(
+          sprintf("[%s] %s\n", Sys.time(), substr(x, 1, 50)),
+          file = logfile,
+          append = TRUE
+        )
+      }
+      
+      request <- httr::GET(
+        url = api,
+        query = c(
+          list(
+            text = x,
+            support = as.character(support),
+            confidence = confidence
+          ),
+          if (length(types) == 0L)
+            list()
+          else
+            list(types = paste(types, collapse = ","))
+        ),
+        httr::add_headers('Accept' = 'application/json')
       )
-      if (length(types) == 1L & length(types_list) == 1L) {
-        list(types)
+      
+      if (httr::http_error(request)) {
+        cli_alert_danger("http error response")
+        if (request_number <= request_max){
+          if (!is.null(logfile)){
+            cat(x, file = logfile, append = TRUE)
+            cat("\n", file = logfile, append = TRUE)
+            cat(
+              sprintf("request %d failed, waiting for retry\n", request_number),
+              file = logfile,
+              append = TRUE
+            )
+            docker_stats <- system2(
+              command = "docker",
+              args = c("stats", "--no-stream"), stdout = TRUE
+            )
+            cat(
+              paste(docker_stats, collapse = "\n"),
+              file = logfile, append = TRUE
+            )
+            cat("\n", file = logfile, append = TRUE)
+            
+            gc_output <- capture.output(gc())
+            cat(
+              paste(gc_output, collapse = "\n"),
+              file = logfile, append = TRUE
+            )
+            cat("\n", file = logfile, append = TRUE)
+          }
+          cli_alert_info("http error response - waiting and trying again")
+          Sys.sleep(1)
+          request_number <- request_number + 1L
+          next
+        } else {
+          if (!is.null(logfile)){
+            cat(
+              "Unable to process chunk, moving on with next chunk \n",
+              file = logfile, append = TRUE
+            )
+          }
+          warning(
+            sprintf("retried request %d times - returning NULL", request_number)
+          )
+          # old school warning, so that it is available calling `warnings()`
+          return(NULL)
+        }
       } else {
-        types
+        # request successful, no need to continue
+        proceed <- FALSE
       }
     }
-  )]
-
-  if (length(types_src) > 0L) {
-    src_all <- unique(unlist(lapply(resources_min[["types"]], names)))
-    src_unused <- setdiff(src_all, types_src)
-    if (length(src_unused) > 0L & isTRUE(verbose))
-      cli_alert_info(
-        "dropping available types from: {paste(src_unused, collapse = ' / ')}"
-      )
-    for (src in types_src){
-      types_vec <- unlist(lapply(
-        lapply(resources_min[["types"]], `[[`, src),
-        function(x) {
-          if (is.null(x))
-            NA_character_
-          else
-            sprintf("|%s|", paste(x, collapse = "|"))
+    
+    if (verbose) cli_progress_step("parse result")
+    txt <- httr::content(request, as = "text", encoding = "UTF-8")
+    json <- jsonlite::fromJSON(txt)
+    resources <- as.data.table(json[["Resources"]])
+    
+    if (nrow(resources) == 0L) return(dt_empty)
+    
+    resources_min <- resources[, c("@URI", "@surfaceForm", "@offset", "@types")]
+    setnames(
+      resources_min,
+      old = c("@URI", "@surfaceForm", "@offset", "@types"),
+      new = c("dbpedia_uri", "text", "start", "types")
+    )
+    setcolorder(resources_min, c("start", "text", "dbpedia_uri", "types"))
+    
+    resources_min[, "start" := as.integer(resources_min[["start"]]) + 1L]
+    
+    # See issue 41.
+    types_list <- strsplit(x = resources_min[["types"]], split = ",")
+    
+    resources_min[, "types" := lapply(
+      types_list,
+      function(x) {
+        if (length(x) == 0L) return(list())
+        spl <- strsplit(x, split = ":")
+        types <- split(
+          x = unlist(lapply(spl, `[`, 2L)),
+          f = unlist(lapply(spl, `[`, 1L))
+        )
+        if (length(types) == 1L & length(types_list) == 1L) {
+          list(types)
+        } else {
+          types
         }
-      ))
-
-      resources_min[, (paste(src, "type", sep = "_")) := types_vec]
+      }
+    )]
+    
+    if (length(types_src) > 0L) {
+      src_all <- unique(unlist(lapply(resources_min[["types"]], names)))
+      src_unused <- setdiff(src_all, types_src)
+      if (length(src_unused) > 0L & isTRUE(verbose))
+        cli_alert_info(
+          "dropping available types from: {paste(src_unused, collapse = ' / ')}"
+        )
+      for (src in types_src){
+        types_vec <- unlist(lapply(
+          lapply(resources_min[["types"]], `[[`, src),
+          function(x) {
+            if (is.null(x))
+              NA_character_
+            else
+              sprintf("|%s|", paste(x, collapse = "|"))
+          }
+        ))
+        
+        resources_min[, (paste(src, "type", sep = "_")) := types_vec]
+      }
     }
+    
+    resources_min
   }
-
-  resources_min
-})
+)
 
 
 #' @exportMethod get_dbpedia_uris
 #' @rdname get_dbpedia_uris
-setMethod("get_dbpedia_uris",
-          "AnnotatedPlainTextDocument",
-          function(x,
-                   language = getOption("dbpedia.lang"),
-                   max_len = 5600L,
-                   confidence = 0.35,
-                   api = getOption("dbpedia.endpoint"),
-                   types = character(),
-                   support = 20,
-                   verbose = TRUE) {
-
-            get_dbpedia_uris(
-              x = as.character(x[["content"]]),
-              language = language,
-              max_len = max_len,
-              confidence = confidence,
-              api = api,
-              types = types,
-              support = support,
-              verbose = verbose
-            )
-          })
+setMethod(
+  "get_dbpedia_uris",
+  "AnnotatedPlainTextDocument",
+  function(
+    x,
+    language = getOption("dbpedia.lang"),
+    max_len = 5600L,
+    confidence = 0.35,
+    api = getOption("dbpedia.endpoint"),
+    retry = TRUE,
+    logfile = NULL,
+    types = character(),
+    support = 20,
+    verbose = TRUE
+  ) {
+    
+    get_dbpedia_uris(
+      x = as.character(x[["content"]]),
+      language = language,
+      max_len = max_len,
+      confidence = confidence,
+      api = api,
+      retry = retry,
+      logfile = logfile,
+      types = types,
+      support = support,
+      verbose = verbose
+    )
+  }
+)
 
 #' Get DBpedia links.
 #'
@@ -519,6 +590,8 @@ setMethod("get_dbpedia_uris",
 #' @param confidence A `numeric` value, the minimum similarity score that serves
 #'   as threshold before DBpedia Spotlight includes a link into the report.
 #' @param api An URL of the DBpedia Spotlight API.
+#' @param retry A `logical` value, whether to retry in case of a http error.
+#' @param logfile Filename for writing logs (e.g. for debugging purposes).
 #' @param types A `character` vector to restrict result returned to certain
 #'   entity types, such as 'Company' or 'Organization'. If the `character`
 #'   vector is empty (default), no restrictions are applied.
@@ -548,6 +621,7 @@ setMethod("get_dbpedia_uris",
 #' - *types*: Recognized entity types, for each row a named list, if available
 #'   entries such as 'DBpedia', 'Schema', 'Wikidata', 'DUL'.
 #'   Depending on the input object, further columns may be available.
+#'   If the request to the endpoint failes, `NULL` is returned.
 #' @exportMethod get_dbpedia_uris
 #' @importFrom cli cli_alert_warning cli_progress_step cli_alert_danger
 #'   cli_progress_done cli_alert_info
@@ -582,9 +656,36 @@ setMethod("get_dbpedia_uris",
 #'   subset(p_type == "speech") %>%
 #'   get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 5067)
 #'   
-setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, max_len = 5600L, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), support = 20, expand_to_token = FALSE, drop_inexact_annotations = TRUE, verbose = TRUE) {
+setMethod(
+  "get_dbpedia_uris",
+  "subcorpus",
+  function(
+    x,
+    language = getOption("dbpedia.lang"),
+    p_attribute = "word",
+    s_attribute = NULL,
+    max_len = 5600L,
+    confidence = 0.35,
+    api = getOption("dbpedia.endpoint"),
+    retry = TRUE,
+    logfile = NULL,
+    types = character(),
+    support = 20,
+    expand_to_token = FALSE,
+    drop_inexact_annotations = TRUE,
+    verbose = TRUE
+  ) {
   
-  if (verbose) cli_progress_step("convert input to `AnnotatedPlainTextDocument`")
+  # empty data.table/result if nothing to be mapped or nothing mapped
+  dt_empty <- data.table(
+      start = integer(),
+      text = character(),
+      dbpedia_uri = character(),
+      types = character()
+  )  
+    
+  if (verbose)
+    cli_progress_step("convert input to `AnnotatedPlainTextDocument`")
   doc <- decode(
     x,
     to = "AnnotatedPlainTextDocument",
@@ -604,10 +705,14 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
     max_len = max_len,
     confidence = confidence,
     api = api,
+    retry = retry,
+    logfile = logfile,
     types = types,
     support = support,
     verbose = verbose
   )
+  
+  if (is.null(links)) return(dt_empty)
 
   # prepare function to assign cpos_right depending on value and arguments
   expand_fun = function(.SD, direction) {
@@ -649,16 +754,8 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
   } else {
 
     dt <- as.data.table(doc, what = s_attribute)
-    if (nrow(dt) == 0){ # if there are no elements of s_attribute #23
-      return(
-        data.table(
-          start = integer(),
-          text = character(),
-          dbpedia_uri = character(),
-          types = character()
-        )
-      )
-    } 
+    # if there are no elements of s_attribute #23
+    if (nrow(dt) == 0) return(dt_empty)
 
     tab <- links[dt, on = c("start", "text")]
 
@@ -687,7 +784,10 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
     tab[["end"]] <- NULL
     tab[["id"]] <- NULL
     
-    setcolorder(x = tab, neworder = c("cpos_left", "cpos_right", "dbpedia_uri", "text", "types"))
+    setcolorder(
+      x = tab,
+      neworder = c("cpos_left", "cpos_right", "dbpedia_uri", "text", "types")
+    )
     
     if (verbose) {
       lapply(
@@ -710,8 +810,12 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
   # drop entities which cannot be mapped exactly to the tokenstream from the
   # output (see issues #26, #44).
   if (isTRUE(drop_inexact_annotations) & (any(is.na(tab[["cpos_right"]])) | any(is.na(tab[["cpos_left"]])))) {
-    missing_cpos_idx <- unique(c(which(is.na(tab[["cpos_right"]])), which(is.na(tab[["cpos_left"]]))))
-    cli_alert_warning("Cannot map {length(missing_cpos_idx)} entit{?y/ies} exactly to tokenstream. Dropping {?it/them} from the annotation.")
+    missing_cpos_idx <- unique(
+      c(which(is.na(tab[["cpos_right"]])), which(is.na(tab[["cpos_left"]])))
+    )
+    cli_alert_warning(
+      "Cannot map {length(missing_cpos_idx)} entit{?y/ies} exactly to tokenstream. Dropping {?it/them} from the annotation."
+    )
     tab <- tab[-missing_cpos_idx, ]
   }
 
@@ -730,7 +834,25 @@ setMethod("get_dbpedia_uris", "subcorpus", function(x, language = getOption("dbp
 #'     p_attribute = "word",
 #'     verbose = TRUE
 #'   )
-setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOption("dbpedia.lang"), p_attribute = "word", s_attribute = NULL, confidence = 0.35, api = getOption("dbpedia.endpoint"), types = character(), support = 20, max_len = 5600L, expand_to_token = FALSE, verbose = TRUE, progress = FALSE) {
+setMethod(
+  "get_dbpedia_uris",
+  "subcorpus_bundle",
+  function(
+    x,
+    language = getOption("dbpedia.lang"),
+    p_attribute = "word",
+    s_attribute = NULL,
+    confidence = 0.35,
+    api = getOption("dbpedia.endpoint"),
+    retry = TRUE,
+    logfile = NULL,
+    types = character(),
+    support = 20,
+    max_len = 5600L,
+    expand_to_token = FALSE,
+    verbose = TRUE,
+    progress = FALSE
+  ) {
   
   if (progress) {
     env <- parent.frame()
@@ -748,6 +870,8 @@ setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOpti
         max_len = max_len,
         confidence = confidence,
         api = api,
+        retry = retry,
+        logfile = logfile,
         types = types,
         support = support,
         expand_to_token = expand_to_token,
@@ -757,10 +881,10 @@ setMethod("get_dbpedia_uris", "subcorpus_bundle", function(x, language = getOpti
   )
   if (progress) cli_progress_done(.envir = env)
   
-  y <- rbindlist(li)
+  # we use fill = TRUE, because columns for types may be missing in empty lists
+  y <- rbindlist(li, fill = TRUE)
   setorderv(y, cols = "cpos_left", order = 1L)
-  
-  
+
   if (verbose) {
     if (!is.null(s_attribute)) {
       cli_alert_info(
@@ -793,6 +917,8 @@ setMethod(
     max_len = 5600L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
+    retry = TRUE,
+    logfile = NULL,
     types = character(),
     support = 20,
     verbose = TRUE,
@@ -827,6 +953,8 @@ setMethod(
             max_len = max_len,
             confidence = confidence,
             api = api,
+            retry = retry,
+            logfile = logfile,
             types = types,
             support = support,
             verbose = if (progress) FALSE else verbose
@@ -865,6 +993,8 @@ setMethod(
     max_len = 5600L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
+    retry = TRUE,
+    logfile = NULL,
     types = character(),
     support = 20,
     expand_to_token = FALSE,
@@ -878,7 +1008,10 @@ setMethod(
   # text part.
   
   if (!is.null(text_tag)) {
-    nodes <- xml2::xml_find_all(x, xpath = namespaced_xpath(xml = x, tags = text_tag))
+    nodes <- xml2::xml_find_all(
+      x,
+      xpath = namespaced_xpath(xml = x, tags = text_tag)
+    )
   } else {
     nodes <- x 
     
@@ -895,18 +1028,22 @@ setMethod(
   if (is.null(segment)) {
     nodes_to_process <- nodes
   } else {
-    nodes_to_process <- xml2::xml_find_all(nodes,
-                                           xpath = namespaced_xpath(xml = x,
-                                                                    tags = segment))
+    nodes_to_process <- xml2::xml_find_all(
+      nodes,
+      xpath = namespaced_xpath(xml = x, tags = segment)
+    )
   }
   
-  if (verbose) cli_progress_step("preparing {.val {length(nodes_to_process)}} annotation tables.")
+  if (verbose)
+    cli_progress_step("preparing {.val {length(nodes_to_process)}} annotation tables.")
   
-  docs <- to_annotation(nodes = nodes_to_process,
-                        xml = x,
-                        token_tags = token_tags,
-                        feature_tag = feature_tag)
-  
+    docs <- to_annotation(
+      nodes = nodes_to_process,
+      xml = x,
+      token_tags = token_tags,
+      feature_tag = feature_tag
+    )
+    
   if (verbose) cli_progress_done()
   
   # prepare function to assign ID depending on value and arguments
@@ -951,6 +1088,8 @@ setMethod(
       max_len = max_len,
       confidence = confidence,
       api = api,
+      retry = retry,
+      logfile = logfile,
       types = types,
       support = support,
       verbose = verbose
@@ -1005,7 +1144,9 @@ setMethod(
 
     if (isTRUE(drop_inexact_annotations) & any(is.na(tab[["original_id"]]))) {
       missing_id_idx <- which(is.na(tab[["original_id"]]))
-      cli_alert_warning("Cannot map {length(missing_id_idx)} entit{?y/ies} exactly to tokenstream. Dropping {?it/them} from the annotation.")
+      cli_alert_warning(
+        "Cannot map {length(missing_id_idx)} entit{?y/ies} exactly to tokenstream. Dropping {?it/them} from the annotation."
+      )
       tab <- tab[-missing_id_idx, ]
     }
 

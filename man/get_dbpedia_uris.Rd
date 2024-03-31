@@ -19,6 +19,8 @@ get_dbpedia_uris(x, ...)
   max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
+  retry = TRUE,
+  logfile = NULL,
   types = character(),
   support = 20,
   types_src = c("DBpedia", "Wikidata"),
@@ -31,6 +33,8 @@ get_dbpedia_uris(x, ...)
   max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
+  retry = TRUE,
+  logfile = NULL,
   types = character(),
   support = 20,
   verbose = TRUE
@@ -44,6 +48,8 @@ get_dbpedia_uris(x, ...)
   max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
+  retry = TRUE,
+  logfile = NULL,
   types = character(),
   support = 20,
   expand_to_token = FALSE,
@@ -58,6 +64,8 @@ get_dbpedia_uris(x, ...)
   s_attribute = NULL,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
+  retry = TRUE,
+  logfile = NULL,
   types = character(),
   support = 20,
   max_len = 5600L,
@@ -72,6 +80,8 @@ get_dbpedia_uris(x, ...)
   max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
+  retry = TRUE,
+  logfile = NULL,
   types = character(),
   support = 20,
   verbose = TRUE,
@@ -88,6 +98,8 @@ get_dbpedia_uris(x, ...)
   max_len = 5600L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
+  retry = TRUE,
+  logfile = NULL,
   types = character(),
   support = 20,
   expand_to_token = FALSE,
@@ -112,6 +124,10 @@ threshold of 5600 characters is the default value.}
 as threshold before DBpedia Spotlight includes a link into the report.}
 
 \item{api}{An URL of the DBpedia Spotlight API.}
+
+\item{retry}{A \code{logical} value, whether to retry in case of a http error.}
+
+\item{logfile}{Filename for writing logs (e.g. for debugging purposes).}
 
 \item{types}{A \code{character} vector to restrict result returned to certain
 entity types, such as 'Company' or 'Organization'. If the \code{character}

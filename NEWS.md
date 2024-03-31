@@ -1,20 +1,31 @@
+## dbpedia v0.1.2.9004
+
+* Method `get_dbpedia_uris()` has new argument `retry` to retry if API is stalled #45 and new argument `logfile` for tracking and debugging longrunning annotation tasks. If the annotation failes, `NULL` is returned (no abort).
+
+
 ## dbpedia v0.1.2.9003
+
 * started introducing functionality to detect and resolve overlaps (see issue #42) with `detect_overlap()` and `categorize_overlap()`
 * added `resolve_overlap()` as an (experimental) function to resolve overlaps identified and categorized in `detect_overlap()` and `categorize_overlap()`
 * introduced tests for `detect_overlap()` and `categorize_overlap()`
 * modified test suite to follow recommendations of "R Packages" (2nd edition) by Wickham and Bryan, in particular by using `withr` for self-contained tests
 
+
 ## dbpedia v0.1.2.9002
+
 * `expand_to_token` of `get_dbpedia_uris()` also expands spans to the left now (#44)
 * added `end` to data.table grouping in `get_dbpedia_uris()` for subcorpora to address issue #43. This avoids processing multiple entities at the same time.
 * reorganized tests via `testthat`, i.e. removed `context` and renamed files to start with "test-"
 * added test for `expand_to_token` argument
 
+
 ## dbpedia v0.1.2.9001
+
 * `entity_types_map()` now creates assignments again (#40) and returns them as character vectors
 * `entity_types_map()` also passes all arguments when used with data.table objects
 * `types_src` works in `get_dbpedia_uris()` for documents with a single type (#41)
 * messages for `types_src` follow verbosity set by the argument `verbose`
+
 
 ## dbpedia v0.1.2
 * `get_dbpedia_uris()` has new argument `types` to filter results.
