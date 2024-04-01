@@ -869,7 +869,8 @@ setMethod(
     support = 20,
     expand_to_token = FALSE,
     drop_inexact_annotations = TRUE,
-    verbose = TRUE
+    verbose = if (progress) FALSE else verbose,
+    progress = FALSE
   ) {
     
   # sometimes, there are nodes of the same name in different parts of the
@@ -900,7 +901,7 @@ setMethod(
                                                                     tags = segment))
   }
   
-  if (verbose) cli_progress_step("preparing {.val {length(nodes_to_process)}} annotation tables.")
+  if (verbose) cli_progress_step("preparing {.val {length(nodes_to_process)}} segments to process.")
   
   docs <- to_annotation(nodes = nodes_to_process,
                         xml = x,
@@ -943,8 +944,15 @@ setMethod(
     dt
   }
   
+  if (progress) {
+    env <- parent.frame()
+    cli_progress_bar("Tasks", total = length(docs), type = "tasks", .envir = env)
+  }
+
   annotations <- lapply(docs, function(doc) {
-    
+
+    if (progress) cli_progress_update(.envir = env)
+
     links <- get_dbpedia_uris(
       x = doc,
       language = language,
@@ -970,10 +978,11 @@ setMethod(
                      text = .SD[["text"]],
                      types = .SD[["types"]]
                    ),
-                   by = "start",
+                   by = c("start", "end"),
                    .SDcols = c("start", "end", "dbpedia_uri", "text", "types")
       ]
       tab[, "start" := NULL]
+      tab[, "end" := NULL]
 
     } else {
 
@@ -1014,7 +1023,9 @@ setMethod(
 
   }
   )
-  
+
+  if (progress) cli_progress_done(.envir = env)
+
   data.table::rbindlist(annotations)
 })
 

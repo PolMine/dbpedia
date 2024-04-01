@@ -92,7 +92,8 @@ get_dbpedia_uris(x, ...)
   support = 20,
   expand_to_token = FALSE,
   drop_inexact_annotations = TRUE,
-  verbose = TRUE
+  verbose = if (progress) FALSE else verbose,
+  progress = FALSE
 )
 }
 \arguments{

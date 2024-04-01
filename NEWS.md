@@ -1,3 +1,10 @@
+## dbpedia v0.1.2.9004
+* improved verbosity of XML processing by implementing the approach used when processing subcorpus bundles for XML nodes as well
+* addressed issue with overlapping annotations in XML, described for CWB corpora in issue #43
+* added the possibility to enrich previous named entities without restricting the initial annotation process to them only (I.e. enrich existing and adding new ones is possible now)
+* changed encoding of URIs in XML from "dbpedia_uri" to "type" and "ref"
+* made the annotation of nested pre-annotated data more robust
+
 ## dbpedia v0.1.2.9003
 * started introducing functionality to detect and resolve overlaps (see issue #42) with `detect_overlap()` and `categorize_overlap()`
 * added `resolve_overlap()` as an (experimental) function to resolve overlaps identified and categorized in `detect_overlap()` and `categorize_overlap()`

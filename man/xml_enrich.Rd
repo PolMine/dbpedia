@@ -10,7 +10,8 @@ xml_enrich(
   token_tags = c("w", "pc"),
   entity_name = "name",
   feature_tag = NULL,
-  attributes = "dbpedia_uri"
+  ref = "dbpedia_uri",
+  type = NULL
 )
 }
 \arguments{
@@ -29,10 +30,22 @@ describing entities.}
 \item{feature_tag}{A \verb{character vector}, the name of pre-annotated features
 to be used and enriched.}
 
-\item{attributes}{A \verb{character vector}, the names of attributes to be added.
-Must correspond to column names in \code{annotation_dt}.}
+\item{ref}{A \verb{character vector}, the name of the URI to be added.
+Must correspond to a column name in \code{annotation_dt}.}
+
+\item{type}{A \verb{character vector}, the name of the entity type to be added.
+Must correspond to a column name in \code{annotation_dt}.}
 }
 \description{
 Enrich original XML with retrieved Uniform Resource Identifiers and
 additional information.
+}
+\details{
+If feature_tag is not NULL, then existing entities are enriched when they
+entirely overlap with new annotations. In this case, found \code{type}s are added
+to the node. If they are not identical, new types are added to previously
+annotated types with a pipe, indicating different annotation results.
+Regardless of the value in \code{feature_tag}, all annotations in the annotation
+data.table are added. To limit the annotation to entities which correspond to
+pre-annotated entities, consult the documentation of \code{get_dbpedia_uris()}.
 }
