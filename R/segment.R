@@ -29,13 +29,14 @@ segment <- function(x, max_len = 7900L, overlap = 500L){
   
   df[["esc"]] <- curl::curl_escape(df[["src"]])
   df[["begin_esc"]] <- cumsum(c(1L, (nchar(df$esc) + 3L)[1L:(nrow(df) - 1L)]))
+  df[["end_esc"]] <- df[["begin_esc"]] + nchar(df[["esc"]])
   
   # The total number of characters of the escaped string is the beginning of 
   # the last offset plus the nchar of the last token
   nchar_esc <- df$begin_esc[nrow(df)] + nchar(df$esc[nrow(df)]) - 1L
   
   # based on paper & pencil math
-  n_segments <- ceiling((nchar_esc - overlap) / (max_len - overlap))
+  n_segments <- ceiling((nchar_esc - overlap) / (max_len - overlap)) + 2
   
   if (n_segments > 1){
     half <- floor(max_len / 2)
@@ -57,13 +58,13 @@ segment <- function(x, max_len = 7900L, overlap = 500L){
         from <- if (i == 1L){
           1L
         } else {
-          max(which(df[["begin_esc"]] <= (anchors[i] - half)))
+          min(which(df[["begin_esc"]] > (anchors[i] - half)))
         }
         
         to <- if (i == length(anchors)){
           nrow(df)
         } else {
-          min(which(df[["begin_esc"]] >= (anchors[i] + half)))
+          max(which(df[["end_esc"]] < (anchors[i] + half)))
         }
         df[from:to,]
       }
@@ -75,5 +76,13 @@ segment <- function(x, max_len = 7900L, overlap = 500L){
     segments <- list(x)
     names(segments) <- as.character(1)
   }
-  as.character(segments)
+  
+  nchar_seg_esc <- nchar(
+    unlist(lapply(lapply(y, `[[`, "esc"), paste, collapse = "%20"))
+  )
+  
+  if (any(nchar_seg_esc > max_len))
+    cli_alert_warning("segments exceed `max_len`")
+
+  unlist(segments)
 }

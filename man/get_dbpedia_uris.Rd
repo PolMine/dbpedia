@@ -17,6 +17,8 @@ get_dbpedia_uris(x, ...)
   x,
   language = getOption("dbpedia.lang"),
   max_len = 5600L,
+  overlap = 500L,
+  offset = 1L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   retry = TRUE,
@@ -31,6 +33,7 @@ get_dbpedia_uris(x, ...)
   x,
   language = getOption("dbpedia.lang"),
   max_len = 5600L,
+  overlap = 1000L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   retry = TRUE,
@@ -46,6 +49,7 @@ get_dbpedia_uris(x, ...)
   p_attribute = "word",
   s_attribute = NULL,
   max_len = 5600L,
+  overlap = 1000L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   retry = TRUE,
@@ -69,6 +73,7 @@ get_dbpedia_uris(x, ...)
   types = character(),
   support = 20,
   max_len = 5600L,
+  overlap = 1000L,
   expand_to_token = FALSE,
   verbose = TRUE,
   progress = FALSE
@@ -78,6 +83,7 @@ get_dbpedia_uris(x, ...)
   x,
   language = getOption("dbpedia.lang"),
   max_len = 5600L,
+  overlap = 1000L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   retry = TRUE,
@@ -96,6 +102,7 @@ get_dbpedia_uris(x, ...)
   token_tags = c("w", "pc"),
   text_tag = NULL,
   max_len = 5600L,
+  overlap = 1000L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
   retry = TRUE,
@@ -119,6 +126,12 @@ determine the stopwords used.}
 \item{max_len}{An \code{integer} value. The text passed to DBpedia Spotlight may
 not exceed a defined length. If it does, an HTTP error results. The known
 threshold of 5600 characters is the default value.}
+
+\item{overlap}{If the input string \code{x} is longer than \code{max_len}, the numnber
+of overlapping characters (passed into \code{segment()}).}
+
+\item{offset}{An integer value with the base offset position of the text to
+be annotated.}
 
 \item{confidence}{A \code{numeric} value, the minimum similarity score that serves
 as threshold before DBpedia Spotlight includes a link into the report.}

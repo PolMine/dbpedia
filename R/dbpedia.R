@@ -1,5 +1,5 @@
 `:=` <- function(...) NULL
-.SD <- NULL
+.SD <- .GRP <- .I <- .N <- NULL
 
 #' Set and report status of DBpedia Spotlight
 #' 
@@ -326,6 +326,7 @@ setGeneric(
 #' @exportMethod get_dbpedia_uris
 #' @rdname get_dbpedia_uris
 #' @importFrom data.table data.table
+#' @importFrom utils capture.output
 #' @examples
 #' \dontrun{
 #' # Process AnnotatedPlainTextDocument (example available in NLP package)
@@ -361,6 +362,7 @@ setMethod(
     language = getOption("dbpedia.lang"),
     max_len = 5600L,
     overlap = 500L,
+    offset = 1L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
     retry = TRUE,
@@ -378,13 +380,14 @@ setMethod(
       )
       segs <- segment(x = x, max_len = max_len, overlap = overlap)
       dts <- lapply(
-        segs,
-        function(seg){
+        seq_along(segs),
+        function(i){
           get_dbpedia_uris(
-            x = seg,
+            x = segs[[i]],
             language = language,
             max_len = max_len, # input 'seg' must be below this threshold
             overlap = overlap, # may not be needed
+            offset = as.integer(names(segs)[i]),
             confidence = confidence,
             api = api,
             retry = retry,
@@ -398,18 +401,21 @@ setMethod(
         }
       )
       
-      pos <- as.integer(names(segs))
+      offset <- as.integer(names(segs))
       for (i in seq_along(dts)){
-        if (i == 1){
-          breakpoint <- (nchar(dts[[1L]]) - pos[2L]) / 2
-          dts[[1L]] <- dts[[1L]][dts[[1L]][["start"]] < breakpoint]
+        if (i == 1L){
+          breakpoint_r <- offset[2L] + (nchar(segs[1L]) - offset[2L]) / 2
+          dts[[1L]] <- dts[[1L]][dts[[1L]][["start"]] < breakpoint_r]
         } else if (i == length(dts)){
-          breakpoint <- ((pos[i - 1L] + nchar(segs[i - 1L]) - 1L) - pos[i]) / 2
-          dts[[i]] <- dts[[i]][dts[[i]][["start"]] > breakpoint]
+          offset_prev <- offset[i - 1L] + nchar(segs[i - 1L]) - 1L
+          breakpoint_l <- offset[i] + ((offset_prev - offset[i]) / 2)
+          dts[[i]] <- dts[[i]][dts[[i]][["start"]] >= breakpoint_l]
         } else {
-          breakpoint_l <- ((pos[i - 1L] + nchar(segs[i - 1L] - 1L)) - pos[i]) / 2
-          breakpoint_r <- ((pos[i] + nchar(segs[i] - 1L)) - pos[i + 1]) / 2
-          dts[[i]] <- dts[[i]][dts[[i]][["start"]] > breakpoint_l]
+          offset_prev <- offset[i - 1L] + nchar(segs[i - 1L]) - 1L
+          breakpoint_l <- offset[i] + ((offset_prev - offset[i]) / 2)
+          rbound_current <- offset[i] + nchar(segs[i]) - 1L
+          breakpoint_r <- offset[i + 1] + ((rbound_current - offset[i + 1]) / 2)
+          dts[[i]] <- dts[[i]][dts[[i]][["start"]] >= breakpoint_l]
           dts[[i]] <- dts[[i]][dts[[i]][["start"]] < breakpoint_r]
         }
       }
@@ -428,7 +434,7 @@ setMethod(
     )
     
     if (verbose) cli_progress_step("send request to DBpedia Spotlight")
-    request_max <- if (is.logical(retry)) as.integer(request) else retry
+    request_max <- if (is.logical(retry)) as.integer(retry) else retry
     request_number <- 1L
     proceed <- TRUE
     
@@ -523,8 +529,8 @@ setMethod(
     )
     setcolorder(resources_min, c("start", "text", "dbpedia_uri", "types"))
     
-    resources_min[, "start" := as.integer(resources_min[["start"]]) + 1L]
-    
+    resources_min[, "start" := as.integer(resources_min[["start"]]) + offset]
+
     # See issue 41.
     types_list <- strsplit(x = resources_min[["types"]], split = ",")
     
@@ -581,6 +587,7 @@ setMethod(
     x,
     language = getOption("dbpedia.lang"),
     max_len = 5600L,
+    overlap = 1000L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
     retry = TRUE,
@@ -594,6 +601,7 @@ setMethod(
       x = as.character(x[["content"]]),
       language = language,
       max_len = max_len,
+      overlap = overlap,
       confidence = confidence,
       api = api,
       retry = retry,
@@ -626,6 +634,8 @@ setMethod(
 #'   threshold of 5600 characters is the default value.
 #' @param overlap If the input string `x` is longer than `max_len`, the numnber
 #'   of overlapping characters (passed into `segment()`).
+#' @param offset An integer value with the base offset position of the text to
+#'   be annotated.
 #' @param language The language of the input text ("en", "fr", "de", ...) to
 #'   determine the stopwords used.
 #' @param confidence A `numeric` value, the minimum similarity score that serves
@@ -706,6 +716,7 @@ setMethod(
     p_attribute = "word",
     s_attribute = NULL,
     max_len = 5600L,
+    overlap = 1000L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
     retry = TRUE,
@@ -744,6 +755,7 @@ setMethod(
     x = doc,
     language = language,
     max_len = max_len,
+    overlap = overlap,
     confidence = confidence,
     api = api,
     retry = retry,
@@ -890,6 +902,7 @@ setMethod(
     types = character(),
     support = 20,
     max_len = 5600L,
+    overlap = 1000L,
     expand_to_token = FALSE,
     verbose = TRUE,
     progress = FALSE
@@ -909,6 +922,7 @@ setMethod(
         language = language,
         s_attribute = s_attribute,
         max_len = max_len,
+        overlap = overlap,
         confidence = confidence,
         api = api,
         retry = retry,
@@ -956,6 +970,7 @@ setMethod(
     x,
     language = getOption("dbpedia.lang"),
     max_len = 5600L,
+    overlap = 1000L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
     retry = TRUE,
@@ -992,6 +1007,7 @@ setMethod(
             x = docs[[docname]],
             language = language,
             max_len = max_len,
+            overlap = overlap,
             confidence = confidence,
             api = api,
             retry = retry,
@@ -1032,6 +1048,7 @@ setMethod(
     token_tags = c("w", "pc"),
     text_tag = NULL,
     max_len = 5600L,
+    overlap = 1000L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
     retry = TRUE,
@@ -1127,6 +1144,7 @@ setMethod(
       x = doc,
       language = language,
       max_len = max_len,
+      overlap = overlap,
       confidence = confidence,
       api = api,
       retry = retry,

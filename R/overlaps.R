@@ -64,7 +64,7 @@ detect_overlap <- function(x,
   }
 
   if ("doc" %in% colnames(x)) {
-    x[, ovl_id := detect_overlap_aux(.SD,
+    x[, "ovl_id" := detect_overlap_aux(.SD,
                                      group_id = .GRP,
                                      start_col = start_col,
                                      end_col = end_col,
@@ -73,7 +73,7 @@ detect_overlap <- function(x,
 
   } else {
 
-    x[, ovl_id := detect_overlap_aux(input_dt = x,
+    x[, "ovl_id" := detect_overlap_aux(input_dt = x,
                                      group_id = NULL,
                                      start_col = start_col,
                                      end_col = end_col,
@@ -192,7 +192,7 @@ detect_overlap_aux <- function(input_dt,
     }
 
     # merge to input
-    ovl_dt[overlaps_out_long, on = "row_idx", ovl_id := i.overlap_id]
+    ovl_dt[overlaps_out_long, on = "row_idx", "ovl_id" := i.overlap_id]
 
     retval <- ovl_dt[["ovl_id"]]
   }
@@ -304,7 +304,7 @@ categorize_overlap <- function(x, start_col, end_col, experimental = FALSE, corp
   }
 
   # Create new column with document type "NA"
-  x[, ovl_type := ifelse(is.na(x[["ovl_id"]]), NA_character_, "ovl_undetermined")]
+  x[, "ovl_type" := ifelse(is.na(x[["ovl_id"]]), NA_character_, "ovl_undetermined")]
 
   # set key for later foverlaps
   setkeyv(x, c(start_col, end_col))
@@ -320,7 +320,7 @@ categorize_overlap <- function(x, start_col, end_col, experimental = FALSE, corp
     .SD[["text"]],
     .SD[["types"]],
     get_outer_inner_ovl_aux(.SD, start_col = start_col, end_col = end_col, verbose = verbose)),
-    by = ovl_id]
+    by = "ovl_id"]
 
   # For "partial" matches, create an inner and an outer version of the
   # annotation. This is currently experimental as it introduces annotations not
@@ -332,8 +332,8 @@ categorize_overlap <- function(x, start_col, end_col, experimental = FALSE, corp
       cli_alert_info(text = "Finding outer and inner segments for partial matches. This is experimental.")
     }
 
-    if (x[ovl_type %in% c("ovl_partial", "ovl_partial|ovl_distinct"), .N] > 0) {
-      overlaps_outer_dt <- x[ovl_type %in% c("ovl_partial", "ovl_partial|ovl_distinct"),
+    if (x[x[["ovl_type"]] %in% c("ovl_partial", "ovl_partial|ovl_distinct"), .N] > 0) {
+      overlaps_outer_dt <- x[x[["ovl_type"]] %in% c("ovl_partial", "ovl_partial|ovl_distinct"),
                              list(
                                doc = ifelse("doc" %in% colnames(.SD), .SD[["doc"]], NA),
                                start = min(.SD[[start_col]]),
@@ -343,9 +343,9 @@ categorize_overlap <- function(x, start_col, end_col, experimental = FALSE, corp
                                types = ifelse(length(unique(.SD[["dbpedia_uri"]])) == 1, unique(.SD[["types"]]), list(list())),
                                ovl_type = ifelse(length(unique(.SD[["dbpedia_uri"]])) == 1, "ovl_partial|ovl_outer", "ovl_partial|ovl_multiple|ovl_outer")
                              ),
-                             by = ovl_id]
+                             by = "ovl_id"]
 
-      overlaps_inner_dt <- x[ovl_type %in% c("ovl_partial", "ovl_partial|ovl_distinct"),
+      overlaps_inner_dt <- x[x[["ovl_type"]] %in% c("ovl_partial", "ovl_partial|ovl_distinct"),
                              list(
                                doc = ifelse("doc" %in% colnames(.SD), .SD[["doc"]], NA),
                                start = min(get_inner_overlap_range(.SD, start_col = start_col, end_col = end_col)),
@@ -357,7 +357,7 @@ categorize_overlap <- function(x, start_col, end_col, experimental = FALSE, corp
                                               list(list())),
                                ovl_type = ifelse(length(unique(.SD[["dbpedia_uri"]])) == 1, "ovl_partial|ovl_inner", "ovl_partial|ovl_multiple|ovl_inner")
                              ),
-                             by = ovl_id]
+                             by = "ovl_id"]
 
       add_ents_dt <- rbind(overlaps_outer_dt, overlaps_inner_dt)
 
@@ -381,10 +381,10 @@ categorize_overlap <- function(x, start_col, end_col, experimental = FALSE, corp
   cols <- c("ovl_longest", "ovl_shortest", "ovl_inner", "ovl_outer",
             "ovl_partial", "ovl_multiple", "ovl_distinct", "ovl_undetermined")
 
-  x[!is.na(ovl_id), (cols) := lapply(cols, function(x) grepl(pattern = x, ovl_type)), by = .I]
+  x[!is.na(x[["ovl_id"]]), (cols) := lapply(cols, function(x) grepl(pattern = x, x[["ovl_type"]])), by = .I]
 
   # after this, the ovl_type column is not needed anymore.
-  x[, ovl_type := NULL]
+  x[, "ovl_type" := NULL]
 
   if ("doc" %in% colnames(x)) {
     setorderv(x, c("doc", start_col))
@@ -558,7 +558,7 @@ resolve_overlap = function(x, keep, omit = NULL, tiebreak, verbose = TRUE) {
   ovl_unique_before <- length(unique(x[!is.na(ovl_id), ][["ovl_id"]])) # number of overlaps
 
   # first, keep all non-overlapping entities
-  x[is.na(ovl_id), ovl_keep := 1L]
+  x[is.na(x[["ovl_id"]]), ovl_keep := 1L]
 
   if (isTRUE(verbose)) {
     cli_alert_info("Identifing entities to {.strong keep}.")
@@ -566,7 +566,7 @@ resolve_overlap = function(x, keep, omit = NULL, tiebreak, verbose = TRUE) {
 
   for (i in seq_along(keep)) {
     keep_i <- paste0("ovl_", keep[i])
-    x[x[, .I[which(get(keep_i) == TRUE)], by = ovl_id]$V1, c("ovl_keep", "ovl_by") := list(i, keep[i])]
+    x[x[, .I[which(get(keep_i) == TRUE)], by = "ovl_id"]$V1, c("ovl_keep", "ovl_by") := list(i, keep[i])]
   }
 
   if (!is.null(omit)) {
@@ -577,7 +577,7 @@ resolve_overlap = function(x, keep, omit = NULL, tiebreak, verbose = TRUE) {
 
     for (i in seq_along(omit)) {
       omit_i <- paste0("ovl_", omit[i])
-      x[x[, .I[which(get(omit_i) == TRUE)], by = ovl_id]$V1, ovl_keep := -1L]
+      x[x[, .I[which(get(omit_i) == TRUE)], by = "ovl_id"]$V1, ovl_keep := -1L]
     }
   }
 
@@ -616,10 +616,10 @@ resolve_overlap = function(x, keep, omit = NULL, tiebreak, verbose = TRUE) {
     )
   }
 
-  x[!is.na(ovl_id), c("ovl_keep", "ovl_by") := tiebreak_fun(.SD, tiebreak_mode = tiebreak), by = ovl_id]
+  x[!is.na(ovl_id), c("ovl_keep", "ovl_by") := tiebreak_fun(.SD, tiebreak_mode = tiebreak), by = "ovl_id"]
   x <- x[x[, .I[which(.SD[["ovl_keep"]] > 0 & .SD[["ovl_keep"]] == min(.SD[["ovl_keep"]], na.rm = TRUE))], by = ovl_id][["V1"]], ]
 
-  ovl_unique_after <- length(unique(x[!is.na(ovl_id), ][["ovl_id"]]))
+  ovl_unique_after <- length(unique(x[!is.na(x[["ovl_id"]]), ][["ovl_id"]]))
 
   if (isTRUE(verbose)) {
     cli::cli_alert_info(

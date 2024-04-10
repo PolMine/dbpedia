@@ -28,3 +28,34 @@ test_that(
     expect_identical(article, article_reconstructed)
   }
 )
+
+
+test_that(
+  "identity of results",
+  {
+    article <- corpus("REUTERS") %>%
+      polmineR::subset(id == "236") %>% # the longest article in the REUTERS corpus
+      get_token_stream(p_attribute = "word", collapse = " ")
+    
+    dbpedia_uris_ref <- get_dbpedia_uris(
+      x = article,
+      api = "http://api.dbpedia-spotlight.org/en/annotate",
+      language = "en",
+      verbose = FALSE,
+      max_len = 7500L
+    )
+    
+    dbpedia_uris_seg <- get_dbpedia_uris(
+      x = article,
+      api = "http://api.dbpedia-spotlight.org/en/annotate",
+      language = "en",
+      verbose = FALSE,
+      max_len = 2000,
+      overlap = 750
+    )
+    
+    expect_identical(dbpedia_uris_ref, dbpedia_uris_seg)
+    
+    expect_identical(dbpedia_uris_ref, dbpedia_uris_seg)
+  }
+)

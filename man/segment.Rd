@@ -15,8 +15,8 @@ processed.}
 \item{overlap}{Number of overlapping characters.}
 }
 \value{
-A named list of character vectors. The names are integer numbers that
-indicate the character offset from the original string.
+A named character vector. The names are integer numbers that indicate
+the character offset from the original string.
 }
 \description{
 Strings that are too long to be processed by DBpedia Spotlight are cut into
