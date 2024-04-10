@@ -2,7 +2,7 @@ Package: dbpedia
 Type: Package
 Title: R Wrapper for DBpedia Spotlight
 Version: 0.1.2.9005
-Date: 2024-03-31
+Date: 2024-04-10
 Authors@R: c(
   person("Andreas", "Blaette", role = c("aut", "cre"), email = "andreas.blaette@uni-due.de", comment = c(ORCID = "0000-0001-8970-8010")),
   person("Christoph", "Leonhardt", role = "aut")
@@ -17,6 +17,7 @@ Imports:
     data.table,
     tibble,
     httr,
+    curl,
     jsonlite,
     RcppCWB,
     fs,
@@ -52,6 +53,7 @@ Collate:
     'xml.R'
     'entity_types.R'
     'overlaps.R'
+    'segment.R'
     'zzz.R'
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3

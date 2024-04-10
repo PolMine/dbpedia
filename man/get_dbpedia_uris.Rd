@@ -177,6 +177,7 @@ A \code{data.table} with the following columns:
 \item \emph{types}: Recognized entity types, for each row a named list, if available
 entries such as 'DBpedia', 'Schema', 'Wikidata', 'DUL'.
 Depending on the input object, further columns may be available.
+If the request to the endpoint failes, \code{NULL} is returned.
 }
 }
 \description{

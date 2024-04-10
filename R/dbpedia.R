@@ -360,6 +360,7 @@ setMethod(
     x,
     language = getOption("dbpedia.lang"),
     max_len = 5600L,
+    overlap = 500L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
     retry = TRUE,
@@ -370,11 +371,49 @@ setMethod(
     verbose = TRUE
   ) {
     
-    if (nchar(x) > max_len) {
+    nchar_escaped <- nchar(curl::curl_escape(x))
+    if (nchar_escaped > max_len) {
       if (verbose) cli_alert_warning(
-        "input text has length {nchar(x)}, truncate to max_len ({.val {max_len}})"
+        "number of characters of escaped input string is {.val {nchar_escaped}} - will process segmented string"
       )
-      x <- substr(x, 1L, max_len)
+      segs <- segment(x = x, max_len = max_len, overlap = overlap)
+      dts <- lapply(
+        segs,
+        function(seg){
+          get_dbpedia_uris(
+            x = seg,
+            language = language,
+            max_len = max_len, # input 'seg' must be below this threshold
+            overlap = overlap, # may not be needed
+            confidence = confidence,
+            api = api,
+            retry = retry,
+            logfile = logfile,
+            types = types,
+            support = support,
+            types_src = types_src,
+            verbose = verbose
+            
+          )
+        }
+      )
+      
+      pos <- as.integer(names(segs))
+      for (i in seq_along(dts)){
+        if (i == 1){
+          breakpoint <- (nchar(dts[[1L]]) - pos[2L]) / 2
+          dts[[1L]] <- dts[[1L]][dts[[1L]][["start"]] < breakpoint]
+        } else if (i == length(dts)){
+          breakpoint <- ((pos[i - 1L] + nchar(segs[i - 1L]) - 1L) - pos[i]) / 2
+          dts[[i]] <- dts[[i]][dts[[i]][["start"]] > breakpoint]
+        } else {
+          breakpoint_l <- ((pos[i - 1L] + nchar(segs[i - 1L] - 1L)) - pos[i]) / 2
+          breakpoint_r <- ((pos[i] + nchar(segs[i] - 1L)) - pos[i + 1]) / 2
+          dts[[i]] <- dts[[i]][dts[[i]][["start"]] > breakpoint_l]
+          dts[[i]] <- dts[[i]][dts[[i]][["start"]] < breakpoint_r]
+        }
+      }
+      return(rbindlist(dts))
     }
     
     if (!is.numeric(support) | !(length(support) == 1)) {
@@ -585,6 +624,8 @@ setMethod(
 #' @param max_len An `integer` value. The text passed to DBpedia Spotlight may
 #'   not exceed a defined length. If it does, an HTTP error results. The known
 #'   threshold of 5600 characters is the default value.
+#' @param overlap If the input string `x` is longer than `max_len`, the numnber
+#'   of overlapping characters (passed into `segment()`).
 #' @param language The language of the input text ("en", "fr", "de", ...) to
 #'   determine the stopwords used.
 #' @param confidence A `numeric` value, the minimum similarity score that serves

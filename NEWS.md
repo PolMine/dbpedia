@@ -1,3 +1,9 @@
+## dbpedia v0.1.2.9005
+
+* A new auxiliary function `segment()` generates overlapping segments of text for strings longer than the maximum nchar that can be processed by DBpedia Spotlight.
+* Method `get_dbpedia_uris()` has new argument `overlap` passed into `segment()`. 
+
+
 ## dbpedia v0.1.2.9004
 
 * Method `get_dbpedia_uris()` has new argument `retry` to retry if API is stalled #45 and new argument `logfile` for tracking and debugging longrunning annotation tasks. If the annotation failes, `NULL` is returned (no abort).
