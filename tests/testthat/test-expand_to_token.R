@@ -5,7 +5,7 @@ test_that(
     use("RcppCWB")
 
     reuters_newswire <- corpus("REUTERS") |>
-      subset(id == 194)
+      polmineR::subset(id == 194)
 
     anno_dt_false <- reuters_newswire |>
       get_dbpedia_uris(expand_to_token = FALSE,
@@ -23,8 +23,9 @@ test_that(
                        support = 20,
                        verbose = FALSE)
 
-    testthat::expect_equal(nrow(anno_dt_false), 11L)
-    testthat::expect_equal(nrow(anno_dt_true), 12L)
+    # Note: These numbers can depend on the endpoint
+    testthat::expect_equal(nrow(anno_dt_false), 10L)
+    testthat::expect_equal(nrow(anno_dt_true), 11L)
 
   }
 )

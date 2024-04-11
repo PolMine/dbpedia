@@ -115,6 +115,6 @@ setMethod(
       "mapping values in column {.var types} to new column {.var category}"
     )
   
-  x[, category := entity_types_map(x = x[["types"]], mapping_vector = mapping_vector, other = other, verbose = verbose)]
+  x[, "category" := entity_types_map(x = x[["types"]], mapping_vector = mapping_vector, other = other, verbose = verbose)]
   x
 })

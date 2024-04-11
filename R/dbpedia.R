@@ -365,7 +365,7 @@ setMethod(
     offset = 1L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
-    retry = TRUE,
+    retry = 0L,
     logfile = NULL,
     doc_id = NA,
     types = character(),
@@ -449,7 +449,6 @@ setMethod(
     )
     
     if (verbose) cli_progress_step("send request to DBpedia Spotlight")
-    request_max <- if (is.logical(retry)) as.integer(retry) else retry
     request_number <- 1L
     proceed <- TRUE
     
@@ -483,7 +482,7 @@ setMethod(
       
       if (httr::http_error(request)) {
         cli_alert_danger("http error response")
-        if (request_number <= request_max){
+        if (request_number <= retry){
           if (!is.null(logfile)){
             cat(x, file = logfile, append = TRUE)
             cat("\n", file = logfile, append = TRUE)
@@ -665,7 +664,8 @@ setMethod(
 #' @param confidence A `numeric` value, the minimum similarity score that serves
 #'   as threshold before DBpedia Spotlight includes a link into the report.
 #' @param api An URL of the DBpedia Spotlight API.
-#' @param retry A `logical` value, whether to retry in case of a http error.
+#' @param retry A `numeric` value, the number of times to retry in case of a http
+#'   error.
 #' @param logfile Filename for writing logs (e.g. for debugging purposes).
 #' @param doc_id A length-one `character` vector indicating document ID in
 #'   logfile and annotation data (`data.table` returned), if not `NULL`
