@@ -3,6 +3,7 @@
 * A new auxiliary function `segment()` generates overlapping segments of text for strings longer than the maximum nchar that can be processed by DBpedia Spotlight.
 * Method `get_dbpedia_uris()` has new argument `overlap` passed into `segment()`. 
 * Method `get_dbpedia_uris()` has new argument `offset` to indicate base offset number other than 1.
+* Method `get_dbpedia_urs()` has new argument `doc_id` that is used in logfile and in output table.
 
 
 ## dbpedia v0.1.2.9004

@@ -367,6 +367,7 @@ setMethod(
     api = getOption("dbpedia.endpoint"),
     retry = TRUE,
     logfile = NULL,
+    doc_id = NA,
     types = character(),
     support = 20,
     types_src = c("DBpedia", "Wikidata"),
@@ -379,6 +380,18 @@ setMethod(
         "number of characters of escaped input string is {.val {nchar_escaped}} - will process segmented string"
       )
       segs <- segment(x = x, max_len = max_len, overlap = overlap)
+      
+      if (!is.null(logfile)){
+        cat(
+          sprintf(
+            "Splitted into %d segments\n",
+            length(segs)
+          ),
+          file = logfile,
+          append = TRUE
+        )
+      }
+      
       dts <- lapply(
         seq_along(segs),
         function(i){
@@ -392,6 +405,7 @@ setMethod(
             api = api,
             retry = retry,
             logfile = logfile,
+            doc_id = doc_id,
             types = types,
             support = support,
             types_src = types_src,
@@ -427,6 +441,7 @@ setMethod(
     }
     
     dt_empty <- data.table(
+      doc_id = character(),
       start = integer(),
       text = character(),
       dbpedia_uri = character(),
@@ -441,7 +456,10 @@ setMethod(
     while (proceed) {
       if (!is.null(logfile)){
         cat(
-          sprintf("[%s] %s\n", Sys.time(), substr(x, 1, 50)),
+          sprintf(
+            "[doc_id: %s | time: %s | nchar: %d | nchar (escaped): %d] %s\n",
+            doc_id, Sys.time(), nchar(x), nchar_escaped, substr(x, 1, 50)
+          ),
           file = logfile,
           append = TRUE
         )
@@ -527,7 +545,11 @@ setMethod(
       old = c("@URI", "@surfaceForm", "@offset", "@types"),
       new = c("dbpedia_uri", "text", "start", "types")
     )
-    setcolorder(resources_min, c("start", "text", "dbpedia_uri", "types"))
+    resources_min[, "doc_id" := doc_id]
+    setcolorder(
+      resources_min,
+      c("doc_id", "start", "text", "dbpedia_uri", "types")
+    )
     
     resources_min[, "start" := as.integer(resources_min[["start"]]) + offset]
 
@@ -592,6 +614,7 @@ setMethod(
     api = getOption("dbpedia.endpoint"),
     retry = TRUE,
     logfile = NULL,
+    doc_id = NA_character_,
     types = character(),
     support = 20,
     verbose = TRUE
@@ -606,6 +629,7 @@ setMethod(
       api = api,
       retry = retry,
       logfile = logfile,
+      doc_id = doc_id,
       types = types,
       support = support,
       verbose = verbose
@@ -643,6 +667,9 @@ setMethod(
 #' @param api An URL of the DBpedia Spotlight API.
 #' @param retry A `logical` value, whether to retry in case of a http error.
 #' @param logfile Filename for writing logs (e.g. for debugging purposes).
+#' @param doc_id A length-one `character` vector indicating document ID in
+#'   logfile and annotation data (`data.table` returned), if not `NULL`
+#'   (default).
 #' @param types A `character` vector to restrict result returned to certain
 #'   entity types, such as 'Company' or 'Organization'. If the `character`
 #'   vector is empty (default), no restrictions are applied.
@@ -730,10 +757,11 @@ setMethod(
   
   # empty data.table/result if nothing to be mapped or nothing mapped
   dt_empty <- data.table(
-      start = integer(),
-      text = character(),
-      dbpedia_uri = character(),
-      types = character()
+    doc_id = character(),  
+    start = integer(),
+    text = character(),
+    dbpedia_uri = character(),
+    types = character()
   )  
     
   if (verbose)
@@ -760,6 +788,7 @@ setMethod(
     api = api,
     retry = retry,
     logfile = logfile,
+    doc_id = name(x),
     types = types,
     support = support,
     verbose = verbose
@@ -816,7 +845,7 @@ setMethod(
     # s-attribute if region starts or ends with stopword (see #11)
     if (verbose)
       cli_progress_step(
-        "map DBpedia Spotlight result on regions of s-attribute {.val {s_attribute}}"
+        "map DBpedia Spotlight result on s-attribute {.val {s_attribute}}"
       )
 
     strucs <- cl_cpos2struc(
@@ -871,6 +900,9 @@ setMethod(
     )
     tab <- tab[-missing_cpos_idx, ]
   }
+  
+  tab[, "doc_id" := rep(name(x), times = nrow(tab))]
+  setcolorder(tab, "doc_id")
 
   tab
 })
