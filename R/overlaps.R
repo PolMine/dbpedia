@@ -59,7 +59,7 @@ detect_overlap <- function(x,
       "Argument {.var end} is NULL. Setting {.var end} to {.var start_col + nchar}.
       This can be wrong in case of CWB corpora."
     )
-    x[, end := get(start_col) + nchar(text)]
+    x[, "end" := get(start_col) + nchar(x[["text"]])]
     end_col <- "end"
   }
 
@@ -69,7 +69,7 @@ detect_overlap <- function(x,
                                      start_col = start_col,
                                      end_col = end_col,
                                      verbose = verbose),
-      by = doc]
+      by = "doc"]
 
   } else {
 
@@ -94,7 +94,7 @@ detect_overlap_aux <- function(input_dt,
                      with = FALSE]
 
   # add temporary row idx for later join
-  ovl_dt[, row_idx := 1:nrow(ovl_dt)]
+  ovl_dt[, "row_idx" := 1:nrow(ovl_dt)]
 
   # set keys for the following foverlaps. Should be start and end.
   setkeyv(ovl_dt, c(start_col, end_col))
@@ -108,7 +108,8 @@ detect_overlap_aux <- function(input_dt,
   # data.tables), subset by those in which the row idx in x is smaller than in
   # y.
 
-  overlaps_out <- foverlaps(ovl_dt, ovl_dt, type = "any", which = TRUE)[xid < yid]
+  overlaps_out_all <- foverlaps(ovl_dt, ovl_dt, type = "any", which = TRUE)
+  overlaps_out <- overlaps_out_all[overlaps_out_all[["xid"]] < overlaps_out_all[["yid"]]]
 
   if (nrow(overlaps_out) == 0) {
 
@@ -124,7 +125,7 @@ detect_overlap_aux <- function(input_dt,
     # the same overlap. See which intersect.
 
     if (nrow(overlaps_out) == 1) {
-      overlaps_out[, overlap_group_idx := 1]
+      overlaps_out[, "overlap_group_idx" := 1]
     } else {
       idx_ranges <- lapply(1:nrow(overlaps_out), function(i) {
         overlaps_out[i, ][["xid"]]:overlaps_out[i, ][["yid"]]
@@ -165,16 +166,16 @@ detect_overlap_aux <- function(input_dt,
 
       # overlapping entities should now all have the same region.
       overlap_groups_unique <- unique(overlap_groups)
-      overlaps_out[, overlap_group_idx := which(sapply(overlap_groups_unique, function(x) .I %in% x)), by = .I]
+      overlaps_out[, "overlap_group_idx" := which(sapply(overlap_groups_unique, function(x) .I %in% x)), by = .I]
     }
 
     # add an ID for individual overlaps
     if (!is.null(group_id)) {
-      overlaps_out[, overlap_id := sprintf("ovl_%s_%s",
+      overlaps_out[, "overlap_id" := sprintf("ovl_%s_%s",
                                            group_id,
-                                           overlap_group_idx)]
+                                           overlaps_out[["overlap_group_idx"]])]
     } else {
-      overlaps_out[, overlap_id := sprintf("ovl_%s", overlap_group_idx)]
+      overlaps_out[, "overlap_id" := sprintf("ovl_%s", overlaps_out[["overlap_group_idx"]])]
     }
 
     # and make from wide to long table for join
@@ -183,7 +184,7 @@ detect_overlap_aux <- function(input_dt,
                               measure.vars = c("xid", "yid"),
                               value.name = "row_idx")
 
-    overlaps_out_long[, variable := NULL]
+    overlaps_out_long[, "variable" := NULL]
 
     if (isTRUE(verbose)) {
       cli_alert_info(
@@ -192,7 +193,7 @@ detect_overlap_aux <- function(input_dt,
     }
 
     # merge to input
-    ovl_dt[overlaps_out_long, on = "row_idx", "ovl_id" := i.overlap_id]
+    ovl_dt[overlaps_out_long, on = "row_idx", "ovl_id" := overlaps_out_long[["overlap_id"]]]
 
     retval <- ovl_dt[["ovl_id"]]
   }
@@ -362,7 +363,7 @@ categorize_overlap <- function(x, start_col, end_col, experimental = FALSE, corp
       add_ents_dt <- rbind(overlaps_outer_dt, overlaps_inner_dt)
 
       if (all(is.na(add_ents_dt[["doc"]]))) {
-        add_ents_dt[, doc := NULL]
+        add_ents_dt[, "doc" := NULL]
       }
 
       if (!start_col %in% colnames(add_ents_dt)) {
@@ -381,7 +382,7 @@ categorize_overlap <- function(x, start_col, end_col, experimental = FALSE, corp
   cols <- c("ovl_longest", "ovl_shortest", "ovl_inner", "ovl_outer",
             "ovl_partial", "ovl_multiple", "ovl_distinct", "ovl_undetermined")
 
-  x[!is.na(x[["ovl_id"]]), (cols) := lapply(cols, function(x) grepl(pattern = x, x[["ovl_type"]])), by = .I]
+  x[!is.na(x[["ovl_id"]]), (cols) := lapply(cols, function(p) grepl(pattern = p, x[.I, ][["ovl_type"]])), by = .I]
 
   # after this, the ovl_type column is not needed anymore.
   x[, "ovl_type" := NULL]
@@ -439,7 +440,7 @@ get_outer_inner_ovl_aux = function(.SD, start_col, end_col, verbose = verbose) {
     # check if there is a row in which the short index is in x and the long
     # index is in y. This suggests that these are totally within each.
 
-    inner_idx <- overlap_dt[xid > yid][["xid"]]
+    inner_idx <- overlap_dt[overlap_dt[["xid"]] > overlap_dt[["yid"]]][["xid"]]
 
     if (length(inner_idx) > 0) {
       overlap_types[inner_idx] <- "ovl_inner"
@@ -449,7 +450,7 @@ get_outer_inner_ovl_aux = function(.SD, start_col, end_col, verbose = verbose) {
       # entities)
     }
 
-    outer_idx <- overlap_dt[xid > yid][["yid"]]
+    outer_idx <- overlap_dt[overlap_dt[["xid"]] > overlap_dt[["yid"]]][["yid"]]
 
     if (length(outer_idx) > 0) {
       overlap_types[outer_idx] <- "ovl_outer"
@@ -555,10 +556,10 @@ get_combined_text = function(.SD, start_col, end_col, segment, corpus = NULL) {
 #' @export
 resolve_overlap = function(x, keep, omit = NULL, tiebreak, verbose = TRUE) {
 
-  ovl_unique_before <- length(unique(x[!is.na(ovl_id), ][["ovl_id"]])) # number of overlaps
+  ovl_unique_before <- length(unique(x[!is.na(x[["ovl_id"]]), ][["ovl_id"]])) # number of overlaps
 
   # first, keep all non-overlapping entities
-  x[is.na(x[["ovl_id"]]), ovl_keep := 1L]
+  x[is.na(x[["ovl_id"]]), "ovl_keep" := 1L]
 
   if (isTRUE(verbose)) {
     cli_alert_info("Identifing entities to {.strong keep}.")
@@ -577,7 +578,7 @@ resolve_overlap = function(x, keep, omit = NULL, tiebreak, verbose = TRUE) {
 
     for (i in seq_along(omit)) {
       omit_i <- paste0("ovl_", omit[i])
-      x[x[, .I[which(get(omit_i) == TRUE)], by = "ovl_id"]$V1, ovl_keep := -1L]
+      x[x[, .I[which(get(omit_i) == TRUE)], by = "ovl_id"]$V1, "ovl_keep" := -1L]
     }
   }
 
@@ -616,8 +617,8 @@ resolve_overlap = function(x, keep, omit = NULL, tiebreak, verbose = TRUE) {
     )
   }
 
-  x[!is.na(ovl_id), c("ovl_keep", "ovl_by") := tiebreak_fun(.SD, tiebreak_mode = tiebreak), by = "ovl_id"]
-  x <- x[x[, .I[which(.SD[["ovl_keep"]] > 0 & .SD[["ovl_keep"]] == min(.SD[["ovl_keep"]], na.rm = TRUE))], by = ovl_id][["V1"]], ]
+  x[!is.na(x[["ovl_id"]]), c("ovl_keep", "ovl_by") := tiebreak_fun(.SD, tiebreak_mode = tiebreak), by = "ovl_id"]
+  x <- x[x[, .I[which(.SD[["ovl_keep"]] > 0 & .SD[["ovl_keep"]] == min(.SD[["ovl_keep"]], na.rm = TRUE))], by = "ovl_id"][["V1"]], ]
 
   ovl_unique_after <- length(unique(x[!is.na(x[["ovl_id"]]), ][["ovl_id"]]))
 
@@ -627,10 +628,10 @@ resolve_overlap = function(x, keep, omit = NULL, tiebreak, verbose = TRUE) {
     )
   }
 
-  x[, ovl_keep := NULL]
+  x[, "ovl_keep" := NULL]
 
   # as a result, all overlap IDs should only occur once
-  stopifnot(all(table(x$ovl_id) == 1))
+  stopifnot(all(table(x[["ovl_id"]]) == 1))
 
   return(x)
 }

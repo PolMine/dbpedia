@@ -21,7 +21,7 @@ get_dbpedia_uris(x, ...)
   offset = 1L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
-  retry = TRUE,
+  retry = 0L,
   logfile = NULL,
   types = character(),
   support = 20,
@@ -138,7 +138,8 @@ as threshold before DBpedia Spotlight includes a link into the report.}
 
 \item{api}{An URL of the DBpedia Spotlight API.}
 
-\item{retry}{A \code{logical} value, whether to retry in case of a http error.}
+\item{retry}{A \code{numeric} value, the number of times to retry in case of a http
+error.}
 
 \item{logfile}{Filename for writing logs (e.g. for debugging purposes).}
 
