@@ -4,11 +4,10 @@ use("RcppCWB") # make REUTERS corpus available
 test_that(
   "ensure that segments add up to original string",
   {
-    article <- corpus("REUTERS") %>%
-      polmineR::subset(id == "236") %>% # the longest article in the REUTERS corpus
-      get_token_stream(p_attribute = "word", collapse = " ")
+    article <- polmineR::subset(corpus("REUTERS"), id == "236") # the longest article in the REUTERS corpus
+    article_ts <- get_token_stream(article, p_attribute = "word", collapse = " ")
 
-    segs <- segment(x = article, max_len = 500, overlap = 100)
+    segs <- segment(x = article_ts, max_len = 500, overlap = 100)
     
     # we grow the reconstructed string ...
     article_reconstructed <- character()
@@ -24,38 +23,36 @@ test_that(
       )
     }
 
-    expect_identical(nchar(article), nchar(article_reconstructed))
-    expect_identical(article, article_reconstructed)
+    expect_identical(nchar(article_ts), nchar(article_reconstructed))
+    expect_identical(article_ts, article_reconstructed)
   }
 )
-
 
 test_that(
   "identity of results",
   {
-    article <- corpus("REUTERS") %>%
-      polmineR::subset(id == "236") %>% # the longest article in the REUTERS corpus
-      get_token_stream(p_attribute = "word", collapse = " ")
-    
+    article <- polmineR::subset(corpus("REUTERS"), id == "236") # the longest article in the REUTERS corpus
+    article_ts <- get_token_stream(article, p_attribute = "word", collapse = " ")
+
     dbpedia_uris_ref <- get_dbpedia_uris(
-      x = article,
+      x = article_ts,
       api = "http://api.dbpedia-spotlight.org/en/annotate",
       language = "en",
       verbose = FALSE,
       max_len = 7500L
     )
-    
+
     dbpedia_uris_seg <- get_dbpedia_uris(
-      x = article,
+      x = article_ts,
       api = "http://api.dbpedia-spotlight.org/en/annotate",
       language = "en",
       verbose = FALSE,
       max_len = 2000,
       overlap = 750
     )
-    
+
     expect_identical(dbpedia_uris_ref, dbpedia_uris_seg)
-    
+
     expect_identical(dbpedia_uris_ref, dbpedia_uris_seg)
   }
 )

@@ -3,14 +3,14 @@ test_that(
   {
 
     withr::local_package("quanteda")
+    quanteda_corpus_min <- corpus(quanteda::data_char_ukimmig2010[1:3])
 
-    uritab <- quanteda::data_char_ukimmig2010[1:3] %>%
-      corpus() %>%
-      get_dbpedia_uris(
-        api = "http://api.dbpedia-spotlight.org/en/annotate",
-        language = "en",
-        progress = FALSE,
-        verbose = FALSE
-      )
+    uritab <- get_dbpedia_uris(
+      x = quanteda_corpus_min,
+      api = "http://api.dbpedia-spotlight.org/en/annotate",
+      language = "en",
+      progress = FALSE,
+      verbose = FALSE
+    )
   }
 )

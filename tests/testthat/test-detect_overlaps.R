@@ -54,9 +54,10 @@ test_that(
     withr::local_package("polmineR")
     use("RcppCWB")
 
-    reuters_anno <- corpus("REUTERS") |>
-      polmineR::subset(id == "353") |>
-      get_dbpedia_uris(
+    reuters_subcorpus <- polmineR::subset(corpus("REUTERS"), id == "353")
+
+    reuters_anno <- get_dbpedia_uris(
+      x = reuters_subcorpus,
         max_len = 5600L,
         confidence = 0.35,
         api = "http://api.dbpedia-spotlight.org/en/annotate",
@@ -64,9 +65,13 @@ test_that(
         types = character(),
         support = 20,
         verbose = TRUE
-      ) |>
-      detect_overlap(start_col = "cpos_left", end_col = "cpos_right", verbose = TRUE)
-    
+      )
+
+      detect_overlap(reuters_anno,
+                     start_col = "cpos_left",
+                     end_col = "cpos_right",
+                     verbose = TRUE)
+
     # there should be two rows with overlapping entity spans in this example
     expect_equal(nrow(reuters_anno[!is.na(ovl_id)]), 2L)
 
@@ -80,30 +85,30 @@ test_that(
 test_that(
   "detect overlap detects overlap for quanteda corpora (with multiple documents)",
   {
-    
+
     withr::local_package("quanteda")
-    
-    x <- data_corpus_inaugural |>
-      corpus_subset(President == "Bush" & Year > 2000) |>
-      corpus_reshape(to = "paragraphs") |>
-      _[2:3] |>
-      get_dbpedia_uris(
-        max_len = 5000L,
-        confidence = 0.35,
-        api = "http://api.dbpedia-spotlight.org/en/annotate",
-        language = "en",
-        types = character(),
-        support = 20,
-        verbose = FALSE,
-        progress = TRUE
-      )
-    
+
+    quanteda_corpus_subset <- corpus_subset(data_corpus_inaugural, President == "Bush" & Year > 2000)
+    paragraphs <- corpus_reshape(quanteda_corpus_subset, to = "paragraphs")[2:3]
+
+    x <- get_dbpedia_uris(
+      x = paragraphs,
+      max_len = 5000L,
+      confidence = 0.35,
+      api = "http://api.dbpedia-spotlight.org/en/annotate",
+      language = "en",
+      types = character(),
+      support = 20,
+      verbose = FALSE,
+      progress = TRUE
+    )
+
     # modify x by reference
     y <- detect_overlap(x, start_col = "start", verbose = TRUE)
-    
+
     # there should be two rows with overlapping entity spans in this example
     expect_equal(nrow(x[!is.na(ovl_id)]), 2L)
-    
+
     # and there should be only one unique ID
     expect_equal(unique(x[!is.na(ovl_id)][["ovl_id"]]), "ovl_2_1")
   }
