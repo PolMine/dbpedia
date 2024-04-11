@@ -23,6 +23,7 @@ get_dbpedia_uris(x, ...)
   api = getOption("dbpedia.endpoint"),
   retry = 0L,
   logfile = NULL,
+  doc_id = NA,
   types = character(),
   support = 20,
   types_src = c("DBpedia", "Wikidata"),
@@ -38,6 +39,7 @@ get_dbpedia_uris(x, ...)
   api = getOption("dbpedia.endpoint"),
   retry = TRUE,
   logfile = NULL,
+  doc_id = NA_character_,
   types = character(),
   support = 20,
   verbose = TRUE
@@ -142,6 +144,10 @@ as threshold before DBpedia Spotlight includes a link into the report.}
 error.}
 
 \item{logfile}{Filename for writing logs (e.g. for debugging purposes).}
+
+\item{doc_id}{A length-one \code{character} vector indicating document ID in
+logfile and annotation data (\code{data.table} returned), if not \code{NULL}
+(default).}
 
 \item{types}{A \code{character} vector to restrict result returned to certain
 entity types, such as 'Company' or 'Organization'. If the \code{character}

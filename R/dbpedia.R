@@ -709,7 +709,7 @@ setMethod(
 #' @importFrom data.table setnames `:=` setDT setcolorder as.data.table
 #' @importFrom stats setNames
 #' @importFrom grDevices heat.colors
-#' @importFrom polmineR decode get_token_stream
+#' @importFrom polmineR decode get_token_stream name
 #' @importFrom data.table setcolorder
 #' @importFrom RcppCWB cl_cpos2struc get_region_matrix
 #' @import methods
