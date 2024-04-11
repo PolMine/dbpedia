@@ -31,7 +31,7 @@ Suggests:
     WikidataQueryServiceR,
     GermaParl2,
     quanteda,
-    testthat,
+    testthat (>= 3.2.1),
     withr
 Remotes:
   polmineR=github::PolMine/polmineR@dev

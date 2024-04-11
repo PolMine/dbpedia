@@ -4,7 +4,7 @@
 * Method `get_dbpedia_uris()` has new argument `overlap` passed into `segment()`. 
 * Method `get_dbpedia_uris()` has new argument `offset` to indicate base offset number other than 1.
 * Method `get_dbpedia_urs()` has new argument `doc_id` that is used in logfile and in output table.
-
+* Package depends on testthat v3.2.1 to avoid error with `expect_contains()`
 
 ## dbpedia v0.1.2.9004
 
