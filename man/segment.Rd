@@ -4,13 +4,17 @@
 \alias{segment}
 \title{Cut long string into overlapping segments}
 \usage{
-segment(x, max_len = 7900L, overlap = 500L)
+segment(x, max_len = 7990L, overlap = 500L)
 }
 \arguments{
 \item{x}{A string (length-one character vector) to process.}
 
-\item{max_len}{The maximum length of (URL-escaped!) string that can be
-processed.}
+\item{max_len}{An \code{integer} value. The text passed to DBpedia Spotlight may
+not exceed a defined length. If it does, an HTTP error results. The known
+threshold (less than 8000 characters) explains the default value of 7990.
+Note that the basis for evaluating the number of characters is the string
+escaped for creating the API request URL (using \code{curl::curl_escape()}),
+which will usually be significantly longer than the unescaped string.}
 
 \item{overlap}{Number of overlapping characters.}
 }

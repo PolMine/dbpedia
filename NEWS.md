@@ -1,3 +1,8 @@
+## dbpedia v0.1.2.9006
+
+* Default of argument `max_len` of `get_dbepdia_uris()` increased to 7990, using maximum langth of string escaped for URI as reference. Documentation of the argument adopted accordingly #51.
+
+
 ## dbpedia v0.1.2.9005
 
 * A new auxiliary function `segment()` generates overlapping segments of text for strings longer than the maximum nchar that can be processed by DBpedia Spotlight.

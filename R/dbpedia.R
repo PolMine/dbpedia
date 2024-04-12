@@ -360,7 +360,7 @@ setMethod(
   function(
     x,
     language = getOption("dbpedia.lang"),
-    max_len = 5600L,
+    max_len = 7990L,
     overlap = 500L,
     offset = 1L,
     confidence = 0.35,
@@ -414,6 +414,8 @@ setMethod(
           )
         }
       )
+      
+      if (any(sapply(dts, is.null))) return(NULL)
       
       offset <- as.integer(names(segs))
       for (i in seq_along(dts)){
@@ -607,7 +609,7 @@ setMethod(
   function(
     x,
     language = getOption("dbpedia.lang"),
-    max_len = 5600L,
+    max_len = 7990L,
     overlap = 1000L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
@@ -654,7 +656,10 @@ setMethod(
 #'   'AnnotatedPlainTextDocument' from NLP package.
 #' @param max_len An `integer` value. The text passed to DBpedia Spotlight may
 #'   not exceed a defined length. If it does, an HTTP error results. The known
-#'   threshold of 5600 characters is the default value.
+#'   threshold (less than 8000 characters) explains the default value of 7990.
+#'   Note that the basis for evaluating the number of characters is the string
+#'   escaped for creating the API request URL (using `curl::curl_escape()`),
+#'   which will usually be significantly longer than the unescaped string.
 #' @param overlap If the input string `x` is longer than `max_len`, the numnber
 #'   of overlapping characters (passed into `segment()`).
 #' @param offset An integer value with the base offset position of the text to
@@ -732,7 +737,7 @@ setMethod(
 #' uritab2 <- corpus("GERMAPARL2MINI") %>%
 #'   subset(speaker_name == "Carlo Schmid") %>%
 #'   subset(p_type == "speech") %>%
-#'   get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 5067)
+#'   get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 7990)
 #'   
 setMethod(
   "get_dbpedia_uris",
@@ -742,7 +747,7 @@ setMethod(
     language = getOption("dbpedia.lang"),
     p_attribute = "word",
     s_attribute = NULL,
-    max_len = 5600L,
+    max_len = 7990L,
     overlap = 1000L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
@@ -933,7 +938,7 @@ setMethod(
     logfile = NULL,
     types = character(),
     support = 20,
-    max_len = 5600L,
+    max_len = 7990L,
     overlap = 1000L,
     expand_to_token = FALSE,
     verbose = TRUE,
@@ -949,7 +954,7 @@ setMethod(
     x@objects, 
     function(sc) {
       if (progress) cli_progress_update(.envir = env)
-      get_dbpedia_uris(
+      dt <- get_dbpedia_uris(
         x = sc,
         language = language,
         s_attribute = s_attribute,
@@ -964,6 +969,8 @@ setMethod(
         expand_to_token = expand_to_token,
         verbose = if (progress) FALSE else verbose
       )
+      dt[, "types" := NULL]
+      dt
     }
   )
   if (progress) cli_progress_done(.envir = env)
@@ -1001,7 +1008,7 @@ setMethod(
   function(
     x,
     language = getOption("dbpedia.lang"),
-    max_len = 5600L,
+    max_len = 7990L,
     overlap = 1000L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
@@ -1079,7 +1086,7 @@ setMethod(
     segment = NULL,
     token_tags = c("w", "pc"),
     text_tag = NULL,
-    max_len = 5600L,
+    max_len = 7990L,
     overlap = 1000L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),

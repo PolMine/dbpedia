@@ -16,7 +16,7 @@ get_dbpedia_uris(x, ...)
 \S4method{get_dbpedia_uris}{character}(
   x,
   language = getOption("dbpedia.lang"),
-  max_len = 5600L,
+  max_len = 7990L,
   overlap = 500L,
   offset = 1L,
   confidence = 0.35,
@@ -33,7 +33,7 @@ get_dbpedia_uris(x, ...)
 \S4method{get_dbpedia_uris}{AnnotatedPlainTextDocument}(
   x,
   language = getOption("dbpedia.lang"),
-  max_len = 5600L,
+  max_len = 7990L,
   overlap = 1000L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
@@ -50,7 +50,7 @@ get_dbpedia_uris(x, ...)
   language = getOption("dbpedia.lang"),
   p_attribute = "word",
   s_attribute = NULL,
-  max_len = 5600L,
+  max_len = 7990L,
   overlap = 1000L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
@@ -74,7 +74,7 @@ get_dbpedia_uris(x, ...)
   logfile = NULL,
   types = character(),
   support = 20,
-  max_len = 5600L,
+  max_len = 7990L,
   overlap = 1000L,
   expand_to_token = FALSE,
   verbose = TRUE,
@@ -84,7 +84,7 @@ get_dbpedia_uris(x, ...)
 \S4method{get_dbpedia_uris}{corpus}(
   x,
   language = getOption("dbpedia.lang"),
-  max_len = 5600L,
+  max_len = 7990L,
   overlap = 1000L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
@@ -103,7 +103,7 @@ get_dbpedia_uris(x, ...)
   segment = NULL,
   token_tags = c("w", "pc"),
   text_tag = NULL,
-  max_len = 5600L,
+  max_len = 7990L,
   overlap = 1000L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
@@ -127,7 +127,10 @@ determine the stopwords used.}
 
 \item{max_len}{An \code{integer} value. The text passed to DBpedia Spotlight may
 not exceed a defined length. If it does, an HTTP error results. The known
-threshold of 5600 characters is the default value.}
+threshold (less than 8000 characters) explains the default value of 7990.
+Note that the basis for evaluating the number of characters is the string
+escaped for creating the API request URL (using \code{curl::curl_escape()}),
+which will usually be significantly longer than the unescaped string.}
 
 \item{overlap}{If the input string \code{x} is longer than \code{max_len}, the numnber
 of overlapping characters (passed into \code{segment()}).}
@@ -262,7 +265,7 @@ use("GermaParl2")
 uritab2 <- corpus("GERMAPARL2MINI") \%>\%
   subset(speaker_name == "Carlo Schmid") \%>\%
   subset(p_type == "speech") \%>\%
-  get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 5067)
+  get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 7990)
   
 uritab <- corpus("REUTERS") \%>\% 
   split(s_attribute = "id", verbose = FALSE) \%>\% 

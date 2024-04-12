@@ -7,9 +7,8 @@
 #' @return A named character vector. The names are integer numbers that indicate
 #'   the character offset from the original string.
 #' @param x A string (length-one character vector) to process.
-#' @param max_len The maximum length of (URL-escaped!) string that can be
-#'   processed.
 #' @param overlap Number of overlapping characters.
+#' @inheritParams get_dbpedia_uris
 #' @export
 #' @importFrom curl curl_escape
 #' @examples
@@ -21,7 +20,7 @@
 #'   get_token_stream(p_attribute = "word", collapse = " ")
 #' 
 #' segs <- segment(x = article, max_len = 500, overlap = 100)
-segment <- function(x, max_len = 7900L, overlap = 500L){
+segment <- function(x, max_len = 7990L, overlap = 500L){
   # check that length(x) == 1L
   
   df <- data.frame(src = strsplit(x, split = " ")[[1]])
