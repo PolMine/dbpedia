@@ -1089,14 +1089,15 @@ setMethod(
     support = 20,
     expand_to_token = FALSE,
     drop_inexact_annotations = TRUE,
-    verbose = TRUE
+    verbose = if (progress) FALSE else verbose,
+    progress = FALSE
   ) {
-    
+
   # sometimes, there are nodes of the same name in different parts of the
   # document (such as <name>) in ParlaMint which describes persons in the TEI
   # header and named entities in the text body. It can be useful to focus on the
   # text part.
-  
+
   if (!is.null(text_tag)) {
     nodes <- xml2::xml_find_all(
       x,
@@ -1104,17 +1105,17 @@ setMethod(
     )
   } else {
     nodes <- x 
-    
+
     # Note: these two nodes objects are different since the first is a nodeset,
     # the second is a xml_document.
   }
-  
+
   # get units which should be send to the DBpedia Spotlight (to account for
   # max_len, etc.). This can be the entire text or a paragraph or a sentence,
   # depending on the structure. Provided by "segment" argument.
-  
+
   # get both tokens and features (NEs, etc.)
-  
+
   if (is.null(segment)) {
     nodes_to_process <- nodes
   } else {
@@ -1123,19 +1124,19 @@ setMethod(
       xpath = namespaced_xpath(xml = x, tags = segment)
     )
   }
-  
+
   if (verbose)
-    cli_progress_step("preparing {.val {length(nodes_to_process)}} annotation tables.")
-  
+    cli_progress_step("preparing {.val {length(nodes_to_process)}} segments to process.")
+
     docs <- to_annotation(
       nodes = nodes_to_process,
       xml = x,
       token_tags = token_tags,
       feature_tag = feature_tag
     )
-    
+
   if (verbose) cli_progress_done()
-  
+
   # prepare function to assign ID depending on value and arguments
   expand_fun = function(.SD, dt) {
     id_right <- dt[.SD[["end"]] == dt[["end"]]][["id"]]
@@ -1146,10 +1147,10 @@ setMethod(
       id_right
     }
   }
-  
+
   # Note: The following function should probably overload the existing
   # dbpedia:::as.data.table.AnnotatedPlainTextDocument() function.
-  
+
   AnnotatedPlainTextDocument_to_datatable2 = function (x, what = NULL)  {
     dt <- setDT(as.data.frame(x[["annotation"]]))
     if (!is.null(what)) {
@@ -1169,9 +1170,16 @@ setMethod(
     }
     dt
   }
-  
+
+  if (progress) {
+    env <- parent.frame()
+    cli_progress_bar("Tasks", total = length(docs), type = "tasks", .envir = env)
+  }
+
   annotations <- lapply(docs, function(doc) {
-    
+
+    if (progress) cli_progress_update(.envir = env)
+
     links <- get_dbpedia_uris(
       x = doc,
       language = language,
@@ -1185,9 +1193,9 @@ setMethod(
       support = support,
       verbose = verbose
     )
-    
+
     if (nrow(links) == 0) return(NULL) # no entities in this segment
-    
+
     if (is.null(feature_tag)) {
       dt <- AnnotatedPlainTextDocument_to_datatable2(doc, what = feature_tag)
       links[, "end" := links[["start"]] + nchar(links[["text"]]) - 1L]
@@ -1200,10 +1208,11 @@ setMethod(
                      text = .SD[["text"]],
                      types = .SD[["types"]]
                    ),
-                   by = "start",
+                   by = c("start", "end"),
                    .SDcols = c("start", "end", "dbpedia_uri", "text", "types")
       ]
       tab[, "start" := NULL]
+      tab[, "end" := NULL]
 
     } else {
 
@@ -1246,7 +1255,9 @@ setMethod(
 
   }
   )
-  
+
+  if (progress) cli_progress_done(.envir = env)
+
   data.table::rbindlist(annotations)
 })
 
