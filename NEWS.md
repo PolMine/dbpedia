@@ -14,7 +14,11 @@
 ## dbpedia v0.1.2.9004
 
 * Method `get_dbpedia_uris()` has new argument `retry` to retry if API is stalled #45 and new argument `logfile` for tracking and debugging longrunning annotation tasks. If the annotation failes, `NULL` is returned (no abort).
-
+* improved verbosity of XML processing by implementing the approach used when processing subcorpus bundles for XML nodes as well
+* addressed issue with overlapping annotations in XML, described for CWB corpora in issue #43
+* added the possibility to enrich previous named entities without restricting the initial annotation process to them only (I.e. enrich existing and adding new ones is possible now)
+* changed encoding of URIs in XML from "dbpedia_uri" to "type" and "ref"
+* made the annotation of nested pre-annotated data more robust
 
 ## dbpedia v0.1.2.9003
 
