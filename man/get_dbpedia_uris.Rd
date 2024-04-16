@@ -37,7 +37,7 @@ get_dbpedia_uris(x, ...)
   overlap = 1000L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
-  retry = TRUE,
+  retry = 0L,
   logfile = NULL,
   doc_id = NA_character_,
   types = character(),
@@ -54,7 +54,7 @@ get_dbpedia_uris(x, ...)
   overlap = 1000L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
-  retry = TRUE,
+  retry = 0L,
   logfile = NULL,
   types = character(),
   support = 20,
@@ -70,7 +70,7 @@ get_dbpedia_uris(x, ...)
   s_attribute = NULL,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
-  retry = TRUE,
+  retry = 0L,
   logfile = NULL,
   types = character(),
   support = 20,
@@ -88,7 +88,7 @@ get_dbpedia_uris(x, ...)
   overlap = 1000L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
-  retry = TRUE,
+  retry = 0L,
   logfile = NULL,
   types = character(),
   support = 20,
@@ -107,7 +107,7 @@ get_dbpedia_uris(x, ...)
   overlap = 1000L,
   confidence = 0.35,
   api = getOption("dbpedia.endpoint"),
-  retry = TRUE,
+  retry = 0L,
   logfile = NULL,
   types = character(),
   support = 20,
@@ -141,7 +141,7 @@ as threshold before DBpedia Spotlight includes a link into the report.}
 
 \item{api}{An URL of the DBpedia Spotlight API.}
 
-\item{retry}{A \code{numeric} value, the number of times to retry in case of a http
+\item{retry}{An \code{integer} value, the number of times to retry in case of a http
 error.}
 
 \item{logfile}{Filename for writing logs (e.g. for debugging purposes).}

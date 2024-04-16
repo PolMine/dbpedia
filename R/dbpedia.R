@@ -611,7 +611,7 @@ setMethod(
     overlap = 1000L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
-    retry = TRUE,
+    retry = 0L,
     logfile = NULL,
     doc_id = NA_character_,
     types = character(),
@@ -664,7 +664,7 @@ setMethod(
 #' @param confidence A `numeric` value, the minimum similarity score that serves
 #'   as threshold before DBpedia Spotlight includes a link into the report.
 #' @param api An URL of the DBpedia Spotlight API.
-#' @param retry A `numeric` value, the number of times to retry in case of a http
+#' @param retry An `integer` value, the number of times to retry in case of a http
 #'   error.
 #' @param logfile Filename for writing logs (e.g. for debugging purposes).
 #' @param doc_id A length-one `character` vector indicating document ID in
@@ -746,7 +746,7 @@ setMethod(
     overlap = 1000L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
-    retry = TRUE,
+    retry = 0L,
     logfile = NULL,
     types = character(),
     support = 20,
@@ -929,7 +929,7 @@ setMethod(
     s_attribute = NULL,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
-    retry = TRUE,
+    retry = 0L,
     logfile = NULL,
     types = character(),
     support = 20,
@@ -1005,7 +1005,7 @@ setMethod(
     overlap = 1000L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
-    retry = TRUE,
+    retry = 0L,
     logfile = NULL,
     types = character(),
     support = 20,
@@ -1083,7 +1083,7 @@ setMethod(
     overlap = 1000L,
     confidence = 0.35,
     api = getOption("dbpedia.endpoint"),
-    retry = TRUE,
+    retry = 0L,
     logfile = NULL,
     types = character(),
     support = 20,

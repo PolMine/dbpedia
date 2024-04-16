@@ -1,3 +1,6 @@
+## dbpedia v0.1.2.9006
+* The default value of argument `retry` in `get_dbpedia_uris()` is now 0L everywhere
+
 ## dbpedia v0.1.2.9005
 
 * A new auxiliary function `segment()` generates overlapping segments of text for strings longer than the maximum nchar that can be processed by DBpedia Spotlight.
