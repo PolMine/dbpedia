@@ -1,3 +1,8 @@
+## dbpedia v0.1.2.9006
+* Method `entity_types_map()` now categorizes types based on individual type columns such as "DBpedia_type"
+or "Wikidata_type" created with the `types_src" argument instead of the "types" column. This prepares the
+removal of the "types" column (see issue #52)
+
 ## dbpedia v0.1.2.9005
 
 * A new auxiliary function `segment()` generates overlapping segments of text for strings longer than the maximum nchar that can be processed by DBpedia Spotlight.
