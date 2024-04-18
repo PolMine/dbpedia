@@ -89,15 +89,20 @@ setMethod(
       )))
     }
 
-    if (!is.character(other) | length(other) > 1)
+    if (!is.character(other) | length(other) > 1) {
       stop(format_error("{.var other} not character vector of length {.val 1}."))
+    }
+
+    if (!is.character(x)) {
+      stop(format_error("{.var x} not character vector."))
+    }
 
     col_split <- strsplit(x, split = "\\|")
 
     retval <- sapply(col_split, function(row_vector) {
       match_idx <- which(mapping_vector %in% row_vector)
       if (length(match_idx) > 0) {
-        category <- unique(names(mapping_vector)[[match_idx]])
+        category <- sort(unique(names(mapping_vector)[match_idx]))
         if (length(category) > 1) {
           category <- paste0(category, collapse = "|")
         }
@@ -115,15 +120,32 @@ setMethod(
   "entity_types_map", "data.table",
   function(x, mapping_vector, other = "MISC", verbose = TRUE) {
 
+    if (!inherits(x, "data.table")) {
+      cli_abort("`x` must be a `data.table` object.")
+    }
+
     # reorganize mapping vector to match columns
     mapping_per_source <- entity_types_categorize(x,
                                                   mapping_vector = mapping_vector)
+
+    # check whether mapping vector is valid
+    for (mapping_idx in seq_along(mapping_per_source)) {
+      mult_mapping <- which(table(mapping_per_source[[mapping_idx]]) > 1)
+      if (length(mult_mapping) > 0) {
+        category_name <- names(mapping_per_source)[[mapping_idx]]
+        category_name <- gsub("_type$", "", category_name)
+        cli_abort(c(
+          "Error in mapping vector for {category_name} types:",
+          "x" = "Type{?s} {names(mult_mapping)} {?is/are} mapped onto multiple categories.")
+        )
+      }
+    }
 
     category_per_source <- sapply(seq_along(mapping_per_source), function(i) {
       type_src <- names(mapping_per_source)[[i]]
       categories <- entity_types_map(x = x[[type_src]],
                                      mapping_vector = mapping_per_source[[i]],
-                                     other = "MISC",
+                                     other = other,
                                      verbose = TRUE)
     }
     )
@@ -133,9 +155,6 @@ setMethod(
 
     if (length(mapping_per_source) > 1) {
       categories <- apply(X = category_per_source, MARGIN = 1, function(category) {
-        if (all(is.na(category))) {
-          return(NA)
-        } else {
 
           # in case that there is an ambiguous mapping earlier, there already
           # could be concatenated entities here. Split up.
@@ -144,7 +163,7 @@ setMethod(
 
           # now unique, sort and concatenate again
           paste0(sort(unique(category)), collapse = "|")
-        }
+
       }
       )
     } else {
