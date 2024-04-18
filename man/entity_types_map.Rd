@@ -2,25 +2,31 @@
 % Please edit documentation in R/entity_types.R
 \name{entity_types_map}
 \alias{entity_types_map}
-\alias{entity_types_map,list-method}
+\alias{entity_types_map,character-method}
 \alias{entity_types_map,data.table-method}
 \title{Map types returned by DBpedia Spotlight to a limited set of categories}
 \usage{
 entity_types_map(x, ...)
 
-\S4method{entity_types_map}{list}(x, mapping_vector, other = "MISC", verbose = TRUE)
+\S4method{entity_types_map}{character}(x, mapping_vector, other = "MISC", verbose = TRUE)
 
 \S4method{entity_types_map}{data.table}(x, mapping_vector, other = "MISC", verbose = TRUE)
 }
 \arguments{
-\item{x}{A \code{data.table} with DBpedia URIs.}
+\item{x}{Either a \verb{character vector} of types or a \code{data.table} returned by
+\code{get_dbpedia_uris()}.}
 
 \item{...}{Further arguments.}
 
 \item{mapping_vector}{A \verb{named character vector} with desired category names
-(as names) and types from the DBpedia ontology as values. For example:
-c("PERSON" = "DBpedia:Person"). Can contain more than one pair of class and
-type.}
+(as names) and types from the DBpedia ontology as values. If \code{x} is a
+character vector of types, the mapping should correspond to types in the
+character vector, such as c("LOCATION" = "Place") in which the type "Place"
+is mapped to the category "LOCATION". If \code{x} is the entire \code{data.table}
+returned by \code{get_dbpedia_uris()}, then the source of the type (i.e.
+"DBpedia" or "Wikidata") should be provided in the format c("LOCATION" =
+"DBpedia:Place"). This indicates the column(s) which should be used in the
+comparison. This can contain more than one pair of class and type.}
 
 \item{other}{A \verb{character vector} with the name of the class of all types not
 matched by the \code{mapping_vector}.}
@@ -28,16 +34,19 @@ matched by the \code{mapping_vector}.}
 \item{verbose}{A \code{logical} value - whether to display messages.}
 }
 \value{
-Function adds classes to input data.table by reference.
+If the input is a \code{data.table} the function adds categories to the
+input data.table by reference. Otherwise, a \verb{character vector} is returned.
 }
 \description{
 This function takes the output of \code{get_dbpedia_uris()} and compares values in
-the \code{types} column with a named character vector. The main purpose of this
-function is to reduce the number of types to a limited set of categories.
+the different \code{types} columns such as "DBpedia_type" with a named character
+vector. The main purpose of this function is to reduce the number of types to
+a limited set of categories.
 }
 \details{
 If there is more than one match between the retrieved types and the
-\verb{mapping vector}, unique classes are sorted alphabetically and collapsed.
+\verb{mapping vector}, unique categories are sorted alphabetically and
+collapsed.
 }
 \examples{
 library(quanteda)
@@ -56,14 +65,28 @@ uritab_paragraphs <- get_dbpedia_uris(
   progress = TRUE
 )
 
-mapping_vector = c(
+mapping_vector_character = c(
+  "PERSON" = "Person",
+  "ORGANIZATION" = "Organisation",
+  "LOCATION" = "Place"
+)
+
+entity_types_map(
+  uritab_paragraphs[["DBpedia_type"]],
+  mapping_vector = mapping_vector_character
+)
+
+# For the entire data.table and mulitple types sources:
+
+mapping_vector_dt = c(
   "PERSON" = "DBpedia:Person",
   "ORGANIZATION" = "DBpedia:Organisation",
+  "ORGANIZATION" = "Wikidata:7278",
   "LOCATION" = "DBpedia:Place"
 )
 
 entity_types_map(
-  uritab_paragraphs[["types"]],
-  mapping_vector = mapping_vector
+  uritab_paragraphs,
+  mapping_vector = mapping_vector_dt
 )
 }
