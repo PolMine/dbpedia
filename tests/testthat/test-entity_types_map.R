@@ -39,11 +39,12 @@ test_that(
     # Examples based on processing quanteda's data_corpus_inaugural with the
     # English DBpedia Spotlight endpoint (entities occur in 2013-Obama).
 
-    types_vector <- c("|Species|Person|Eukaryote|Animal|Politician|",
-                      "|Organisation|Agent|Legislature|",
-                      "|Place|Location|CelestialBody|Planet|",
-                      "|ArchitecturalStructure|Building|",
-                      NA
+    types_vector <- c(
+      "|Species|Person|Eukaryote|Animal|Politician|", # (based on the DBpedia types for http://dbpedia.org/resource/Joe_Biden in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
+      "|Organisation|Agent|Legislature|", # (based on the DBpedia types for http://dbpedia.org/resource/United_States_Congress in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
+      "|Place|Location|CelestialBody|Planet|", # (based on the DBpedia types for http://dbpedia.org/resource/Earth in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
+      "|ArchitecturalStructure|Building|", # (based on the DBpedia types for http://dbpedia.org/resource/United_States_Capitol in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
+      NA # (entity without DBpedia type, for example http://dbpedia.org/resource/Vice_President_of_the_United_States in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
     )
 
     # for character vectors, omit the source
@@ -73,11 +74,11 @@ test_that(
     # Examples based on processing quanteda's data_corpus_inaugural with the
     # English DBpedia Spotlight endpoint (entities occur in 2013-Obama).
 
-    types_vector <- c("|Species|Person|Eukaryote|Animal|Politician|",
-                      "|Organisation|Agent|Legislature|",
-                      "|Place|Location|CelestialBody|Planet|",
-                      "|ArchitecturalStructure|Building|",
-                      NA
+    types_vector <- c("|Species|Person|Eukaryote|Animal|Politician|", # (based on the DBpedia types for http://dbpedia.org/resource/Joe_Biden in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
+                      "|Organisation|Agent|Legislature|", # (based on the DBpedia types for http://dbpedia.org/resource/United_States_Congress in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
+                      "|Place|Location|CelestialBody|Planet|", # (based on the DBpedia types for http://dbpedia.org/resource/Earth in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
+                      "|ArchitecturalStructure|Building|", # (based on the DBpedia types for http://dbpedia.org/resource/United_States_Capitol in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
+                      NA # (entity without DBpedia type, for example http://dbpedia.org/resource/Vice_President_of_the_United_States in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
     )
 
     types_dt <- data.table(
@@ -120,11 +121,11 @@ test_that(
     # Examples based on processing quanteda's data_corpus_inaugural with the
     # English DBpedia Spotlight endpoint (entities occur in 2013-Obama).
 
-    types_vector <- c("|Species|Person|Eukaryote|Animal|Politician|",
-                      "|Organisation|Agent|Legislature|",
-                      "|Place|Location|CelestialBody|Planet|",
-                      "|ArchitecturalStructure|Building|",
-                      NA
+    types_vector <- c("|Species|Person|Eukaryote|Animal|Politician|", # (based on the DBpedia types for http://dbpedia.org/resource/Joe_Biden in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
+                      "|Organisation|Agent|Legislature|", # (based on the DBpedia types for http://dbpedia.org/resource/United_States_Congress in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
+                      "|Place|Location|CelestialBody|Planet|", # (based on the DBpedia types for http://dbpedia.org/resource/Earth in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
+                      "|ArchitecturalStructure|Building|", # (based on the DBpedia types for http://dbpedia.org/resource/United_States_Capitol in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
+                      NA # (entity without DBpedia type, for example http://dbpedia.org/resource/Vice_President_of_the_United_States in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
     )
 
     types_dt <- data.table(
@@ -136,7 +137,12 @@ test_that(
         "http://dbpedia.org/resource/Vice_President_of_the_United_States"
       ),
       DBpedia_type = types_vector,
-      Wikidata_type = c(NA, NA, "Q634", NA, NA)
+      Wikidata_type = c(NA, # NA values used for testing
+                        NA, # NA values used for testing
+                        "Q634", # (based on the Wikidata types for http://dbpedia.org/resource/Earth in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
+                        NA, # NA values used for testing
+                        NA # NA values used for testing
+      )
     )
 
     mapping_vector = c(
@@ -167,11 +173,11 @@ test_that(
     # Examples based on processing quanteda's data_corpus_inaugural with the
     # English DBpedia Spotlight endpoint (entities occur in 2013-Obama).
 
-    types_vector <- c("|Species|Person|Eukaryote|Animal|Politician|",
-                      "|Organisation|Agent|Legislature|",
-                      "|Place|Location|CelestialBody|Planet|",
-                      "|ArchitecturalStructure|Building|",
-                      NA
+    types_vector <- c("|Species|Person|Eukaryote|Animal|Politician|", # (based on the DBpedia types for http://dbpedia.org/resource/Joe_Biden in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
+                      "|Organisation|Agent|Legislature|", # (based on the DBpedia types for http://dbpedia.org/resource/United_States_Congress in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
+                      "|Place|Location|CelestialBody|Planet|", # (based on the DBpedia types for http://dbpedia.org/resource/Earth in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
+                      "|ArchitecturalStructure|Building|", # (based on the DBpedia types for http://dbpedia.org/resource/United_States_Capitol in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
+                      NA # (entity without DBpedia type, for example http://dbpedia.org/resource/Vice_President_of_the_United_States in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
     )
 
     types_dt <- data.table(
@@ -183,7 +189,12 @@ test_that(
         "http://dbpedia.org/resource/Vice_President_of_the_United_States"
       ),
       DBpedia_type = types_vector,
-      Wikidata_type = c(NA, NA, "Q634", NA, NA)
+      Wikidata_type = c(NA, # NA values used for testing
+                        NA, # NA values used for testing
+                        "Q634", # (based on the Wikidata types for http://dbpedia.org/resource/Earth in the English model of DBpedia Spotlight (run locally), last checked on 2024-04-18)
+                        NA, # NA values used for testing
+                        NA # NA values used for testing
+      )
     )
 
     mapping_vector = c(
