@@ -166,7 +166,7 @@ test_that(
 
     # Examples based on processing quanteda's data_corpus_inaugural with the
     # English DBpedia Spotlight endpoint (entities occur in 2013-Obama).
-    
+
     types_vector <- c("|Species|Person|Eukaryote|Animal|Politician|",
                       "|Organisation|Agent|Legislature|",
                       "|Place|Location|CelestialBody|Planet|",

@@ -56,7 +56,7 @@ inaugural_paragraphs <- data_corpus_inaugural \%>\%
   corpus_reshape(to = "paragraphs")
   
 uritab_paragraphs <- get_dbpedia_uris(
-  x = inaugural_paragraphs,
+  x = inaugural_paragraphs[2], # single paragraph
   language = "en",
   max_len = 5600L,
   confidence = 0.5,
@@ -71,12 +71,12 @@ mapping_vector_character = c(
   "LOCATION" = "Place"
 )
 
-entity_types_map(
+categories <- entity_types_map(
   uritab_paragraphs[["DBpedia_type"]],
   mapping_vector = mapping_vector_character
 )
 
-# For the entire data.table and mulitple types sources:
+# For the entire data.table and multiple types sources:
 
 mapping_vector_dt = c(
   "PERSON" = "DBpedia:Person",
