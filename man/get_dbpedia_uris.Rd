@@ -42,6 +42,7 @@ get_dbpedia_uris(x, ...)
   doc_id = NA_character_,
   types = character(),
   support = 20,
+  types_src = c("DBpedia", "Wikidata"),
   verbose = TRUE
 )
 
@@ -58,6 +59,7 @@ get_dbpedia_uris(x, ...)
   logfile = NULL,
   types = character(),
   support = 20,
+  types_src = c("DBpedia", "Wikidata"),
   expand_to_token = FALSE,
   drop_inexact_annotations = TRUE,
   verbose = TRUE
@@ -74,6 +76,7 @@ get_dbpedia_uris(x, ...)
   logfile = NULL,
   types = character(),
   support = 20,
+  types_src = c("DBpedia", "Wikidata"),
   max_len = 7990L,
   overlap = 1000L,
   expand_to_token = FALSE,
@@ -92,6 +95,7 @@ get_dbpedia_uris(x, ...)
   logfile = NULL,
   types = character(),
   support = 20,
+  types_src = c("DBpedia", "Wikidata"),
   verbose = TRUE,
   progress = FALSE
 )
@@ -111,6 +115,7 @@ get_dbpedia_uris(x, ...)
   logfile = NULL,
   types = character(),
   support = 20,
+  types_src = c("DBpedia", "Wikidata"),
   expand_to_token = FALSE,
   drop_inexact_annotations = TRUE,
   verbose = if (progress) FALSE else verbose,

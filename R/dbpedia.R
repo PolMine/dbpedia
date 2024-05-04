@@ -618,6 +618,7 @@ setMethod(
     doc_id = NA_character_,
     types = character(),
     support = 20,
+    types_src = c("DBpedia", "Wikidata"),
     verbose = TRUE
   ) {
     
@@ -633,6 +634,7 @@ setMethod(
       doc_id = doc_id,
       types = types,
       support = support,
+      types_src = types_src,
       verbose = verbose
     )
   }
@@ -755,6 +757,7 @@ setMethod(
     logfile = NULL,
     types = character(),
     support = 20,
+    types_src = c("DBpedia", "Wikidata"),
     expand_to_token = FALSE,
     drop_inexact_annotations = TRUE,
     verbose = TRUE
@@ -796,6 +799,7 @@ setMethod(
     doc_id = name(x),
     types = types,
     support = support,
+    types_src = types_src,
     verbose = verbose
   )
   
@@ -938,6 +942,7 @@ setMethod(
     logfile = NULL,
     types = character(),
     support = 20,
+    types_src = c("DBpedia", "Wikidata"),
     max_len = 7990L,
     overlap = 1000L,
     expand_to_token = FALSE,
@@ -966,6 +971,7 @@ setMethod(
         logfile = logfile,
         types = types,
         support = support,
+        types_src = types_src,
         expand_to_token = expand_to_token,
         verbose = if (progress) FALSE else verbose
       )
@@ -1016,6 +1022,7 @@ setMethod(
     logfile = NULL,
     types = character(),
     support = 20,
+    types_src = c("DBpedia", "Wikidata"),
     verbose = TRUE,
     progress = FALSE
   ) {
@@ -1053,6 +1060,7 @@ setMethod(
             logfile = logfile,
             types = types,
             support = support,
+            types_src = types_src,
             verbose = if (progress) FALSE else verbose
           )[, "doc" := docname]
         }
@@ -1094,6 +1102,7 @@ setMethod(
     logfile = NULL,
     types = character(),
     support = 20,
+    types_src = c("DBpedia", "Wikidata"),
     expand_to_token = FALSE,
     drop_inexact_annotations = TRUE,
     verbose = if (progress) FALSE else verbose,
@@ -1198,6 +1207,7 @@ setMethod(
       logfile = logfile,
       types = types,
       support = support,
+      types_src = types_src,
       verbose = verbose
     )
 

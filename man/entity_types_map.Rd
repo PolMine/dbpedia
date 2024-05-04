@@ -54,7 +54,7 @@ library(quanteda)
 inaugural_paragraphs <- data_corpus_inaugural \%>\%
   corpus_subset(Year == 2009) \%>\% # limit to Barack Obama 2009
   corpus_reshape(to = "paragraphs")
-  
+
 uritab_paragraphs <- get_dbpedia_uris(
   x = inaugural_paragraphs[2], # single paragraph
   language = "en",
