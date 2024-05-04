@@ -14,7 +14,8 @@ dbpedia_get_wikidata_uris(
   limit = chunksize,
   wait = 1,
   verbose = TRUE,
-  progress = FALSE
+  progress = FALSE,
+  ...
 )
 
 add_wikidata_uris(x, ...)
@@ -54,6 +55,10 @@ of requests (and avoid denial of service). Defaults to 100.}
 
 \item{...}{Further arguments.}
 }
+\value{
+A \code{tibble} with request results - an empty \code{tibble} if all requests
+failed.
+}
 \description{
 Get Wikipedia IDs for DBpedia URIs.
 }
@@ -64,12 +69,15 @@ dbpedia_uris <- c(
   "http://de.dbpedia.org/resource/Velbert"
 )
 dbpedia_get_wikidata_uris(
-  dbpedia_uris,
+  x = dbpedia_uris,
   optional = "municipalityCode",
   endpoint = "http://de.dbpedia.org/sparql",
   wait = 0,
   chunksize = 2,
-  progress = TRUE
+  progress = TRUE,
+  limit = 2,
+  verbose = TRUE,
+  httr::timeout(1)
 )
 \donttest{
 library(dbpedia)

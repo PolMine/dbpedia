@@ -2,6 +2,7 @@
 * All `get_dbpedia_uris()`-methods have argument `types_src` #55.
 * `sparql_query()` has three dots (...) option for passing arguments into
 `httr::GET()` - specifying a timeout as intended usage #56.
+* `dbpedia_get_wikidata_uris()` has three-dots-argument to pass timeout into `httr::GET()` via `sparql_query()` #57.
 
 ## dbpedia v0.1.2.9006
 * Default of argument `max_len` of `get_dbepdia_uris()` increased to 7990, using maximum langth of string escaped for URI as reference. Documentation of the argument adopted accordingly #51.

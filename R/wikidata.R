@@ -13,7 +13,11 @@
 #'   of requests (and avoid denial of service). Defaults to 100.
 #' @param progress Whether to show progress bar (`logical` value).
 #' @param verbose Whether to show messages (`logical` value).
+#' @param ... Arguments passed into `httr::GET()` via `sparql_query()`. Useful
+#'   for determining a timeout (see examples).
 #' @export
+#' @return A `tibble` with request results - an empty `tibble` if all requests
+#'   failed.
 #' @rdname wikidata_uris
 #' @examples
 #' dbpedia_uris <- c(
@@ -22,15 +26,28 @@
 #'   "http://de.dbpedia.org/resource/Velbert"
 #' )
 #' dbpedia_get_wikidata_uris(
-#'   dbpedia_uris,
+#'   x = dbpedia_uris,
 #'   optional = "municipalityCode",
 #'   endpoint = "http://de.dbpedia.org/sparql",
 #'   wait = 0,
 #'   chunksize = 2,
-#'   progress = TRUE
+#'   progress = TRUE,
+#'   limit = 2,
+#'   verbose = TRUE,
+#'   httr::timeout(1)
 #' )
 #' @importFrom cli cli_progress_bar cli_progress_done cli_progress_update
-dbpedia_get_wikidata_uris <- function(x, optional, endpoint, chunksize = 100, limit = chunksize, wait = 1, verbose = TRUE, progress = FALSE) {
+dbpedia_get_wikidata_uris <- function(
+    x,
+    optional,
+    endpoint,
+    chunksize = 100,
+    limit = chunksize,
+    wait = 1,
+    verbose = TRUE,
+    progress = FALSE,
+    ...
+  ) {
   
   stopifnot(
     is.character(x),
@@ -59,10 +76,8 @@ dbpedia_get_wikidata_uris <- function(x, optional, endpoint, chunksize = 100, li
       %s
       FILTER(regex(str(?wikidata_uri), "www.wikidata.org" ) )}
       LIMIT %d'
-  
 
   chunks <- as_chunks(x = x, size = chunksize)
-  retval_li <- list()
   
   if (progress) {
     cli_progress_bar(
@@ -71,23 +86,34 @@ dbpedia_get_wikidata_uris <- function(x, optional, endpoint, chunksize = 100, li
       type = "tasks"
     )
   }
-  for (i in 1L:length(chunks)) {
-    if (progress) cli_progress_update()
-    query <- sprintf(
-      template,
-      paste(sprintf("<%s>", chunks[[i]]), collapse = " "),
-      optional,
-      limit
-    )
-    
-    Sys.sleep(wait)
-    
-    retval_li[[i]] <- sparql_query(endpoint = endpoint, query = query)
-  }
+  
+  retval_li <- lapply(
+    1L:length(chunks),
+    function(i) {
+      query <- sprintf(
+        template,
+        paste(sprintf("<%s>", chunks[[i]]), collapse = " "),
+        optional,
+        limit
+      )
+      Sys.sleep(wait)
+      res <- sparql_query(
+        endpoint = endpoint,
+        query = query, 
+        ...
+      )
+      if (progress) cli_progress_update(.envir = parent.frame(n = 2))
+      res
+    }
+  )
   
   if (progress) cli_progress_done()
 
   y <- as_tibble(do.call(rbind, retval_li))
+  if (nrow(y) == 0L){
+    cli_alert_danger("all requests failed, returning empty tibble")
+    return(y)
+  }
   colnames(y)[1] <- "dbpedia_uri"
   y[["dbpedia_uri"]] <- gsub("^<(.*?)>$", "\\1", y[["dbpedia_uri"]])
   y[["wikidata_uri"]] <- gsub("^<(.*?)>$", "\\1", y[["wikidata_uri"]])
