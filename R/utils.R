@@ -2,9 +2,12 @@
 #' 
 #' @param endpoint URL of a SPARQL endpoint.
 #' @param query A (single) SPARL query. 
+#' @param ... Arguments passed into `httr::GET()`. Useful to determine a timeout
+#'   (see examples).
 #' @importFrom httr GET add_headers content
 #' @importFrom xml2 read_xml xml_find_all xml_attr xml_text
 #' @importFrom utils URLencode
+#' @return A `data.frame` if the request has been successful, `NULL` if not.
 #' @export
 #' @examples
 #' sparql_endpoint <- "http://de.dbpedia.org/sparql"
@@ -19,8 +22,8 @@
 #'   }
 #'   LIMIT 100
 #' '
-#' sparql_query(endpoint = sparql_endpoint, query = query)
-sparql_query <- function(endpoint, query) {
+#' sparql_query(endpoint = sparql_endpoint, query = query, httr::timeout(1))
+sparql_query <- function(endpoint, query, ...) {
   
   stopifnot(
     is.character(endpoint), length(endpoint) == 1L,
@@ -34,10 +37,21 @@ sparql_query <- function(endpoint, query) {
     sep = ""
   )
   
-  results <- GET(
-    url = url,
-    add_headers(Accept = "application/sparql-results+xml")
+  trystatus <- try(
+    {
+      results <- GET(
+        url = url,
+        add_headers(Accept = "application/sparql-results+xml"),
+        ...
+      )
+    },
+    silent = TRUE
   )
+  if (inherits(trystatus, "try-error")) {
+    cli_alert_danger("httr::GET() failed, returning NULL")
+    return(NULL)
+  }
+  
   
   content <- content(results, as = "text")
   

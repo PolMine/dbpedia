@@ -4,12 +4,18 @@
 \alias{sparql_query}
 \title{Query SPARQL endpoint}
 \usage{
-sparql_query(endpoint, query)
+sparql_query(endpoint, query, ...)
 }
 \arguments{
 \item{endpoint}{URL of a SPARQL endpoint.}
 
 \item{query}{A (single) SPARL query.}
+
+\item{...}{Arguments passed into \code{httr::GET()}. Useful to determine a timeout
+(see examples).}
+}
+\value{
+A \code{data.frame} if the request has been successful, \code{NULL} if not.
 }
 \description{
 Query SPARQL endpoint
@@ -27,5 +33,5 @@ query <- 'SELECT distinct ?item ?wikidata_uri ?key
   }
   LIMIT 100
 '
-sparql_query(endpoint = sparql_endpoint, query = query)
+sparql_query(endpoint = sparql_endpoint, query = query, httr::timeout(1))
 }
