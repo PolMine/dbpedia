@@ -594,6 +594,7 @@ setMethod(
         
         resources_min[, (paste(src, "type", sep = "_")) := types_vec]
       }
+      resources_min[, "types" := NULL]
     }
     
     resources_min
@@ -707,6 +708,10 @@ setMethod(
 #'   entries such as 'DBpedia', 'Schema', 'Wikidata', 'DUL'.
 #'   Depending on the input object, further columns may be available.
 #'   If the request to the endpoint failes, `NULL` is returned.
+#' 
+#' If argument `types_src` is specified, the information in the column 'types'
+#' is dissolved into columns such as `types_DBpedia`, and the 'types'-column
+#' is dropped.
 #' @exportMethod get_dbpedia_uris
 #' @importFrom cli cli_alert_warning cli_progress_step cli_alert_danger
 #'   cli_progress_done cli_alert_info
@@ -959,7 +964,7 @@ setMethod(
     x@objects, 
     function(sc) {
       if (progress) cli_progress_update(.envir = env)
-      dt <- get_dbpedia_uris(
+      get_dbpedia_uris(
         x = sc,
         language = language,
         s_attribute = s_attribute,
@@ -975,8 +980,6 @@ setMethod(
         expand_to_token = expand_to_token,
         verbose = if (progress) FALSE else verbose
       )
-      dt[, "types" := NULL]
-      dt
     }
   )
   if (progress) cli_progress_done(.envir = env)

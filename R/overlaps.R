@@ -310,9 +310,10 @@ categorize_overlap <- function(x, start_col, end_col, experimental = FALSE, corp
   # set key for later foverlaps
   setkeyv(x, c(start_col, end_col))
 
-  if (isTRUE(verbose)) {
-    cli_alert_info(text = "Determining full and partial overlaps and spans with multiple URIs.")
-  }
+  if (isTRUE(verbose))
+    cli_alert_info(
+      "Determining full and partial overlaps and spans with multiple URIs."
+    )
 
   x[, c(start_col, end_col, "dbpedia_uri", "text", "types", "ovl_type") := list(
     .SD[[start_col]],
