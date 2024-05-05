@@ -1,5 +1,9 @@
+## dbpedia v0.1.2.9008
+* `get_dbpedia_uris()`-methods have new argument `types_drop` to drop 'types column that may result in nested data structures causing errors with large data.
+* New function `dbpedia_lookup()`.
+
 ## dbpedia v0.1.2.9007
-* All `get_dbpedia_uris()`-methods have argument `types_src`. If it is used, the column "types" is removed #55.
+* All `get_dbpedia_uris()`-methods have argument `types_src` #55.
 * `sparql_query()` has three dots (...) option for passing arguments into
 `httr::GET()` - specifying a timeout as intended usage #56.
 * `dbpedia_get_wikidata_uris()` has three-dots-argument to pass timeout into `httr::GET()` via `sparql_query()` #57.

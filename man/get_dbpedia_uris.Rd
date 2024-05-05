@@ -27,6 +27,7 @@ get_dbpedia_uris(x, ...)
   types = character(),
   support = 20,
   types_src = c("DBpedia", "Wikidata"),
+  types_drop = FALSE,
   verbose = TRUE
 )
 
@@ -43,6 +44,7 @@ get_dbpedia_uris(x, ...)
   types = character(),
   support = 20,
   types_src = c("DBpedia", "Wikidata"),
+  types_drop = FALSE,
   verbose = TRUE
 )
 
@@ -60,6 +62,7 @@ get_dbpedia_uris(x, ...)
   types = character(),
   support = 20,
   types_src = c("DBpedia", "Wikidata"),
+  types_drop = FALSE,
   expand_to_token = FALSE,
   drop_inexact_annotations = TRUE,
   verbose = TRUE
@@ -77,6 +80,7 @@ get_dbpedia_uris(x, ...)
   types = character(),
   support = 20,
   types_src = c("DBpedia", "Wikidata"),
+  types_drop = FALSE,
   max_len = 7990L,
   overlap = 1000L,
   expand_to_token = FALSE,
@@ -96,6 +100,7 @@ get_dbpedia_uris(x, ...)
   types = character(),
   support = 20,
   types_src = c("DBpedia", "Wikidata"),
+  types_drop = FALSE,
   verbose = TRUE,
   progress = FALSE
 )
@@ -116,6 +121,7 @@ get_dbpedia_uris(x, ...)
   types = character(),
   support = 20,
   types_src = c("DBpedia", "Wikidata"),
+  types_drop = FALSE,
   expand_to_token = FALSE,
   drop_inexact_annotations = TRUE,
   verbose = if (progress) FALSE else verbose,
@@ -171,6 +177,11 @@ for entity types. If provided, columns following the pattern '(src)_type'
 added to the table. Values are wrapped and separated by vertical bars.
 \code{types_src} defaults to "DBpedia" and "Wikidata".}
 
+\item{types_drop}{A \code{logical} value - whether to drop the "types" column with
+lists of entity types in the knowledge bases. Dropping the column is
+recommend for processing large data to avoid nested data structure and
+errors. Defaults to \code{FALSE}.}
+
 \item{verbose}{A \code{logical} value - whether to display messages.}
 
 \item{p_attribute}{The p-attribute used for decoding a \code{subcorpus} object.}
@@ -208,6 +219,9 @@ entries such as 'DBpedia', 'Schema', 'Wikidata', 'DUL'.
 Depending on the input object, further columns may be available.
 If the request to the endpoint failes, \code{NULL} is returned.
 }
+
+If argument \code{types_src} is specified, the information in the column 'types'
+is dissolved into columns such as \code{types_DBpedia}.
 }
 \description{
 Get DBpedia links.

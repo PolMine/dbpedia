@@ -371,6 +371,7 @@ setMethod(
     types = character(),
     support = 20,
     types_src = c("DBpedia", "Wikidata"),
+    types_drop = FALSE,
     verbose = TRUE
   ) {
     
@@ -409,6 +410,7 @@ setMethod(
             types = types,
             support = support,
             types_src = types_src,
+            types_drop = types_drop,
             verbose = verbose
             
           )
@@ -594,9 +596,11 @@ setMethod(
         
         resources_min[, (paste(src, "type", sep = "_")) := types_vec]
       }
-      resources_min[, "types" := NULL]
+      
     }
     
+    if (isTRUE(types_drop)) resources_min[, "types" := NULL]
+
     resources_min
   }
 )
@@ -620,6 +624,7 @@ setMethod(
     types = character(),
     support = 20,
     types_src = c("DBpedia", "Wikidata"),
+    types_drop = FALSE,
     verbose = TRUE
   ) {
     
@@ -636,6 +641,7 @@ setMethod(
       types = types,
       support = support,
       types_src = types_src,
+      types_drop = types_drop,
       verbose = verbose
     )
   }
@@ -688,6 +694,10 @@ setMethod(
 #'   (e.g. "DBpedia_types") with entity types (`NA` if not available) will be
 #'   added to the table. Values are wrapped and separated by vertical bars.
 #'   `types_src` defaults to "DBpedia" and "Wikidata".
+#' @param types_drop A `logical` value - whether to drop the "types" column with
+#'   lists of entity types in the knowledge bases. Dropping the column is
+#'   recommend for processing large data to avoid nested data structure and
+#'   errors. Defaults to `FALSE`. 
 #' @param verbose A `logical` value - whether to display messages.
 #' @param progress A `logical` value - whether to show progress.
 #' @param s_attribute A length-one `character` vector indicating a s-attribute.
@@ -710,8 +720,7 @@ setMethod(
 #'   If the request to the endpoint failes, `NULL` is returned.
 #' 
 #' If argument `types_src` is specified, the information in the column 'types'
-#' is dissolved into columns such as `types_DBpedia`, and the 'types'-column
-#' is dropped.
+#' is dissolved into columns such as `types_DBpedia`.
 #' @exportMethod get_dbpedia_uris
 #' @importFrom cli cli_alert_warning cli_progress_step cli_alert_danger
 #'   cli_progress_done cli_alert_info
@@ -763,6 +772,7 @@ setMethod(
     types = character(),
     support = 20,
     types_src = c("DBpedia", "Wikidata"),
+    types_drop = FALSE,
     expand_to_token = FALSE,
     drop_inexact_annotations = TRUE,
     verbose = TRUE
@@ -779,6 +789,7 @@ setMethod(
     
   if (verbose)
     cli_progress_step("convert input to `AnnotatedPlainTextDocument`")
+  
   doc <- decode(
     x,
     to = "AnnotatedPlainTextDocument",
@@ -790,6 +801,7 @@ setMethod(
     ),
     verbose = FALSE
   )
+  
   if (verbose) cli_progress_done()
   
   links <- get_dbpedia_uris(
@@ -805,6 +817,7 @@ setMethod(
     types = types,
     support = support,
     types_src = types_src,
+    types_drop = types_drop,
     verbose = verbose
   )
   
@@ -844,8 +857,7 @@ setMethod(
                  by = c("start", "end"),
                  .SDcols = c("start", "end", "dbpedia_uri", "text", "types")
     ]
-    tab[, "start" := NULL]
-    tab[, "end" := NULL]
+    tab[, "start" := NULL][, "end" := NULL]
 
   } else {
 
@@ -874,11 +886,8 @@ setMethod(
       registry = x@registry_dir,
       strucs = strucs  
     )
-    tab[["cpos_left"]] <- r[,1]
-    tab[["cpos_right"]] <- r[,2]
-    tab[["start"]] <- NULL
-    tab[["end"]] <- NULL
-    tab[["id"]] <- NULL
+    tab[, "cpos_left" := r[, 1]][, "cpos_right" := r[, 2]]
+    tab[, "start" := NULL][, "end" := NULL][, "id" := NULL]
     
     setcolorder(
       x = tab,
@@ -948,6 +957,8 @@ setMethod(
     types = character(),
     support = 20,
     types_src = c("DBpedia", "Wikidata"),
+    
+    types_drop = FALSE,
     max_len = 7990L,
     overlap = 1000L,
     expand_to_token = FALSE,
@@ -977,6 +988,7 @@ setMethod(
         types = types,
         support = support,
         types_src = types_src,
+        types_drop = types_drop,
         expand_to_token = expand_to_token,
         verbose = if (progress) FALSE else verbose
       )
@@ -1026,6 +1038,7 @@ setMethod(
     types = character(),
     support = 20,
     types_src = c("DBpedia", "Wikidata"),
+    types_drop = FALSE,
     verbose = TRUE,
     progress = FALSE
   ) {
@@ -1064,6 +1077,7 @@ setMethod(
             types = types,
             support = support,
             types_src = types_src,
+            types_drop = types_drop,
             verbose = if (progress) FALSE else verbose
           )[, "doc" := docname]
         }
@@ -1106,6 +1120,7 @@ setMethod(
     types = character(),
     support = 20,
     types_src = c("DBpedia", "Wikidata"),
+    types_drop = FALSE,
     expand_to_token = FALSE,
     drop_inexact_annotations = TRUE,
     verbose = if (progress) FALSE else verbose,
@@ -1211,6 +1226,7 @@ setMethod(
       types = types,
       support = support,
       types_src = types_src,
+      types_drop = types_drop,
       verbose = verbose
     )
 
@@ -1255,7 +1271,10 @@ setMethod(
       tab[["id_left"]] <- NULL
       tab[["id_right"]] <- NULL
 
-      setcolorder(x = tab, neworder = c("dbpedia_uri", "text", "types", "original_id"))
+      setcolorder(
+        x = tab,
+        neworder = c("dbpedia_uri", "text", "types", "original_id")
+      )
 
     }
 
@@ -1280,6 +1299,77 @@ setMethod(
 
   data.table::rbindlist(annotations)
 })
+
+
+#' Use DBpedia Lookup service to get DBpedia URIs
+#' 
+#' DBpedia Lookup is a service to match a query on a DBpedia URI. See the 
+#' explanation [here](https://www.dbpedia.org/resources/lookup/) and the 
+#' experimental GUI [here](https://lookup.dbpedia.org/index.html).
+#' 
+#' @param query A term/query to look up.
+#' @param api The service to consult.
+#' @param max_results The maximum number of results
+#' @param progress A `logical` value, whether to show progress message.
+#' @return A named list of vectors with length `max_results`; the names are the
+#'   queries.
+#' @importFrom httr GET http_error content
+#' @importFrom xml2 read_xml xml_find_all xml_text
+#' @export
+#' @examples
+#' uri <- dbpedia_lookup(query = "Berlin")
+#' uris <- dbpedia_lookup(query = c("Berlin", "Paris", "London"))
+dbpedia_lookup <- function(
+    query,
+    api = "https://lookup.dbpedia.org/api/search",
+    max_results = 5,
+    progress = TRUE
+) {
+  
+  if (length(query) > 1L) {
+    if (progress) {
+      cli_progress_bar(
+        "processing DBpedia Lookup queries",
+        total = length(query),
+        type = "tasks"
+      )
+    }
+    
+    li <- lapply(
+      seq_along(query),
+      function(i){
+        if (progress) cli_progress_update(.envir = parent.frame(n = 2))
+        dbpedia_lookup(
+          query = query[[i]],
+          api = api,
+          max_results = max_results,
+          progress = FALSE
+        )
+      }
+    )
+    
+    retval <- setNames(lapply(li, `[[`, 1), sapply(lapply(li, names), `[[`, 1))
+    
+    if (progress) cli_progress_done()
+  } else {
+    res <- GET(
+      url = api,
+      query = list(
+        query = query,
+        maxResults = max_results
+      )
+    )
+    
+    if (http_error(res)) return(NA_character_)
+    
+    txt <- content(res, as = "text", encoding = "UTF-8")
+    xml <- read_xml(txt)
+    uri_nodeset <- xml_find_all(xml, xpath = "/ArrayOfResults/Result/URI")
+    retval <- setNames(list(xml_text(uri_nodeset)), query)
+  }
+  
+  retval
+}
 
 
 
