@@ -155,8 +155,8 @@ as threshold before DBpedia Spotlight includes a link into the report.}
 
 \item{api}{An URL of the DBpedia Spotlight API.}
 
-\item{retry}{An \code{integer} value, the number of times to retry in case of a http
-error.}
+\item{retry}{An \code{integer} value, the number of times to retry in case of a
+http error.}
 
 \item{logfile}{Filename for writing logs (e.g. for debugging purposes).}
 
@@ -215,31 +215,36 @@ A \code{data.table} with the following columns:
 \item \emph{dbpedia_uri}: The DBpedia URI.
 \item \emph{text}: Text that has been annotated
 \item \emph{types}: Recognized entity types, for each row a named list, if available
-entries such as 'DBpedia', 'Schema', 'Wikidata', 'DUL'.
-Depending on the input object, further columns may be available.
-If the request to the endpoint failes, \code{NULL} is returned.
-}
+entries such as 'DBpedia', 'Schema', 'Wikidata', 'DUL'. Depending on the
+input object, further columns may be available. If the request to the
+endpoint failes, \code{NULL} is returned.
 
 If argument \code{types_src} is specified, the information in the column 'types'
 is dissolved into columns such as \code{types_DBpedia}.
+}
 }
 \description{
 Get DBpedia links.
 }
 \details{
-\itemize{
-\item \code{expand_to_token} is a rather experimental feature that resolves
-mismatches between entity spans and token spans by expanding the former to
-the last character position of the corresponding token. See issue #26 in the
-\code{dbpedia} GitHub repository.
-\item The configuration of the \code{httr::GET()} calls
-used can be controlled using \code{httr::config()}. A relevant scenario is SSL
-verification issues that can be addressed using
-\code{httr::set_config(httr::config(ssl_verifypeer = 0L))} (at own risk!). The
-error "HTTP/2 stream 1 was not closed cleanly before end of the underlying
-stream" can be addressed using
+The configuration of the \code{httr::GET()} calls used can be controlled using
+\code{httr::config()}. A relevant scenario is SSL verification issues that can be
+addressed using \code{httr::set_config(httr::config(ssl_verifypeer = 0L))} (at own
+risk!). The error "HTTP/2 stream 1 was not closed cleanly before end of the
+underlying stream" can be addressed using
 \code{httr::set_config(httr::config(http_verson = 1.1))}
-}
+
+The 'types'-column of the \code{data.table} returned is a list of lists. When
+processing large data, this can result in an excessive number of nested
+expressions and cause a 'protection stack overflow' error. One potential
+solution may be to increase the limit on the number of nested expressions
+(e.g. \code{options(expressions = 5e5)}). Alternatively,drop the 'types'-column by
+setting the argument \code{typse_drop} to \code{TRUE}.
+
+\code{expand_to_token} is a rather experimental feature that resolves mismatches
+between entity spans and token spans by expanding the former to the last
+character position of the corresponding token. See issue #26 in the \code{dbpedia}
+GitHub repository.
 }
 \examples{
 \dontrun{

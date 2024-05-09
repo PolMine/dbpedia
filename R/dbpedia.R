@@ -649,17 +649,25 @@ setMethod(
 
 #' Get DBpedia links.
 #'
-#' @details - `expand_to_token` is a rather experimental feature that resolves
-#' mismatches between entity spans and token spans by expanding the former to
-#' the last character position of the corresponding token. See issue #26 in the
-#' `dbpedia` GitHub repository.
-#' - The configuration of the `httr::GET()` calls
-#' used can be controlled using `httr::config()`. A relevant scenario is SSL
-#' verification issues that can be addressed using
-#' `httr::set_config(httr::config(ssl_verifypeer = 0L))` (at own risk!). The
-#' error "HTTP/2 stream 1 was not closed cleanly before end of the underlying
-#' stream" can be addressed using
+#' @details
+#' The configuration of the `httr::GET()` calls used can be controlled using
+#' `httr::config()`. A relevant scenario is SSL verification issues that can be
+#' addressed using `httr::set_config(httr::config(ssl_verifypeer = 0L))` (at own
+#' risk!). The error "HTTP/2 stream 1 was not closed cleanly before end of the
+#' underlying stream" can be addressed using
 #' `httr::set_config(httr::config(http_verson = 1.1))`
+#' 
+#' The 'types'-column of the `data.table` returned is a list of lists. When
+#' processing large data, this can result in an excessive number of nested
+#' expressions and cause a 'protection stack overflow' error. One potential
+#' solution may be to increase the limit on the number of nested expressions
+#' (e.g. `options(expressions = 5e5)`). Alternatively,drop the 'types'-column by
+#' setting the argument `typse_drop` to `TRUE`.
+#'
+#' `expand_to_token` is a rather experimental feature that resolves mismatches
+#' between entity spans and token spans by expanding the former to the last
+#' character position of the corresponding token. See issue #26 in the `dbpedia`
+#' GitHub repository.
 #'
 #' @param x A `subcorpus` (`xml`, ...) object. Will be coerced to
 #'   'AnnotatedPlainTextDocument' from NLP package.
@@ -678,8 +686,8 @@ setMethod(
 #' @param confidence A `numeric` value, the minimum similarity score that serves
 #'   as threshold before DBpedia Spotlight includes a link into the report.
 #' @param api An URL of the DBpedia Spotlight API.
-#' @param retry An `integer` value, the number of times to retry in case of a http
-#'   error.
+#' @param retry An `integer` value, the number of times to retry in case of a
+#'   http error.
 #' @param logfile Filename for writing logs (e.g. for debugging purposes).
 #' @param doc_id A length-one `character` vector indicating document ID in
 #'   logfile and annotation data (`data.table` returned), if not `NULL`
@@ -697,7 +705,7 @@ setMethod(
 #' @param types_drop A `logical` value - whether to drop the "types" column with
 #'   lists of entity types in the knowledge bases. Dropping the column is
 #'   recommend for processing large data to avoid nested data structure and
-#'   errors. Defaults to `FALSE`. 
+#'   errors. Defaults to `FALSE`.
 #' @param verbose A `logical` value - whether to display messages.
 #' @param progress A `logical` value - whether to show progress.
 #' @param s_attribute A length-one `character` vector indicating a s-attribute.
@@ -715,12 +723,12 @@ setMethod(
 #' - *dbpedia_uri*: The DBpedia URI.
 #' - *text*: Text that has been annotated
 #' - *types*: Recognized entity types, for each row a named list, if available
-#'   entries such as 'DBpedia', 'Schema', 'Wikidata', 'DUL'.
-#'   Depending on the input object, further columns may be available.
-#'   If the request to the endpoint failes, `NULL` is returned.
-#' 
-#' If argument `types_src` is specified, the information in the column 'types'
-#' is dissolved into columns such as `types_DBpedia`.
+#'   entries such as 'DBpedia', 'Schema', 'Wikidata', 'DUL'. Depending on the
+#'   input object, further columns may be available. If the request to the
+#'   endpoint failes, `NULL` is returned.
+#'
+#'   If argument `types_src` is specified, the information in the column 'types'
+#'   is dissolved into columns such as `types_DBpedia`.
 #' @exportMethod get_dbpedia_uris
 #' @importFrom cli cli_alert_warning cli_progress_step cli_alert_danger
 #'   cli_progress_done cli_alert_info
