@@ -857,8 +857,8 @@ setMethod(
     dt <- as.data.table(doc, what = s_attribute)
     tab[, "end" := tab[["start"]] + nchar(tab[["text"]]) - 1L]
 
-    tab[, cpos_left := expand_fun(.SD, direction = "left"), by = c("start", "end"), .SDcols = c("start", "end")]
-    tab[, cpos_right := expand_fun(.SD, direction = "right"), by = c("start", "end"), .SDcols = c("start", "end")]
+    tab[, "cpos_left" := expand_fun(.SD, direction = "left"), by = c("start", "end"), .SDcols = c("start", "end")]
+    tab[, "cpos_right" := expand_fun(.SD, direction = "right"), by = c("start", "end"), .SDcols = c("start", "end")]
 
     tab[, "start" := NULL][, "end" := NULL][, "doc_id" := NULL]
   } else {

@@ -56,9 +56,10 @@ library(dbpedia)
 
 doc <- "Berlin is the capital city of Germany."
 
-uri_table <- get_dbpedia_uris(x = doc,
-                              language = getOption("dbpedia.lang"),
-                              api = getOption("dbpedia.endpoint")
+uri_table <- get_dbpedia_uris(
+  x = doc,
+  language = "en",
+  api = "https://api.dbpedia-spotlight.org/en/annotate"
 )
 ```
 
@@ -66,12 +67,14 @@ DBpedia Spotlight is able to identify which parts of the text represent
 entities and decide which resources in the knowledge graph DBpedia they
 correspond with. The return value of the method is a data.table
 containing identified entities along with their respective DBpedia URIs
-and starting positions in the document.
+and starting positions in the document. Information on “types” which are
+by default provided by `get_dbpedia_uris()` are omitted in this output.
 
-| start | text    | dbpedia_uri                                  |
-|------:|:--------|:---------------------------------------------|
-|     1 | Berlin  | <http://de.dbpedia.org/resource/Berlin>      |
-|    31 | Germany | <http://de.dbpedia.org/resource/Deutschland> |
+| doc_id | start | text         | dbpedia_uri                                |
+|:-------|------:|:-------------|:-------------------------------------------|
+| NA     |     1 | Berlin       | <http://dbpedia.org/resource/Berlin>       |
+| NA     |    15 | capital city | <http://dbpedia.org/resource/Capital_city> |
+| NA     |    31 | Germany      | <http://dbpedia.org/resource/Germany>      |
 
 ## Installation and Setup
 
@@ -165,35 +168,36 @@ getOption("dbpedia.lang")
 #### Data
 
 For the following example, we use the “US presidential inaugural address
-texts” corpus from the `quanteda` R package. For illustrative purposes,
-only speeches since 1970 are used. To create useful chunks of text, we
-split the corpus into paragraphs.
+texts” corpus from the `quanteda` R package. To create useful chunks of
+text, we split the corpus into paragraphs. For illustrative purposes,
+only the first few paragraphs of the second inauguration speech of
+Barack Obama are used.
 
 ``` r
 inaugural_paragraphs <- data_corpus_inaugural |>
-  corpus_subset(Year > 1970) |>
-  corpus_reshape(to = "paragraphs")
+  corpus_subset(Year == 2013) |>
+  corpus_reshape(to = "paragraphs") |>
+  _[1:2]
 ```
 
 #### Entity Linking with `get_dbpedia_uris()`
 
-Using a local endpoint for the DBpedia Spotlight service and the sample
-corpus from `quanteda`, identifying and disambiguating entities in
-documents can be realized with the main worker method the package:
-`get_dbpedia_uris()`.
+Using the DBpedia Spotlight service and the sample corpus from
+`quanteda`, identifying and disambiguating entities in documents can be
+realized with the main worker method the package: `get_dbpedia_uris()`.
 
 The method accepts the data in different input formats -
-`character vectors`, `quanteda` corpora, Corpus Workbench format, XML -
-as well as additional parameters, some of which are discussed in more
-detail in the package’s vignette.
+`character vectors`, `quanteda` corpora, the Corpus Workbench format,
+XML - as well as additional parameters, some of which are discussed in
+more detail in the package’s vignette.
 
 ``` r
 uritab_paragraphs <- get_dbpedia_uris(
   x = inaugural_paragraphs,
-  language = getOption("dbpedia.lang"),
-  max_len = 5600L,
+  language = "en",
+  max_len = 7990L,
   confidence = 0.5,
-  api = getOption("dbpedia.endpoint"),
+  api = "https://api.dbpedia-spotlight.org/en/annotate",
   verbose = FALSE,
   progress = FALSE
 )
@@ -205,15 +209,15 @@ the method. The return value is a `data.table` containing the document
 name as well as the extracted entities along with their starting
 position in the text and, most importantly, their respective URI in the
 DBpedia Knowledge Graph (only the first five entities are shown here and
-the column containing the types of the entities is omitted):
+the columns describing the types of the entities are omitted):
 
-| doc          | start | text          | dbpedia_uri                                                         |
-|:-------------|------:|:--------------|:--------------------------------------------------------------------|
-| 1973-Nixon.1 |     1 | Mr            | <http://de.dbpedia.org/resource/Master_of_the_Rolls>                |
-| 1973-Nixon.1 |    21 | Mr            | <http://de.dbpedia.org/resource/Master_of_the_Rolls>                |
-| 1973-Nixon.1 |    25 | Speaker       | <http://de.dbpedia.org/resource/Speaker>                            |
-| 1973-Nixon.1 |    34 | Mr            | <http://de.dbpedia.org/resource/Master_of_the_Rolls>                |
-| 1973-Nixon.1 |    38 | Chief Justice | <http://de.dbpedia.org/resource/Chief_Justice_of_the_United_States> |
+| doc          | doc_id | start | text                   | dbpedia_uri                                                       |
+|:-------------|:-------|------:|:-----------------------|:------------------------------------------------------------------|
+| 2013-Obama.1 | NA     |     1 | Vice President         | <http://dbpedia.org/resource/Vice_President_of_the_United_States> |
+| 2013-Obama.1 | NA     |    27 | Chief Justice          | <http://dbpedia.org/resource/Chief_Justice_of_the_United_States>  |
+| 2013-Obama.1 | NA     |    57 | United States Congress | <http://dbpedia.org/resource/United_States_Congress>              |
+| 2013-Obama.2 | NA     |    37 | President              | <http://dbpedia.org/resource/President_of_the_United_States>      |
+| 2013-Obama.2 | NA     |    50 | bear                   | <http://dbpedia.org/resource/Bear>                                |
 
 The package’s vignette provides some more details to the approach and
 parameters.
@@ -253,7 +257,7 @@ reuters_newswire <- corpus("REUTERS") |>
 
 Like before, we perform Entity Linking with `get_dbpedia_uris()`. In
 addition, we map entity types returned by DBpedia Spotlight to a number
-of entity classes (see the vignette for a more comprehensive
+of entity categories (see the vignette for a more comprehensive
 explanation).
 
 ``` r
@@ -262,24 +266,32 @@ mapping_vector = c(
   "ORGANIZATION" = "DBpedia:Organisation",
   "LOCATION" = "DBpedia:Place"
 )
-
-reuters_newswire_annotation <- reuters_newswire |>
-  get_dbpedia_uris(verbose = FALSE) |>
-  map_types_to_class(mapping_vector = mapping_vector)
 ```
 
-    ## ℹ mapping values in column `types` to new column `class`
+``` r
+reuters_newswire_annotation <- reuters_newswire |>
+  get_dbpedia_uris(
+    language = "en",
+    api = "https://api.dbpedia-spotlight.org/en/annotate",
+    confidence = 0.5,
+    verbose = FALSE) |>
+  entity_types_map(mapping_vector = mapping_vector)
+```
+
+    ## ! Cannot map 3 entities exactly to tokenstream. Dropping them from the annotation.
+
+    ## ℹ mapping values in column DBpedia_type to new column `category`
 
 This results in the following annotations (only the first five entities
-are shown here and the column of types is omitted):
+are shown here and the columns describing types are omitted):
 
-| cpos_left | cpos_right | dbpedia_uri                                                              | text    | class                          |
-|----------:|-----------:|:-------------------------------------------------------------------------|:--------|:-------------------------------|
-|        92 |         92 | <http://de.dbpedia.org/resource/Organisation_erdölexportierender_Länder> | OPEC    | LOCATION\|ORGANIZATION\|PERSON |
-|        93 |         93 | <http://de.dbpedia.org/resource/Brian_May>                               | may     | LOCATION\|ORGANIZATION\|PERSON |
-|       101 |        101 | <http://de.dbpedia.org/resource/June_Carter_Cash>                        | June    | LOCATION\|ORGANIZATION\|PERSON |
-|       102 |        102 | <http://de.dbpedia.org/resource/Session_(Schweiz)>                       | session | LOCATION\|ORGANIZATION\|PERSON |
-|       105 |        105 | <http://de.dbpedia.org/resource/Integrated_Truss_Structure>              | its     | LOCATION\|ORGANIZATION\|PERSON |
+| doc_id | cpos_left | cpos_right | dbpedia_uri                                                        | text                                 | category |
+|:-------|----------:|-----------:|:-------------------------------------------------------------------|:-------------------------------------|:---------|
+|        |        92 |         92 | <http://dbpedia.org/resource/OPEC>                                 | OPEC                                 | LOCATION |
+|        |       138 |        138 | <http://dbpedia.org/resource/OPEC>                                 | OPEC                                 | LOCATION |
+|        |       152 |        153 | <http://dbpedia.org/resource/Daniel_Yergin>                        | Daniel Yergin                        | PERSON   |
+|        |       156 |        159 | <http://dbpedia.org/resource/Cambridge_Energy_Research_Associates> | Cambridge Energy Research Associates | MISC     |
+|        |       160 |        160 | <http://dbpedia.org/resource/Cambridge_Energy_Research_Associates> | CERA                                 | MISC     |
 
 #### Mapping the Results to the Corpus
 
@@ -290,12 +302,12 @@ continuous text. This allows us to map the annotations back to the
 corpus.
 
 `polmineR`’s `read()` method allows us to visualize this mapping
-interactively, using the classes of the entities to provide some visual
-clues as well.
+interactively, using the categories of the entities to provide some
+visual clues as well.
 
 ``` r
 read(reuters_newswire,
-     annotation = as_subcorpus(reuters_newswire_annotation, highlight_by = "class"))
+     annotation = as_subcorpus(reuters_newswire_annotation, highlight_by = "category"))
 ```
 
 #### Advanced Scenarios
