@@ -448,10 +448,11 @@ setMethod(
       doc_id = character(),
       start = integer(),
       text = character(),
-      dbpedia_uri = character(),
-      types = character()
+      dbpedia_uri = character()
     )
-    
+
+    if (isFALSE(types_drop)) dt_empty[, types := character()]
+
     if (verbose) cli_progress_step("send request to DBpedia Spotlight")
     request_number <- 1L
     proceed <- TRUE
@@ -791,10 +792,11 @@ setMethod(
     doc_id = character(),  
     start = integer(),
     text = character(),
-    dbpedia_uri = character(),
-    types = character()
-  )  
-    
+    dbpedia_uri = character()
+  )
+
+  if (isFALSE(types_drop)) dt_empty[, types := character()]
+
   if (verbose)
     cli_progress_step("convert input to `AnnotatedPlainTextDocument`")
   
@@ -891,7 +893,7 @@ setMethod(
     
     setcolorder(
       x = tab,
-      neworder = c("cpos_left", "cpos_right", "dbpedia_uri", "text", "types")
+      neworder = c("cpos_left", "cpos_right", "dbpedia_uri", "text")
     )
     
     if (verbose) {
@@ -925,7 +927,7 @@ setMethod(
   }
   
   tab[, "doc_id" := rep(name(x), times = nrow(tab))]
-  setcolorder(tab, "doc_id")
+  setcolorder(tab, c("doc_id", "cpos_left", "cpos_right", "dbpedia_uri", "text"))
 
   tab
 })
