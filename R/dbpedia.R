@@ -812,7 +812,7 @@ setMethod(
   
   if (verbose) cli_progress_done()
   
-  links <- get_dbpedia_uris(
+  tab <- get_dbpedia_uris(
     x = doc,
     language = language,
     max_len = max_len,
@@ -828,8 +828,8 @@ setMethod(
     types_drop = types_drop,
     verbose = verbose
   )
-  
-  if (is.null(links)) return(dt_empty)
+
+  if (is.null(tab)) return(dt_empty)
 
   # prepare function to assign cpos_right depending on value and arguments
   expand_fun = function(.SD, direction) {
@@ -853,27 +853,19 @@ setMethod(
 
   if (is.null(s_attribute)) {
     dt <- as.data.table(doc, what = s_attribute)
-    links[, "end" := links[["start"]] + nchar(links[["text"]]) - 1L]
-    tab <- links[,
-                 list(
-                   cpos_left = expand_fun(.SD, direction = "left"),
-                   cpos_right = expand_fun(.SD, direction = "right"),
-                   dbpedia_uri = .SD[["dbpedia_uri"]],
-                   text = .SD[["text"]],
-                   types = .SD[["types"]]
-                 ),
-                 by = c("start", "end"),
-                 .SDcols = c("start", "end", "dbpedia_uri", "text", "types")
-    ]
-    tab[, "start" := NULL][, "end" := NULL]
+    tab[, "end" := tab[["start"]] + nchar(tab[["text"]]) - 1L]
 
+    tab[, cpos_left := expand_fun(.SD, direction = "left"), by = c("start", "end"), .SDcols = c("start", "end")]
+    tab[, cpos_right := expand_fun(.SD, direction = "right"), by = c("start", "end"), .SDcols = c("start", "end")]
+
+    tab[, "start" := NULL][, "end" := NULL][, "doc_id" := NULL]
   } else {
 
     dt <- as.data.table(doc, what = s_attribute)
     # if there are no elements of s_attribute #23
     if (nrow(dt) == 0) return(dt_empty)
 
-    tab <- links[dt, on = c("start", "text")]
+    tab <- tab[dt, on = c("start", "text")]
 
     # Corpus positions in table tab may deviate from regions of 
     # s-attribute if region starts or ends with stopword (see #11)
