@@ -897,9 +897,10 @@ setMethod(
     tab[, "cpos_left" := r[, 1]][, "cpos_right" := r[, 2]]
     tab[, "start" := NULL][, "end" := NULL][, "id" := NULL]
     
+    # column 'types' deliberately excluded because it may have been dropped
     setcolorder(
       x = tab,
-      neworder = c("cpos_left", "cpos_right", "dbpedia_uri", "text", "types")
+      neworder = c("cpos_left", "cpos_right", "dbpedia_uri", "text")
     )
     
     if (verbose) {

@@ -1,3 +1,6 @@
+## dbpedia v0.1.2.9009
+* Assumption dropped on existence of column types to avoid error
+
 ## dbpedia v0.1.2.9008
 * `get_dbpedia_uris()`-methods have new argument `types_drop` to drop 'types column that may result in nested data structures causing errors with large data.
 * New function `dbpedia_lookup()`.
