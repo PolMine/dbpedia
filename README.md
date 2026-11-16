@@ -134,6 +134,17 @@ container keeps restarting, and the logs
 the model stored on your machine (e.g. a `spotlight-model_lang=de.tar.gz`
 file retrieved from the Internet Archive).
 
+The Internet Archive holds a copy of the latest German model (version
+2022.03.01, about 1 GB) that was originally published at
+`downloads.dbpedia.org`:
+[spotlight-model_lang=de.tar.gz](https://web.archive.org/web/20250121042434id_/https://downloads.dbpedia.org/repo/dbpedia/spotlight/spotlight-model/2022.03.01/spotlight-model_lang%3Dde.tar.gz).
+You can download it as follows:
+
+``` sh
+curl -L -o spotlight-model_lang=de.tar.gz \
+  "https://web.archive.org/web/20250121042434id_/https://downloads.dbpedia.org/repo/dbpedia/spotlight/spotlight-model/2022.03.01/spotlight-model_lang%3Dde.tar.gz"
+```
+
 The startup script of the container only attempts the download if the
 folder `/opt/spotlight/models/<lang>` does not exist inside the
 container. So it is sufficient to extract the model on your machine and
