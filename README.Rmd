@@ -83,15 +83,44 @@ docker run -tid \
 
 This will initialize the German Docker DBpedia Spotlight model. Other available languages are described in the GitHub repository as well.
 
-**Note**: In our tests, we noticed that the DBpedia Spotlight Docker containers are not available for all architectures, in particular Apple silicon. In this case, build container from the dockerfile as follows before loading the model:
+**Note**: When run the first time, the script will download the language model. Depending on the language, this download and the subsequent initialization of the model will take some time. This process is not necessarily obvious in the output of the terminal. If the container is queried before the language model is fully initialized, the download or initialization of the model seems to be interrupted which will cause errors when queried later on. It is thus advisable to wait until the container is idle before querying the service the first time in a session.
+
+### Using a locally stored language model
+
+The language models are not always available from the DBpedia Databus, which the container uses to download them. If the download fails, the container keeps restarting, and the logs (`docker logs dbpedia-spotlight.de`) show errors such as `Invalid Spotlight model folder`. In this case, you can use a copy of the model stored on your machine (e.g. a `spotlight-model_lang=de.tar.gz` file retrieved from the Internet Archive).
+
+The startup script of the container only attempts the download if the folder `/opt/spotlight/models/<lang>` does not exist inside the container. So it is sufficient to extract the model on your machine and to make it available at this location. First, extract the archive. It contains a top-level folder named after the language (`de/`), which holds the model files (`model.properties`, `model/tokens.mem` etc.):
 
 ```{sh, eval = FALSE}
-git clone https://github.com/dbpedia-spotlight/spotlight-docker.git
-cd spotlight-docker
-docker build -t dbpedia/dbpedia-spotlight:latest .
+mkdir -p ~/spotlight-models
+tar -xzf spotlight-model_lang=de.tar.gz -C ~/spotlight-models
+ls ~/spotlight-models/de
 ```
 
-**Note**: When run the first time, the script will download the language model. Depending on the language, this download and the subsequent initialization of the model will take some time. This process is not necessarily obvious in the output of the terminal. If the container is queried before the language model is fully initialized, the download or initialization of the model seems to be interrupted which will cause errors when queried later on. It is thus advisable to wait until the container is idle before querying the service the first time in a session.
+Then bind-mount this folder into the container at `/opt/spotlight/models/de`:
+
+```{sh, eval = FALSE}
+docker run -tid \
+  --restart unless-stopped \
+  --name dbpedia-spotlight.de \
+  --mount type=bind,source="$HOME/spotlight-models/de",target=/opt/spotlight/models/de,readonly \
+  -p 2222:80  \
+  dbpedia/dbpedia-spotlight spotlight.sh de
+```
+
+Note the following:
+
+- The path given as `source` can be any folder on your machine, but it has to be an absolute path (`$HOME/...` rather than `~/...`). The `target` has to be exactly `/opt/spotlight/models/<lang>`.
+- Mount only the model folder, not the whole `/opt/spotlight` directory: it contains the DBpedia Spotlight jar file, which would be hidden by the mount.
+- If a container with the same name already exists (e.g. from a failed attempt to download the model), remove it first with `docker rm -f dbpedia-spotlight.de`.
+- Loading the model takes a little while. The service is ready when `docker logs dbpedia-spotlight.de` reports `Server started in /opt/spotlight listening on http://0.0.0.0:80/rest`.
+
+To check that the service works, send a test request:
+
+```{sh, eval = FALSE}
+curl "http://localhost:2222/rest/annotate?text=Angela%20Merkel%20war%20Bundeskanzlerin." \
+  -H "Accept: application/json"
+```
 
 ### Using the package - A Very Quick Warkthrough with `quanteda` corpora
 
