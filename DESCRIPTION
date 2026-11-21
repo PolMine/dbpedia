@@ -1,8 +1,8 @@
 Package: dbpedia
 Type: Package
 Title: R Wrapper for DBpedia Spotlight
-Version: 0.1.2.9009
-Date: 2024-07-05
+Version: 0.1.2.9010
+Date: 2026-11-21
 Authors@R: c(
   person("Andreas", "Blaette", role = c("aut", "cre"), email = "andreas.blaette@uni-due.de", comment = c(ORCID = "0000-0001-8970-8010")),
   person("Christoph", "Leonhardt", role = "aut")
@@ -12,6 +12,7 @@ Depends:
     R (>= 3.5.0)
 Imports:
     methods,
+    parallel,
     polmineR (>= 0.8.9.9002),
     cli,
     data.table,
@@ -56,5 +57,5 @@ Collate:
     'segment.R'
     'zzz.R'
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0

@@ -1,3 +1,7 @@
+## dbpedia v0.1.2.9010
+* The `subcorpus_bundle` method of `get_dbpedia_uris()` has new arguments `cl` and `chunksize` for sending requests to DBpedia Spotlight in parallel, using a socket cluster. Results are identical to sequential processing. Fork clusters are rejected because forked workers share the HTTP connection of the parent process.
+* The `subcorpus_bundle` method of `get_dbpedia_uris()` passes argument `p_attribute` to the `subcorpus` method (it was ignored before).
+
 ## dbpedia v0.1.2.9009
 * Assumption dropped on existence of column types to avoid error
 

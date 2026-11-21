@@ -85,7 +85,9 @@ get_dbpedia_uris(x, ...)
   overlap = 1000L,
   expand_to_token = FALSE,
   verbose = TRUE,
-  progress = FALSE
+  progress = FALSE,
+  cl = NULL,
+  chunksize = 25L
 )
 
 \S4method{get_dbpedia_uris}{corpus}(
@@ -200,6 +202,18 @@ annotations when entity spans and token spans do not align exactly.}
 
 \item{progress}{A \code{logical} value - whether to show progress.}
 
+\item{cl}{Parallel processing of the objects of a \code{subcorpus_bundle}. If
+\code{NULL} (default), objects are processed sequentially. If an \code{integer}
+value > 1, a socket cluster with this number of workers is started (and
+stopped when done). Alternatively, a cluster created with
+\code{parallel::makePSOCKcluster()} can be passed, which is reused. See section
+'Parallel processing' in \code{details}.}
+
+\item{chunksize}{The number of objects of a \code{subcorpus_bundle} sent to a
+worker at a time when processing in parallel (argument \code{cl}). Smaller
+chunks balance the load better, larger chunks reduce the communication
+overhead.}
+
 \item{feature_tag}{Name of a tag containing named entities, etc.}
 
 \item{segment}{name of elements to segment document by}
@@ -246,6 +260,30 @@ between entity spans and token spans by expanding the former to the last
 character position of the corresponding token. See issue #26 in the \code{dbpedia}
 GitHub repository.
 }
+\section{Parallel processing}{
+
+With a \code{subcorpus_bundle} as input, most of the time is spent waiting for
+the response of DBpedia Spotlight to one request after another. Spotlight
+can process several requests at the same time. Sending requests in parallel
+(argument \code{cl}) is therefore much faster, if the Spotlight server has
+sufficient CPUs (and memory). Results are identical to sequential
+processing.
+
+Use socket clusters (\code{parallel::makePSOCKcluster()}), not forked processes
+(\code{parallel::makeForkCluster()}, \code{parallel::mclapply()}): Forked workers
+inherit the HTTP connection of the parent process, and if this connection
+has been used before, concurrent requests fail with errors such as
+"Malformed encoding found in chunked-encoding". A fork cluster passed via
+\code{cl} results in an error.
+
+The workers load the packages dbpedia and polmineR. Corpora the workers do
+not know (e.g. corpora made available with \code{polmineR::use()} in the current
+session) are loaded from the registry directories of the \code{subcorpus}
+objects. The workers run on the local machine. If a \code{logfile} is used, all
+workers write to the same file, so lines written by different workers may
+be interleaved.
+}
+
 \examples{
 \dontrun{
 # Process AnnotatedPlainTextDocument (example available in NLP package)
@@ -292,13 +330,22 @@ uritab2 <- corpus("GERMAPARL2MINI") \%>\%
   subset(p_type == "speech") \%>\%
   get_dbpedia_uris(language = "de", s_attribute = "ne", max_len = 7990)
   
-uritab <- corpus("REUTERS") \%>\% 
-  split(s_attribute = "id", verbose = FALSE) \%>\% 
+uritab <- corpus("REUTERS") \%>\%
+  split(s_attribute = "id", verbose = FALSE) \%>\%
   get_dbpedia_uris(
     api = "http://api.dbpedia-spotlight.org/en/annotate",
     language = "en",
     p_attribute = "word",
     verbose = TRUE
+  )
+
+# Parallel processing with four workers
+uritab <- corpus("REUTERS") \%>\%
+  split(s_attribute = "id", verbose = FALSE) \%>\%
+  get_dbpedia_uris(
+    api = "http://api.dbpedia-spotlight.org/en/annotate",
+    language = "en",
+    cl = 4L
   )
 # example code
 

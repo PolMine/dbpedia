@@ -940,16 +940,58 @@ setMethod(
 })
 
 
+#' @param cl Parallel processing of the objects of a `subcorpus_bundle`. If
+#'   `NULL` (default), objects are processed sequentially. If an `integer`
+#'   value > 1, a socket cluster with this number of workers is started (and
+#'   stopped when done). Alternatively, a cluster created with
+#'   `parallel::makePSOCKcluster()` can be passed, which is reused. See section
+#'   'Parallel processing' in `details`.
+#' @param chunksize The number of objects of a `subcorpus_bundle` sent to a
+#'   worker at a time when processing in parallel (argument `cl`). Smaller
+#'   chunks balance the load better, larger chunks reduce the communication
+#'   overhead.
+#' @section Parallel processing:
+#' With a `subcorpus_bundle` as input, most of the time is spent waiting for
+#' the response of DBpedia Spotlight to one request after another. Spotlight
+#' can process several requests at the same time. Sending requests in parallel
+#' (argument `cl`) is therefore much faster, if the Spotlight server has
+#' sufficient CPUs (and memory). Results are identical to sequential
+#' processing.
+#'
+#' Use socket clusters (`parallel::makePSOCKcluster()`), not forked processes
+#' (`parallel::makeForkCluster()`, `parallel::mclapply()`): Forked workers
+#' inherit the HTTP connection of the parent process, and if this connection
+#' has been used before, concurrent requests fail with errors such as
+#' "Malformed encoding found in chunked-encoding". A fork cluster passed via
+#' `cl` results in an error.
+#'
+#' The workers load the packages dbpedia and polmineR. Corpora the workers do
+#' not know (e.g. corpora made available with `polmineR::use()` in the current
+#' session) are loaded from the registry directories of the `subcorpus`
+#' objects. The workers run on the local machine. If a `logfile` is used, all
+#' workers write to the same file, so lines written by different workers may
+#' be interleaved.
 #' @importFrom data.table rbindlist setorderv
+#' @importFrom parallel makePSOCKcluster stopCluster clusterEvalQ clusterCall parLapplyLB
+#' @importFrom cli cli_abort
 #' @rdname get_dbpedia_uris
 #' @examples
-#' uritab <- corpus("REUTERS") %>% 
-#'   split(s_attribute = "id", verbose = FALSE) %>% 
+#' uritab <- corpus("REUTERS") %>%
+#'   split(s_attribute = "id", verbose = FALSE) %>%
 #'   get_dbpedia_uris(
 #'     api = "http://api.dbpedia-spotlight.org/en/annotate",
 #'     language = "en",
 #'     p_attribute = "word",
 #'     verbose = TRUE
+#'   )
+#'
+#' # Parallel processing with four workers
+#' uritab <- corpus("REUTERS") %>%
+#'   split(s_attribute = "id", verbose = FALSE) %>%
+#'   get_dbpedia_uris(
+#'     api = "http://api.dbpedia-spotlight.org/en/annotate",
+#'     language = "en",
+#'     cl = 4L
 #'   )
 setMethod(
   "get_dbpedia_uris",
@@ -966,45 +1008,129 @@ setMethod(
     types = character(),
     support = 20,
     types_src = c("DBpedia", "Wikidata"),
-    
+
     types_drop = FALSE,
     max_len = 7990L,
     overlap = 1000L,
     expand_to_token = FALSE,
     verbose = TRUE,
-    progress = FALSE
+    progress = FALSE,
+    cl = NULL,
+    chunksize = 25L
   ) {
-  
-  if (progress) {
-    env <- parent.frame()
-    cli_progress_bar("Tasks", total = length(x), type = "tasks", .envir = env)
+
+  # Arguments for the subcorpus method, evaluated here so that workers do not
+  # depend on options (e.g. 'dbpedia.endpoint') set in this session.
+  args <- list(
+    language = language,
+    p_attribute = p_attribute,
+    s_attribute = s_attribute,
+    max_len = max_len,
+    overlap = overlap,
+    confidence = confidence,
+    api = api,
+    retry = retry,
+    logfile = logfile,
+    types = types,
+    support = support,
+    types_src = types_src,
+    types_drop = types_drop,
+    expand_to_token = expand_to_token,
+    verbose = if (progress || !is.null(cl)) FALSE else verbose
+  )
+
+  if (is.numeric(cl)){
+    if (length(cl) != 1L || is.na(cl) || cl < 1)
+      cli_abort("argument {.arg cl} is required to be a positive integer value")
+    if (cl > 1){
+      if (verbose) cli_alert_info("starting socket cluster with {.val {as.integer(cl)}} workers")
+      cl <- makePSOCKcluster(as.integer(cl))
+      on.exit(stopCluster(cl), add = TRUE)
+    } else {
+      cl <- NULL
+    }
   }
-  
-  li <- lapply(
-    x@objects, 
-    function(sc) {
-      if (progress) cli_progress_update(.envir = env)
-      get_dbpedia_uris(
-        x = sc,
-        language = language,
-        s_attribute = s_attribute,
-        max_len = max_len,
-        overlap = overlap,
-        confidence = confidence,
-        api = api,
-        retry = retry,
-        logfile = logfile,
-        types = types,
-        support = support,
-        types_src = types_src,
-        types_drop = types_drop,
-        expand_to_token = expand_to_token,
-        verbose = if (progress) FALSE else verbose
+
+  if (!is.null(cl)){
+    if (!inherits(cl, "cluster"))
+      cli_abort("argument {.arg cl} is required to be `NULL`, an integer value or a cluster")
+    if (inherits(cl[[1]], "forknode"))
+      cli_abort(c(
+        "fork clusters are not supported",
+        "i" = "use {.fn parallel::makePSOCKcluster} (see section 'Parallel processing' of {.fn get_dbpedia_uris})"
+      ))
+    clusterEvalQ(cl, suppressPackageStartupMessages({
+      library(polmineR); library(dbpedia)
+    }))
+
+    # Corpora that are only available in this session (e.g. made available
+    # with polmineR::use()) are unknown to the workers: load them from the
+    # registry directories of the subcorpus objects.
+    corpora <- unique(data.frame(
+      corpus = vapply(x@objects, function(sc) sc@corpus, character(1)),
+      registry = vapply(x@objects, function(sc) as.character(sc@registry_dir), character(1))
+    ))
+    load_corpora <- function(corpora){
+      for (i in seq_len(nrow(corpora))){
+        if (!corpora[["corpus"]][i] %in% RcppCWB::cqp_list_corpora()){
+          RcppCWB::cl_load_corpus(corpora[["corpus"]][i], registry = corpora[["registry"]][i])
+          RcppCWB::cqp_load_corpus(corpora[["corpus"]][i], registry = corpora[["registry"]][i])
+        }
+      }
+      invisible(NULL)
+    }
+    environment(load_corpora) <- asNamespace("dbpedia")
+    clusterCall(cl, load_corpora, corpora)
+  }
+
+  if (is.null(cl)){
+
+    if (progress) {
+      env <- parent.frame()
+      cli_progress_bar("Tasks", total = length(x), type = "tasks", .envir = env)
+    }
+    li <- lapply(
+      x@objects,
+      function(sc) {
+        if (progress) cli_progress_update(.envir = env)
+        do.call(get_dbpedia_uris, c(list(x = sc), args))
+      }
+    )
+    if (progress) cli_progress_done(.envir = env)
+
+  } else {
+
+    # The worker function is defined in the namespace, so that the
+    # environment of this method (with the entire bundle) is not serialized.
+    process_chunk <- function(objs, args){
+      data.table::rbindlist(
+        lapply(objs, function(sc) do.call(get_dbpedia_uris, c(list(x = sc), args))),
+        fill = TRUE
       )
     }
-  )
-  if (progress) cli_progress_done(.envir = env)
-  
+    environment(process_chunk) <- asNamespace("dbpedia")
+
+    chunks <- split(x@objects, ceiling(seq_along(x@objects) / chunksize))
+
+    if (progress) {
+      env <- parent.frame()
+      cli_progress_bar("Tasks", total = length(x), type = "tasks", .envir = env)
+      # Chunks are processed in rounds, to update the progress bar after each
+      # round. Several chunks per worker keep the workers busy.
+      rounds <- split(seq_along(chunks), ceiling(seq_along(chunks) / (length(cl) * 4L)))
+      li <- list()
+      for (round in rounds){
+        li <- c(li, parLapplyLB(cl, chunks[round], process_chunk, args = args))
+        cli_progress_update(
+          inc = sum(lengths(chunks[round])), .envir = env
+        )
+      }
+      cli_progress_done(.envir = env)
+    } else {
+      li <- parLapplyLB(cl, chunks, process_chunk, args = args)
+    }
+  }
+
   # we use fill = TRUE, because columns for types may be missing in empty lists
   y <- rbindlist(li, fill = TRUE)
   setorderv(y, cols = "cpos_left", order = 1L)
