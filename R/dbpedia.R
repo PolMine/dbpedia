@@ -469,7 +469,10 @@ setMethod(
         )
       }
       
-      request <- httr::GET(
+      # A connection error (e.g. 'Empty reply from server' when DBpedia Spotlight
+      # is restarting) is an R error, not a http error response. Catch it to
+      # retry it like a http error.
+      request <- tryCatch(httr::GET(
         url = api,
         query = c(
           list(
@@ -483,16 +486,29 @@ setMethod(
             list(types = paste(types, collapse = ","))
         ),
         httr::add_headers('Accept' = 'application/json')
-      )
+      ), error = function(e) e)
       
-      if (httr::http_error(request)) {
-        cli_alert_danger("http error response")
+      connection_error <- inherits(request, "error")
+      
+      if (connection_error || httr::http_error(request)) {
+        msg <- if (connection_error){
+          sprintf("connection error: %s", conditionMessage(request))
+        } else {
+          "http error response"
+        }
+        cli_alert_danger(msg)
         if (request_number <= retry){
+          # Increasing waiting times bridge a restart of DBpedia Spotlight
+          # (loading the models takes about a minute).
+          wait <- c(5L, 30L, 60L)[min(request_number, 3L)]
           if (!is.null(logfile)){
             cat(x, file = logfile, append = TRUE)
             cat("\n", file = logfile, append = TRUE)
             cat(
-              sprintf("request %d failed, waiting for retry\n", request_number),
+              sprintf(
+                "request %d failed (%s), waiting %d seconds for retry\n",
+                request_number, msg, wait
+              ),
               file = logfile,
               append = TRUE
             )
@@ -513,11 +529,14 @@ setMethod(
             )
             cat("\n", file = logfile, append = TRUE)
           }
-          cli_alert_info("http error response - waiting and trying again")
-          Sys.sleep(1)
+          cli_alert_info(sprintf("waiting %d seconds and trying again", wait))
+          Sys.sleep(wait)
           request_number <- request_number + 1L
           next
         } else {
+          # If DBpedia Spotlight cannot be reached, all further requests will
+          # fail too: stop rather than return NULL for all remaining documents.
+          if (connection_error) stop(request)
           if (!is.null(logfile)){
             cat(
               "Unable to process chunk, moving on with next chunk \n",
@@ -688,7 +707,11 @@ setMethod(
 #'   as threshold before DBpedia Spotlight includes a link into the report.
 #' @param api An URL of the DBpedia Spotlight API.
 #' @param retry An `integer` value, the number of times to retry in case of a
-#'   http error.
+#'   http error response or a connection error (such as 'Empty reply from
+#'   server' when DBpedia Spotlight is restarting). Waiting times before
+#'   retries increase (5, 30 and then 60 seconds). If all retries fail, a http
+#'   error results in a warning and `NULL` is returned, a connection error
+#'   results in an error.
 #' @param logfile Filename for writing logs (e.g. for debugging purposes).
 #' @param doc_id A length-one `character` vector indicating document ID in
 #'   logfile and annotation data (`data.table` returned), if not `NULL`
@@ -943,7 +966,8 @@ setMethod(
 #' @param chunksize The number of objects of a `subcorpus_bundle` sent to a
 #'   worker at a time when processing in parallel (argument `cl`). Smaller
 #'   chunks balance the load better, larger chunks reduce the communication
-#'   overhead.
+#'   overhead. With `progress = TRUE`, chunks are processed in rounds of 20
+#'   chunks per worker, and the progress bar is updated after each round.
 #' @section Parallel processing:
 #' With a `subcorpus_bundle` as input, most of the time is spent waiting for
 #' the response of DBpedia Spotlight to one request after another. Spotlight
@@ -1010,7 +1034,7 @@ setMethod(
     verbose = TRUE,
     progress = FALSE,
     cl = NULL,
-    chunksize = 25L
+    chunksize = 10L
   ) {
 
   # Arguments for the subcorpus method, evaluated here so that workers do not
@@ -1110,8 +1134,11 @@ setMethod(
       env <- parent.frame()
       cli_progress_bar("Tasks", total = length(x), type = "tasks", .envir = env)
       # Chunks are processed in rounds, to update the progress bar after each
-      # round. Several chunks per worker keep the workers busy.
-      rounds <- split(seq_along(chunks), ceiling(seq_along(chunks) / (length(cl) * 4L)))
+      # round. At the end of a round, workers wait for the slowest chunk.
+      # Many (small) chunks per worker and round keep this loss small (about
+      # 2-4% with 20 chunks of 10 objects, compared to 16% with 4 chunks of
+      # 25 objects, measured for a newspaper corpus).
+      rounds <- split(seq_along(chunks), ceiling(seq_along(chunks) / (length(cl) * 20L)))
       li <- list()
       for (round in rounds){
         li <- c(li, parLapplyLB(cl, chunks[round], process_chunk, args = args))

@@ -87,7 +87,7 @@ get_dbpedia_uris(x, ...)
   verbose = TRUE,
   progress = FALSE,
   cl = NULL,
-  chunksize = 25L
+  chunksize = 10L
 )
 
 \S4method{get_dbpedia_uris}{corpus}(
@@ -158,7 +158,11 @@ as threshold before DBpedia Spotlight includes a link into the report.}
 \item{api}{An URL of the DBpedia Spotlight API.}
 
 \item{retry}{An \code{integer} value, the number of times to retry in case of a
-http error.}
+http error response or a connection error (such as 'Empty reply from
+server' when DBpedia Spotlight is restarting). Waiting times before
+retries increase (5, 30 and then 60 seconds). If all retries fail, a http
+error results in a warning and \code{NULL} is returned, a connection error
+results in an error.}
 
 \item{logfile}{Filename for writing logs (e.g. for debugging purposes).}
 
@@ -212,7 +216,8 @@ stopped when done). Alternatively, a cluster created with
 \item{chunksize}{The number of objects of a \code{subcorpus_bundle} sent to a
 worker at a time when processing in parallel (argument \code{cl}). Smaller
 chunks balance the load better, larger chunks reduce the communication
-overhead.}
+overhead. With \code{progress = TRUE}, chunks are processed in rounds of 20
+chunks per worker, and the progress bar is updated after each round.}
 
 \item{feature_tag}{Name of a tag containing named entities, etc.}
 

@@ -1,5 +1,7 @@
 ## dbpedia v0.1.2.9010
 * The `subcorpus_bundle` method of `get_dbpedia_uris()` has new arguments `cl` and `chunksize` for sending requests to DBpedia Spotlight in parallel, using a socket cluster. Results are identical to sequential processing. Fork clusters are rejected because forked workers share the HTTP connection of the parent process.
+* With `progress = TRUE`, parallel processing works in rounds of 20 chunks per worker (default `chunksize` 10), to reduce the time workers wait for the slowest chunk at the end of a round.
+* `get_dbpedia_uris()` retries connection errors (such as 'Empty reply from server' when DBpedia Spotlight is restarting after running out of memory) like http error responses, with waiting times of 5, 30 and then 60 seconds between retries (1 second before). If all retries fail, a connection error results in an error, so that processing does not continue with an unreachable server.
 * The `subcorpus_bundle` method of `get_dbpedia_uris()` passes argument `p_attribute` to the `subcorpus` method (it was ignored before).
 
 ## dbpedia v0.1.2.9009
